@@ -2,14 +2,6 @@
 
 #include "CacheInfo.h"
 
-//CacheInfo::CacheInfo()
-//{
-//	m_HashTopTables = 0;
-//	m_CacheNums = 0;
-//
-//	m_pCacheTop = NULL;
-//	m_pHashTopTable = NULL;
-//}
 CacheInfo::CacheInfo(int HashRootTables)
 {
 
@@ -35,8 +27,6 @@ CacheInfo::CacheInfo(int HashRootTables)
 		m_HashRootTable[ii].pPrevHash   = NULL;
 		m_HashRootTable[ii].pNextHash   = NULL;
 	}
-
-
 }
 
 CacheInfo::~CacheInfo(void)
