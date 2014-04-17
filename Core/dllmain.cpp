@@ -263,9 +263,8 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			//::MessageBox(NULL,_T("DLL_PROCESS_ATTACH"),_T("debug"),MB_OK);
 			InstallProxyFunction( _T("ddraw.dll"),  _T("DirectDrawCreateEx"), ProxyDirectDrawCreateEx, &OrigDirectDrawCreateEx );
 			InstallProxyFunction( _T("dinput.dll"), _T("DirectInputCreateA"), ProxyDirectInputCreateA, &OrigDirectInputCreateA );
-			//hook_ws2_32_recv();
+			//InstallProxyFunction( _T("ws2_32.dll"), _T("recv"), ProxyWS32_recv, &OrigWS32_recv );
 
-			//InstallProxyFunction( _T("user32.dll"), _T("PeekMessageA"), ProxyPeekMessageA, &OrigPeekMessageA );
 			if( g_pSharedData ){
 				::GetCurrentDirectory(MAX_PATH,temppath);
 				strcat_s( temppath,"\\BGM\\");

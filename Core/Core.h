@@ -5,9 +5,9 @@
 // CORE_API 関数を DLL からインポートされたと見なすのに対し、この DLL は、このマクロで定義された
 // シンボルをエクスポートされたと見なします。
 #ifdef CORE_EXPORTS
-#define CORE_API __declspec(dllexport)
+#define CORE_API extern "C" __declspec(dllexport)
 #else
-#define CORE_API __declspec(dllimport)
+#define CORE_API extern "C" __declspec(dllimport)
 #endif
 
 CORE_API void InstallHook();
