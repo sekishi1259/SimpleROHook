@@ -77,8 +77,9 @@ namespace SimpleROHookCS
                 serializer.Serialize(writer, configration);
             }
             #endregion
-
+            
             m_SharedData.Dispose();
+            Dispose(true);
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)

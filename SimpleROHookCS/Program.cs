@@ -40,11 +40,13 @@ namespace SimpleROHookCS
                     if (intPtrInstall == null)
                     {
                         MessageBox.Show("error:InstallHook function is not included in Core.dll.");
+                        FreeLibrary(hModule);
                         return;
                     }
                     if (intPtrRemove == null)
                     {
                         MessageBox.Show("error:intPtrRemove function is not included in Core.dll.");
+                        FreeLibrary(hModule);
                         return;
                     }
 

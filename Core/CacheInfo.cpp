@@ -59,8 +59,7 @@ void *CacheInfo::CreateData(int hashkey,int datasize)
 			pNext = pCache->pNext;
 			//
 			if( !pNext ){
-				// もっとも使われていない
-				// キャッシュの終端から削除
+				// release a disused old cache.
 				StCacheInfo *pPrev = pCache->pPrev;
 				if(pPrev)pPrev->pNext = pNext;
 				//
@@ -148,7 +147,7 @@ void *CacheInfo::GetCacheData(int hashkey)
 	while(pCache)
 	{
 		if( pCache->OriginalKey == hashkey ){
-			// 参照されたキャッシュは最上位に繰り上がる
+			// move to top a cache used.
 			StCacheInfo *pPrev = pCache->pPrev;
 			StCacheInfo *pNext = pCache->pNext;
 			//

@@ -51,7 +51,7 @@ bool CFastFont::CreateFastFont(LOGFONT *lplf,int OutLineFormat,int HashDivideNum
 
 	m_hFont = CreateFontIndirect(lplf);
 	if(m_hFont){
-		// 高速化のため固定展開バッファを作成
+		// fix a work buffer.
 		m_hDC     = CreateCompatibleDC(NULL);
 		if( !m_hDC ){
 			DeleteObject(m_hFont);
@@ -60,7 +60,7 @@ bool CFastFont::CreateFastFont(LOGFONT *lplf,int OutLineFormat,int HashDivideNum
 		m_hOldFont = (HFONT)SelectObject(m_hDC, m_hFont);
 		GetTextMetrics( m_hDC, &m_TM );
 
-		m_DefaultBufferSize = m_TM.tmHeight * ((m_TM.tmMaxCharWidth+3)&0xfffffffc);//最大サイズ
+		m_DefaultBufferSize = m_TM.tmHeight * ((m_TM.tmMaxCharWidth+3)&0xfffffffc);//max size
 		m_pDefaultBuffer = new BYTE[m_DefaultBufferSize];
 		if(!m_pDefaultBuffer){
 			DeleteObject(m_hFont);
@@ -145,7 +145,6 @@ CFastFont::StOutlineFontData *CFastFont::GetFontData(int code,SIZE *pSize)
 			GLYPHMETRICS tempGM;
 			imagesize = 0;
 			if( GetGlyphOutline(m_hDC, code, GGO_METRICS,&tempGM, 0,NULL, &Mat) != GDI_ERROR ){
-				// 2Bit以上のスペースはアウトラインは取れないがGLYPHMETRICSだけなら取得可能
 				GM.gmBlackBoxX = 0;
 				GM.gmBlackBoxY = 0;
 				GM.gmCellIncX = tempGM.gmCellIncX;
@@ -153,7 +152,7 @@ CFastFont::StOutlineFontData *CFastFont::GetFontData(int code,SIZE *pSize)
 				GM.gmptGlyphOrigin.x = 0;
 				GM.gmptGlyphOrigin.y = m_TM.tmAscent;
 			}else{
-				// 未知のコード
+				// error code
 				GM.gmBlackBoxX = 0;
 				GM.gmBlackBoxY = 0;
 				GM.gmCellIncX = (short)m_TM.tmMaxCharWidth;
@@ -271,7 +270,7 @@ void CFastFont::BltFontData(int code,int x,int y,SIZE *pSize)
 
 	}
 }
-
+/*
 #include <tchar.h>
 
 void CFastFont::test(int mode)
@@ -319,3 +318,4 @@ void CFastFont::test(int mode)
 		break;
 	}
 }
+*/

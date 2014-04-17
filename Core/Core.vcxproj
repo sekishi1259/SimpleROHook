@@ -40,13 +40,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\usr\vs2010\include;C:\usr\DirectXSDK9_15\Include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\usr\vs2010\lib;C:\usr\DirectXSDK9_15\Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\usr\DirectXSDK9_15\Include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\usr\DirectXSDK9_15\Lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\usr\vs2010\include;C:\usr\DirectXSDK9_15\Include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\usr\vs2010\lib;C:\usr\DirectXSDK9_15\Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

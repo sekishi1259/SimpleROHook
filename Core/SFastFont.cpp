@@ -15,13 +15,10 @@ static void OutputDebugFile(LPCSTR format, ...)
 	char   s[512];
 	va_list args;
 
-	// 可変個引数の初期化
 	va_start(args, format);
 
-	// 可変個引数に従い文字列に代入
 	vsprintf(s, format, args);
 	
-	// デバッグ出力
 	{
 		char logfilename[2048];
 		sprintf(logfilename,"SFastFont.log");
@@ -32,7 +29,6 @@ static void OutputDebugFile(LPCSTR format, ...)
 		}
 	}
 
-	// 可変個の引数のリセット
 	va_end(args);
 }
 
@@ -89,7 +85,6 @@ bool CSFastFont::CreateFastFont(LOGFONT *lplf,LPDIRECT3DDEVICE7 pDev,LPDIRECTDRA
 	m_ImageMode = imagemode;
 	if( m_pFastFont->CreateFastFont(lplf) )
 	{
-		// 高速化のため固定展開バッファを作成
 	//	m_MaxImageWidth  = 256;
 	//	m_MaxImageHeight = 256;
 		m_MaxImageWidth  = 512;
@@ -115,8 +110,7 @@ bool CSFastFont::CreateFastFont(LOGFONT *lplf,LPDIRECT3DDEVICE7 pDev,LPDIRECTDRA
 		m_HashRootTable = new StSFontCacheInfo[m_HashRootTables];
 		memset( m_HashRootTable,0,sizeof(StSFontCacheInfo)*m_HashRootTables );
 		
-		// 空キャッシュデータテーブル作成
-		// root(dummy)
+		// create a root(dummy)
 		m_pSFontChacheInfo[0].pNext = &m_pSFontChacheInfo[1];
 		for(int ii = 0;ii < m_MaxCacheNums;ii++){
 			int index = ii + 1;
@@ -127,7 +121,7 @@ bool CSFastFont::CreateFastFont(LOGFONT *lplf,LPDIRECT3DDEVICE7 pDev,LPDIRECTDRA
 			m_pSFontChacheInfo[index].u = (ii % m_WidthCount) * m_MaxFontWidth;
 			m_pSFontChacheInfo[index].v = (ii / m_WidthCount) * m_MaxFontHeight;
 		}
-		// m_pSFontChacheInfo[n].pNext = NULLとなる物が最も使われていないキャッシュ
+		// m_pSFontChacheInfo[n].pNext = NULL  is disused cache.
 		// 
 		m_pLastSFontChacheInfo = &m_pSFontChacheInfo[m_MaxCacheNums];
 
@@ -480,15 +474,14 @@ AGFEDCB
 */
 		pCache = m_pLastSFontChacheInfo;
 
-	// 最も使われていないハッシュキーの取得
-	// …、こうなるとは限らない
+		// 最も使われていないハッシュキーの取得
+		// …、こうなるとは限らない
 		// キャッシュがヒットするとこれは成り立たない
 		if(	m_pLastSFontChacheInfoFirstUsed == m_pLastSFontChacheInfo ){
 			Flush();
 		}
 		if(!m_pLastSFontChacheInfoFirstUsed)
 			m_pLastSFontChacheInfoFirstUsed = m_pLastSFontChacheInfo;
-	//
 
 		m_pLastSFontChacheInfo = pCache->pPrev;// 実質最終端のキャッシュ
 		
