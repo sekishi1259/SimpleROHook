@@ -35,6 +35,7 @@
             this.kHzAudioModeonBootToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.playMusicOnClientStreamPlayerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.packetLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.freeMouseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showM2EToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showFpsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -64,6 +65,7 @@
             this.kHzAudioModeonBootToolStripMenuItem,
             this.playMusicOnClientStreamPlayerToolStripMenuItem,
             this.toolStripSeparator1,
+            this.packetLogToolStripMenuItem,
             this.freeMouseToolStripMenuItem,
             this.showM2EToolStripMenuItem,
             this.showFpsToolStripMenuItem,
@@ -78,7 +80,7 @@
             this.aboutSimpleROHookToolStripMenuItem,
             this.exitToolStripMenuItem});
             this.TaskTray_contextMenuStrip.Name = "contextMenuStrip1";
-            this.TaskTray_contextMenuStrip.Size = new System.Drawing.Size(268, 351);
+            this.TaskTray_contextMenuStrip.Size = new System.Drawing.Size(268, 373);
             this.TaskTray_contextMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.TaskTray_contextMenuStrip_Opening);
             // 
             // kHzAudioModeonBootToolStripMenuItem
@@ -100,6 +102,14 @@
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(264, 6);
+            // 
+            // packetLogToolStripMenuItem
+            // 
+            this.packetLogToolStripMenuItem.CheckOnClick = true;
+            this.packetLogToolStripMenuItem.Name = "packetLogToolStripMenuItem";
+            this.packetLogToolStripMenuItem.Size = new System.Drawing.Size(267, 22);
+            this.packetLogToolStripMenuItem.Text = "Packet Log";
+            this.packetLogToolStripMenuItem.Click += new System.EventHandler(this.packetLogToolStripMenuItem_Click);
             // 
             // freeMouseToolStripMenuItem
             // 
@@ -228,6 +238,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripMenuItem aboutSimpleROHookToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem freeMouseToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem packetLogToolStripMenuItem;
     }
 }
 

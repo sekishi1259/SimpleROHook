@@ -1,11 +1,112 @@
 #include "stdafx.h"
 #include "tinyconsole.h"
 #include "RoCodeBind.h"
+#include "SFastFont.h"
 
 HANDLE         g_hMapObject = 0;
 StSHAREDMEMORY *g_pSharedData = 0;
 BOOL g_MouseFreeSw = FALSE;
-DWORD g_MonitorRefreshRate;
+
+#define kFloorSkillTypeMAX 0x100
+DWORD g_M2ESkillColor[kFloorSkillTypeMAX];
+
+CSFastFont *g_pSFastFont = NULL;
+LPDIRECTDRAWSURFACE7 g_pddsFontTexture = NULL;
+
+static HRESULT CALLBACK TextureSearchCallback( DDPIXELFORMAT* pddpf,
+                                               VOID* param )
+{
+    if( pddpf->dwFlags & (DDPF_LUMINANCE|DDPF_BUMPLUMINANCE|DDPF_BUMPDUDV) )
+        return DDENUMRET_OK;
+    if( pddpf->dwFourCC != 0 )
+        return DDENUMRET_OK;
+    if( pddpf->dwRGBBitCount != 16 )
+        return DDENUMRET_OK;
+    if(!(pddpf->dwFlags&DDPF_ALPHAPIXELS) )
+        return DDENUMRET_OK;
+	// get 16 bit with alphapixel format
+    memcpy( (DDPIXELFORMAT*)param, pddpf, sizeof(DDPIXELFORMAT) );
+    return DDENUMRET_CANCEL;
+}
+
+void InitRODraw(IDirect3DDevice7* d3ddevice)
+{
+	SearchRagexeMemory();
+	LoadIni();
+
+	D3DDEVICEDESC7 ddDesc;
+	d3ddevice->GetCaps( &ddDesc );
+
+	DDSURFACEDESC2 ddsd;
+	ZeroMemory( &ddsd, sizeof(DDSURFACEDESC2) );
+	ddsd.dwSize          = sizeof(DDSURFACEDESC2);
+	ddsd.dwFlags         = DDSD_CAPS|DDSD_HEIGHT|DDSD_WIDTH|
+							DDSD_PIXELFORMAT|DDSD_TEXTURESTAGE;
+	ddsd.ddsCaps.dwCaps  = DDSCAPS_TEXTURE;
+	ddsd.dwWidth         = 512;
+	ddsd.dwHeight        = 512;
+
+	if( ddDesc.deviceGUID == IID_IDirect3DHALDevice )
+		ddsd.ddsCaps.dwCaps2 = DDSCAPS2_TEXTUREMANAGE;
+	else if( ddDesc.deviceGUID == IID_IDirect3DTnLHalDevice )
+		ddsd.ddsCaps.dwCaps2 = DDSCAPS2_TEXTUREMANAGE;
+	else
+		ddsd.ddsCaps.dwCaps |= DDSCAPS_SYSTEMMEMORY;
+
+	d3ddevice->EnumTextureFormats( TextureSearchCallback, &ddsd.ddpfPixelFormat );
+	if( ddsd.ddpfPixelFormat.dwRGBBitCount ){
+		LPDIRECTDRAWSURFACE7 pddsRender = NULL;
+		LPDIRECTDRAW7        pDD = NULL;
+
+		d3ddevice->GetRenderTarget( &pddsRender );
+		if( pddsRender ){
+			pddsRender->GetDDInterface( (VOID**)&pDD );
+			pddsRender->Release();
+		}
+		if( pDD ){
+			if( SUCCEEDED( pDD->CreateSurface( &ddsd, &g_pddsFontTexture, NULL )) ){
+				kDD_LOGGING2(( "font texture created." ));
+			} else {
+				kDD_LOGGING2(( "failed create a font texture." ));
+			}
+			pDD->Release();
+		}
+		if( g_pddsFontTexture ){
+			LOGFONT logfont;
+			logfont.lfHeight         = -10;
+			logfont.lfWidth          = 0;
+			logfont.lfEscapement     = 0;
+			logfont.lfOrientation    = 0;
+			logfont.lfWeight         = FW_REGULAR;
+			//
+			logfont.lfItalic         = FALSE;
+			logfont.lfUnderline      = FALSE;
+			logfont.lfStrikeOut      = FALSE;
+			logfont.lfCharSet        = DEFAULT_CHARSET;
+			logfont.lfOutPrecision   = OUT_DEFAULT_PRECIS; 
+			logfont.lfClipPrecision  = CLIP_DEFAULT_PRECIS; 
+			logfont.lfQuality        = NONANTIALIASED_QUALITY; 
+			logfont.lfPitchAndFamily = FIXED_PITCH | FF_DONTCARE; 
+			_tcscpy_s(logfont.lfFaceName,_T("‚l‚r ‚oƒSƒVƒbƒN"));
+
+			g_pSFastFont = new CSFastFont;
+			g_pSFastFont->CreateFastFont(&logfont,d3ddevice,g_pddsFontTexture,0);
+		}
+	}
+
+}
+
+void ReleaseRODraw(void)
+{
+	if( g_pSFastFont )
+		delete g_pSFastFont;
+	if( g_pddsFontTexture ){
+		g_pddsFontTexture->Release();
+		g_pddsFontTexture = NULL;
+	}
+}
+
+
 
 int g_screen_width = 0;
 int g_screen_height = 0;
@@ -38,6 +139,321 @@ void Transform2screen(struct vector3d& i,vector3d& o,float& rhw)
 	rhw = 1.0f / i.z;
 }
 
+void LoadIni(void)
+{
+	if( g_pSharedData){
+
+		int sectionsize;
+		char Sectionbuf[32768];
+		char *pkey;
+		char filename[MAX_PATH];
+
+		if( ::WideCharToMultiByte(CP_ACP,0,
+			g_pSharedData->configfilepath,wcslen(g_pSharedData->configfilepath)+1,
+			filename,sizeof(filename),
+			NULL,NULL) ){
+
+		kDD_LOGGING2( ("LoadIni startup") );
+		kDD_LOGGING2( ("%s",filename) );
+
+			sectionsize = GetPrivateProfileSection(_T("M2E"),Sectionbuf,32768,filename);
+			pkey = Sectionbuf;
+
+			for(int ii = 0;ii < kFloorSkillTypeMAX;ii++)
+				g_M2ESkillColor[ii]=0;
+
+			
+			while(*pkey!='\0'){
+				int index;
+				DWORD color;
+
+				char *ptemp;
+				ptemp = pkey;
+
+				std::string linestring(ptemp);
+
+				pkey += linestring.length();
+
+				sscanf_s(linestring.c_str(),"Skill%x=%x",&index,&color);
+				g_M2ESkillColor[index] = color;
+				pkey++;
+			}
+		}
+	}
+}
+
+void DrawSRHDebug(IDirect3DDevice7* d3ddevice)
+{
+	if( !g_pSharedData )return;
+
+	if( g_pSharedData->show_framerate ){
+		std::stringstream str;
+		str << g_PerformanceCounter.GetFrameRate() << "fps : "<<(int)g_PerformanceCounter.GetTotalTick() << std::endl;
+
+		g_pSFastFont->DrawText((LPSTR)str.str().c_str(), 0, 0,D3DCOLOR_ARGB(255,255,255,255),0,NULL);
+	}
+
+	if( g_pSharedData->objectinformation ){
+		std::stringstream str;
+		CModeMgr *pcmode = g_pmodeMgr;
+		//str.str("");
+		CGameMode *p_gamemode = (CGameMode*)pcmode->m_curMode;
+
+		if( p_gamemode && pcmode->m_curModeType == 1 
+		 && p_gamemode->m_world && p_gamemode->m_view && p_gamemode->m_world->m_attr ){
+			CView *pView = p_gamemode->m_view;
+
+			C3dAttr *pAttr = p_gamemode->m_world->m_attr;
+
+			if( p_gamemode->m_world->m_player ){
+				C3dAttr *pattr = p_gamemode->m_world->m_attr;
+				ViewInfo3d *pVinfo = &pView->m_cur;
+				vector3d pos;
+				vector3d tpos,spos;
+				float rhw;
+				std::stringstream putinfostr;
+				CPlayer *pPlayer = (CPlayer*)p_gamemode->m_world->m_player;
+
+				str << "m_clevel = " << pPlayer->m_clevel << "\n";
+				str << "m_gid = " << std::hex << (unsigned long)pPlayer->m_gid << "\n";
+				str << "m_job = " << std::hex << (unsigned long)pPlayer->m_job << "\n";
+				str << "m_sex = " << std::hex << (unsigned long)pPlayer->m_sex << "\n";
+
+
+				//
+				//  world position to cell position
+				//
+				pos.x = pPlayer->m_pos.x - pVinfo->at.x;
+				pos.y = pPlayer->m_pos.y - pVinfo->at.y;
+				pos.z = pPlayer->m_pos.z - pVinfo->at.z;
+				//
+				tpos.MatrixMult(pos,pView->m_viewMatrix);
+				tpos.z += pVinfo->distance;
+				tpos += pView->m_up;
+				long cx,cy;
+				pattr->ConvertToCellCoor(pPlayer->m_pos.x,pPlayer->m_pos.z,cx,cy);
+				//
+				//
+				//
+				putinfostr << "(" << cx << "," << cy << ")" << std::endl;
+				int sx,sy;
+				Transform2screen(tpos,spos,rhw);
+				sx = (int)spos.x;
+				sy = (int)spos.y;
+				g_pSFastFont->DrawText((LPSTR)putinfostr.str().c_str(), sx, sy,D3DCOLOR_ARGB(255,255,255,255),2,NULL);
+			}
+
+			int skillnums = p_gamemode->m_world->m_skillList.size();
+			str << " m_skillList size =" << skillnums << "\n";
+
+			int itemnums = p_gamemode->m_world->m_itemList.size();
+			str << " m_itemList size =" << itemnums << "\n";
+
+			std::list<CItem*> itemList = p_gamemode->m_world->m_itemList;
+			for( std::list<CItem*>::iterator it = itemList.begin() ; it != itemList.end() ; it++ )
+			{
+				CItem *pItem = *it;
+				if( pItem ){
+					ViewInfo3d *pVinfo = &pView->m_cur;
+					vector3d pos;
+					vector3d tpos,spos;
+					float rhw;
+					pos.x = pItem->m_pos.x - pVinfo->at.x;
+					pos.y = pItem->m_pos.y - pVinfo->at.y;
+					pos.z = pItem->m_pos.z - pVinfo->at.z;
+					//
+					tpos.MatrixMult(pos,pView->m_viewMatrix);
+					tpos.z += pVinfo->distance;
+
+					Transform2screen(tpos,spos,rhw);
+
+					long cx,cy;
+					pAttr->ConvertToCellCoor(pItem->m_pos.x,pItem->m_pos.z,cx,cy);
+
+					std::stringstream putinfostr;
+					putinfostr << "(" << cx << "," << cy << ")" << std::endl;
+					//putinfostr << pItem->m_itemName << std::endl;
+				//	putinfostr << "aid = " << pItem->m_aid << std::endl;
+					putinfostr << "itemid = " << pItem->m_itemid2 << std::endl;
+
+					int sx,sy;
+					sx = (int)spos.x;
+					sy = (int)spos.y;
+					g_pSFastFont->DrawText((LPSTR)putinfostr.str().c_str(), sx, sy,D3DCOLOR_ARGB(255,255,255,255),2,NULL);
+				}
+			}
+
+
+			int actornums = p_gamemode->m_world->m_actorList.size();
+			str << " m_actorList size =" << actornums << "\n";
+			std::list<CGameActor*> actorList = p_gamemode->m_world->m_actorList;
+			for( std::list<CGameActor*>::iterator it = actorList.begin() ; it != actorList.end() ; it++ )
+			{
+				CGameActor *pGameActor = *it;
+				if( pGameActor ){
+					ViewInfo3d *pVinfo = &pView->m_cur;
+					vector3d pos;
+					vector3d tpos,spos;
+					float rhw;
+					pos.x = pGameActor->m_pos.x - pVinfo->at.x;
+					pos.y = pGameActor->m_pos.y - pVinfo->at.y;
+					pos.z = pGameActor->m_pos.z - pVinfo->at.z;
+					//
+					tpos.MatrixMult(pos,pView->m_viewMatrix);
+					tpos.z += pVinfo->distance;
+
+					Transform2screen(tpos,spos,rhw);
+
+					long cx,cy;
+					pAttr->ConvertToCellCoor(pGameActor->m_pos.x,pGameActor->m_pos.z,cx,cy);
+
+					std::stringstream putinfostr;
+					putinfostr << "(" << cx << "," << cy << ")" << std::endl;
+				//	putinfostr << "dest(" << pGameActor->m_moveDestX << "," << pGameActor->m_moveDestY << ")" << std::endl;
+					putinfostr << "lv = " << pGameActor->m_clevel << std::endl;
+					putinfostr << "job = " << pGameActor->m_job << std::endl;
+
+					int sx,sy;
+					sx = (int)spos.x;
+					sy = (int)spos.y;
+					g_pSFastFont->DrawText((LPSTR)putinfostr.str().c_str(), sx, sy,D3DCOLOR_ARGB(255,255,255,255),2,NULL);
+				}
+			}
+			
+		}
+		str << std::endl;
+		g_pSFastFont->DrawText((LPSTR)str.str().c_str(), 0, 16,D3DCOLOR_ARGB(255,255,255,255),0,NULL);
+	}
+	g_pSFastFont->Flush();
+
+}
+
+void DrawOn3DMap(IDirect3DDevice7* d3ddevice)
+{
+	DrawM2E(d3ddevice);
+}
+
+void DrawM2E(IDirect3DDevice7* d3ddevice)
+{
+	if( !g_pSharedData )return;
+	if( g_pSharedData->m2e == FALSE )return;
+	if( !g_pmodeMgr )return;
+
+	CModeMgr *pcmode = g_pmodeMgr;
+	CWorld *pWorld;
+	CView *pView;
+
+	if( pcmode->m_curMode && pcmode->m_curModeType == 1 ){
+		CGameMode *pGamemode = (CGameMode*)pcmode->m_curMode;
+		pWorld = pGamemode->m_world;
+		pView  = pGamemode->m_view;
+
+		DWORD _state_zenable;
+		DWORD _state_zwriteenable;
+		DWORD _state_zbias;
+		DWORD _state_fogenable;
+		DWORD _state_specularenable;
+		DWORD _state_alphafunc;
+		DWORD _state_alpharef;
+		DWORD _state_srcblend;
+		DWORD _state_destblend;
+		//LPDIRECTDRAWSURFACE7 lpOriginalTexture = NULL;
+		//d3ddevice->GetTexture(0, &lpOriginalTexture);
+		d3ddevice->GetRenderState(D3DRENDERSTATE_ZENABLE,        &_state_zenable);
+		d3ddevice->GetRenderState(D3DRENDERSTATE_ZWRITEENABLE,   &_state_zwriteenable);
+		d3ddevice->GetRenderState(D3DRENDERSTATE_ZBIAS,          &_state_zbias);
+		d3ddevice->GetRenderState(D3DRENDERSTATE_FOGENABLE,      &_state_fogenable);
+		d3ddevice->GetRenderState(D3DRENDERSTATE_SPECULARENABLE, &_state_specularenable);
+		d3ddevice->GetRenderState(D3DRENDERSTATE_ALPHAFUNC,      &_state_alphafunc);
+		d3ddevice->GetRenderState(D3DRENDERSTATE_ALPHAREF,       &_state_alpharef);
+		d3ddevice->GetRenderState(D3DRENDERSTATE_SRCBLEND ,      &_state_srcblend);
+		d3ddevice->GetRenderState(D3DRENDERSTATE_DESTBLEND,      &_state_destblend);
+
+		d3ddevice->SetTexture(0, NULL);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_ZENABLE, D3DZB_TRUE);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_ZWRITEENABLE, FALSE);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_ZBIAS, 2);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_FOGENABLE    ,FALSE);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_SPECULARENABLE   ,FALSE);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_ALPHAFUNC,D3DCMP_GREATER);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_ALPHAREF,0x00);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_SRCBLEND ,D3DBLEND_SRCALPHA );
+		d3ddevice->SetRenderState(D3DRENDERSTATE_DESTBLEND,D3DBLEND_INVSRCALPHA);
+
+		if( pWorld && pView && pWorld->m_attr ){
+			C3dAttr *pAttr = pWorld->m_attr;
+
+			int skillnums = pWorld->m_skillList.size();
+			std::list<CSkill*> skillList = pWorld->m_skillList;
+
+			for( std::list<CSkill*>::iterator it = skillList.begin() ; it != skillList.end() ; it++ )
+			{
+				CSkill *pSkill = *it;
+				//
+				if( pSkill && pSkill->m_job < 0x100 && g_M2ESkillColor[pSkill->m_job] ){
+					DWORD color = g_M2ESkillColor[pSkill->m_job];
+					VERTEX vertex[4] =
+					{
+						{   0.0,  0.0,   0.0f,  1.0f, color },
+						{ 100.0,  0.0,   0.0f,  1.0f, color },
+						{   0.0,100.0,   0.0f,  1.0f, color },
+						{ 100.0,100.0,   0.0f,  1.0f, color }
+					};
+					ViewInfo3d *pVinfo = &pView->m_cur;
+					vector3d pos;
+					vector3d tpos,spos;
+					float rhw;
+					pos.x = pSkill->m_pos.x - pVinfo->at.x;
+					pos.y = pSkill->m_pos.y - pVinfo->at.y;
+					pos.z = pSkill->m_pos.z - pVinfo->at.z;
+					//
+					tpos.MatrixMult(pos,pView->m_viewMatrix);
+					tpos.z += pVinfo->distance;
+
+					long cx,cy;
+					CAttrCell *pCell;
+					vector3d centerpos(pSkill->m_pos),polvect[4];
+
+					pAttr->ConvertToCellCoor(centerpos.x,centerpos.z,cx,cy);
+					pCell = pAttr->GetCell(cx, cy);
+
+					polvect[0].Set(centerpos.x -2.4f, pCell->h1 ,centerpos.z -2.4f);
+					polvect[1].Set(centerpos.x +2.4f, pCell->h2 ,centerpos.z -2.4f);
+					polvect[2].Set(centerpos.x -2.4f, pCell->h3 ,centerpos.z +2.4f);
+					polvect[3].Set(centerpos.x +2.4f, pCell->h4 ,centerpos.z +2.4f);
+
+					for(int ii = 0; ii < 4; ii ++){
+						pos.x = polvect[ii].x - pVinfo->at.x;
+						pos.y = polvect[ii].y - pVinfo->at.y;
+						pos.z = polvect[ii].z - pVinfo->at.z;
+						tpos.MatrixMult(pos,pView->m_viewMatrix);
+						tpos.z += pVinfo->distance;
+						Transform2screen(tpos,spos,rhw);
+						vertex[ii].x = spos.x;
+						vertex[ii].y = spos.y;
+						vertex[ii].z = spos.z;
+						vertex[ii].rhw = rhw;
+					}
+					d3ddevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, D3DFVF_CPOLVERTEX, vertex, 4, 0);
+				}
+			}
+		}
+		d3ddevice->SetRenderState(D3DRENDERSTATE_ZENABLE,        _state_zenable);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_ZWRITEENABLE,   _state_zwriteenable);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_ZBIAS,          _state_zbias);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_FOGENABLE,      _state_specularenable);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_SPECULARENABLE, _state_specularenable);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_ALPHAFUNC,      _state_alphafunc);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_ALPHAREF,       _state_alpharef);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_SRCBLEND ,      _state_srcblend);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_DESTBLEND,      _state_destblend);
+		//d3ddevice->SetTexture(0, lpOriginalTexture);
+	}
+}
+
+
+
+
 CPerformanceCounter g_PerformanceCounter(60);
 
 DWORD g_ROmouse = NULL;
@@ -53,14 +469,12 @@ BOOL OpenSharedMemory(void)
 	g_hMapObject = ::OpenFileMapping( FILE_MAP_ALL_ACCESS , FALSE, kSHAREDMEMORY_OBJECTNAME );
 	if( !g_hMapObject ){
 		kDD_LOGGING2( ("shared memory:Initialize Failed.") );
-		//::MessageBox(NULL,_T("Initialize Failed."), _T("shared memory"), MB_OK);
 		return FALSE;
 	}
 	g_pSharedData = (StSHAREDMEMORY*)::MapViewOfFile(g_hMapObject,
 		FILE_MAP_ALL_ACCESS,0,0,0);
 	if(!g_pSharedData){
 		kDD_LOGGING2( ("shared memory:DataMap Failed.") );
-		//::MessageBox(NULL,_T("DataMap Failed."), _T("shared memory"), MB_OK);
 		::CloseHandle( g_hMapObject);
 		g_hMapObject = NULL;
 		return FALSE;
@@ -125,6 +539,17 @@ BOOL PatternMatcher(StFindMemInfo *patterndata,int nums,LPBYTE address)
 int g_packetLenMap_table[ROPACKET_MAXLEN];
 int g_packetLenMap_table_index = 0;
 
+int GetPacketLength(int opcode)
+{
+	int result = -1;
+
+	if( g_packetLenMap_table_index >= opcode )
+	{
+		result = g_packetLenMap_table[ opcode ];
+	}
+	return result;
+}
+
 int GetTreeData(p_std_map_packetlen* node) 
 {
 	if ( node->parent == NULL || node->key >= ROPACKET_MAXLEN || node->key == 0)
@@ -143,7 +568,56 @@ int GetTreeData(p_std_map_packetlen* node)
 	return g_packetLenMap_table_index;
 }
 
+#define PACKETQUEUE_BUFFERSIZE 40960
+char packetqueuebuffer[PACKETQUEUE_BUFFERSIZE];
+unsigned int packetqueue_head = 0;
 
+void PacketQueueProc(char *buf,int len)
+{
+	if( len > 0 ){
+		if( packetqueue_head + len >= PACKETQUEUE_BUFFERSIZE ){
+			kDD_LOGGING2( ("packet buffer has overflowed.\n") );
+			return;
+		}
+		memcpy( &packetqueuebuffer[packetqueue_head] , buf,
+			len);
+		packetqueue_head += len;
+		while( packetqueue_head > 1 ){
+			unsigned short opcode = *(unsigned short*)packetqueuebuffer;
+			unsigned int packetlength;
+
+			if( packetqueue_head == 4 && len == 4 ){
+				packetlength = 4;
+			}else{
+				packetlength = GetPacketLength( opcode );
+				if( packetlength == -1 ){
+					if( packetqueue_head < 4 )break;
+					packetlength = *(unsigned int*)packetqueuebuffer;
+					packetlength >>= 16;
+				}
+			}
+			if( packetqueue_head >= packetlength ){
+				if( g_pSharedData && g_pSharedData->write_packetlog ){
+					std::stringstream str;
+					str << "[" << std::setfill('0') << std::setw(8) << timeGetTime() << "] R ";
+					for(int ii = 0;ii < (int)packetlength ;ii++)
+						str << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << (int)(unsigned char)packetqueuebuffer[ii] << " ";
+					str << std::flush;
+					//kDD_LOGGING2( ("Opcode %04X size = %d / %d\n",opcode,packetlength,packetqueue_head) );
+					kDD_LOGGING2(( str.str().c_str() ));
+				}
+
+				packetqueue_head -= packetlength;
+				if( packetqueue_head ){
+					memmove( packetqueuebuffer, &packetqueuebuffer[packetlength],
+						packetqueue_head );
+				}
+			}else{
+				break;
+			}
+		}
+	}
+}
 
 
 
@@ -661,7 +1135,7 @@ void SearchRagexeMemory(void)
 			int packetnums = GetTreeData( packetLenMap->parent );
 			if( packetnums ){
 				std::stringstream onelinestr;
-				for(int ii = 0;ii <= packetnums ;ii++){
+				for(int ii = 0;ii < packetnums ;ii++){
 					if( (ii % 0x40)==0 ){
 						onelinestr << "# 0x" << std::setfill('0') << std::setw(4) << std::hex << ii;
 						kDD_LOGGING2(( onelinestr.str().c_str() ));

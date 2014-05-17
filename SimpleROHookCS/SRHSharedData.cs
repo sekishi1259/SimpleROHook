@@ -17,6 +17,7 @@ namespace SimpleROHookCS
 
             public int executeorder;
 
+            public int write_packetlog;
             public int freemouse;
             public int m2e;
             public int fix_windowmode_vsyncwait;
@@ -34,7 +35,7 @@ namespace SimpleROHookCS
 
         public SRHSharedData()
         {
-            m_Mmf = MemoryMappedFile.CreateNew(@"SimpleROHook1006",
+            m_Mmf = MemoryMappedFile.CreateNew(@"SimpleROHook1008",
                 Marshal.SizeOf(typeof(StSHAREDMEMORY)),
                 MemoryMappedFileAccess.ReadWrite);
             if (m_Mmf == null)
@@ -45,6 +46,7 @@ namespace SimpleROHookCS
             m_Accessor.SafeMemoryMappedViewHandle.AcquirePointer(ref p);
             m_pSharedMemory = (StSHAREDMEMORY*)p;
 
+            write_packetlog = false;
             freemouse = false;
             m2e = false;
             fix_windowmode_vsyncwait = false;
@@ -63,6 +65,17 @@ namespace SimpleROHookCS
             m_Mmf.Dispose();
         }
 
+        public bool write_packetlog
+        {
+            get
+            {
+                return (m_pSharedMemory->write_packetlog == 0) ? false : true;
+            }
+            set
+            {
+                m_pSharedMemory->write_packetlog = (value == false) ? 0 : 1;
+            }
+        }
         public bool freemouse
         {
             get

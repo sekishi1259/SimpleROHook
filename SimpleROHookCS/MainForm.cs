@@ -32,6 +32,8 @@ namespace SimpleROHookCS
 
                     configration = (Config)serializer.Deserialize(reader);
 
+                    m_SharedData.write_packetlog
+                        = configration.write_packetlog;
                     m_SharedData.freemouse
                         = configration.freemouse;
                     m_SharedData.m2e
@@ -58,6 +60,8 @@ namespace SimpleROHookCS
                 var configration = new Config();
                 var serializer = new XmlSerializer(typeof(Config));
 
+                configration.write_packetlog
+                    = m_SharedData.write_packetlog;
                 configration.freemouse
                     = m_SharedData.freemouse;
                 configration.m2e
@@ -92,7 +96,7 @@ namespace SimpleROHookCS
         {
             string musicfilename = m_SharedData.musicfilename;
             var openFileDialog = new OpenFileDialog();
-            openFileDialog.Title = "Ragnarok Online JukeBox";
+            openFileDialog.Title = "Ragnarok Online BGM";
             openFileDialog.InitialDirectory = musicfilename;
             openFileDialog.CheckFileExists = true;
             openFileDialog.Multiselect = false;
@@ -162,6 +166,12 @@ namespace SimpleROHookCS
             m_SharedData._44khz_audiomode = tsm.Checked;
         }
 
+        private void packetLogToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var tsm = (ToolStripMenuItem)sender;
+            m_SharedData.write_packetlog = tsm.Checked;
+        }
+
         private void freeMouseToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var tsm = (ToolStripMenuItem)sender;
@@ -205,12 +215,14 @@ namespace SimpleROHookCS
         }
 
 
+
     }
 
     public class Config
     {
         public Config()
         {
+            write_packetlog = false;
             freemouse = false;
             m2e = true;
             fix_windowmode_vsyncwait = true;
@@ -220,6 +232,7 @@ namespace SimpleROHookCS
             cpucoolerlevel = 0;
         }
 
+        public bool write_packetlog { get; set; }
         public bool freemouse { get; set; }
         public bool m2e { get; set; }
         public bool fix_windowmode_vsyncwait { get; set; }

@@ -1,8 +1,5 @@
 #include "ProxyHelper.h"
-#include "SFastFont.h"
 
-#define D3DCOLOR_ARGB(a,r,g,b) \
-	((D3DCOLOR)((((a)&0xff)<<24)|(((r)&0xff)<<16)|(((g)&0xff)<<8)|((b)&0xff)))
 
 #define CLASSNAME "IDirectDraw7"
 class CProxy_IDirectDraw7 : public IDirectDraw7{
@@ -12,16 +9,12 @@ private:
 	DWORD					PrimarySurfaceFlag;
 	IDirectDrawSurface7*	TargetSurface;
 public:
-	static IDirectDraw7*    StaticInstance;
 	static CProxy_IDirectDraw7*    lpthis;
-	IDirectDrawSurface7*    OffScreenSurface;
 
 	CProxy_IDirectDraw7(IDirectDraw7* ptr);
-	//: Instance(ptr), CooperativeLevel(0), PrimarySurfaceFlag(0), TargetSurface(NULL) {}
 	~CProxy_IDirectDraw7();
 	
 	static CProxy_IDirectDraw7* getLPProxyIDirectDraw7(void){return lpthis;};
-	static IDirectDraw7*        getLPIDirectDraw7(void){return StaticInstance;};
 	void   setThis(CProxy_IDirectDraw7* _lpthis){lpthis = _lpthis;};
 
 	/*** IUnknown methods ***/
@@ -103,9 +96,8 @@ public:
 class CProxy_IDirectDrawSurface7 : public IDirectDrawSurface7{
 private:
 	IDirectDrawSurface7* m_Instance;
-	IDirectDrawSurface7* m_BackSurface;
 public:
-	CProxy_IDirectDrawSurface7(IDirectDrawSurface7* ptr) : m_Instance(ptr), m_BackSurface(NULL) {}
+	CProxy_IDirectDrawSurface7(IDirectDrawSurface7* ptr) : m_Instance(ptr) {}
 
 	/*** IUnknown methods ***/
 	STDMETHOD(QueryInterface) (THIS_ REFIID p1, LPVOID FAR * p2)	PROXY2(QueryInterface)
@@ -124,14 +116,8 @@ public:
 	STDMETHOD(DeleteAttachedSurface)(THIS_ DWORD p1, LPDIRECTDRAWSURFACE7 p2)					PROXY2(DeleteAttachedSurface)
 	STDMETHOD(EnumAttachedSurfaces)(THIS_ LPVOID p1, LPDDENUMSURFACESCALLBACK7 p2)				PROXY2(EnumAttachedSurfaces)
 	STDMETHOD(EnumOverlayZOrders)(THIS_ DWORD p1, LPVOID p2, LPDDENUMSURFACESCALLBACK7 p3)		PROXY3(EnumOverlayZOrders)
-	STDMETHOD(Flip)(THIS_ LPDIRECTDRAWSURFACE7 p1, DWORD p2)
-	{
-		return Proxy_Flip(p1, p2);
-	}
-	STDMETHOD(GetAttachedSurface)(THIS_ LPDDSCAPS2 p1, LPDIRECTDRAWSURFACE7 FAR * p2)
-	{
-		return Proxy_GetAttachedSurface(p1, p2);
-	}
+	STDMETHOD(Flip)(THIS_ LPDIRECTDRAWSURFACE7 p1, DWORD p2)									PROXY2(Flip)
+	STDMETHOD(GetAttachedSurface)(THIS_ LPDDSCAPS2 p1, LPDIRECTDRAWSURFACE7 FAR * p2)			PROXY2(GetAttachedSurface)
 	STDMETHOD(GetBltStatus)(THIS_ DWORD p1)										PROXY1(GetBltStatus)
 	STDMETHOD(GetCaps)(THIS_ LPDDSCAPS2 p1)										PROXY1(GetCaps)
 	STDMETHOD(GetClipper)(THIS_ LPDIRECTDRAWCLIPPER FAR* p1)					PROXY1(GetClipper)
@@ -174,13 +160,6 @@ public:
 	STDMETHOD(GetPriority)(THIS_ LPDWORD p1)			PROXY1(GetPriority)
 	STDMETHOD(SetLOD)(THIS_ DWORD p1)					PROXY1(SetLOD)
 	STDMETHOD(GetLOD)(THIS_ LPDWORD p1)					PROXY1(GetLOD)
-
-
-	//
-	// Proxy Functions
-	//
-	HRESULT Proxy_Flip(LPDIRECTDRAWSURFACE7 p1, DWORD p2);
-	HRESULT Proxy_GetAttachedSurface(LPDDSCAPS2 p1, LPDIRECTDRAWSURFACE7 FAR * p2);
 };
 #undef CLASSNAME
 
@@ -192,13 +171,14 @@ class CProxy_IDirect3DDevice7 : public IDirect3DDevice7{
 private:
 	IDirect3DDevice7*			m_Instance;
 	IDirectDrawSurface7*	TargetSurface;
-	enum{
+	enum enDRAWSTATUS{
 		enDRAW3D = 0,
 		enDRAWSPR,
 		enDRAWGUI
 	};
-	int                     m_DrawState;
+	enDRAWSTATUS			m_DrawState;
 	BOOL					m_firstonce;
+	BOOL					m_frameonce;
 public:
 
 	CProxy_IDirect3DDevice7(IDirect3DDevice7* ptr,IDirectDrawSurface7* psf) : m_Instance(ptr), TargetSurface(psf), m_firstonce(true) {}
@@ -220,33 +200,20 @@ public:
 	/*** IDirect3DDevice7 methods ***/
 	STDMETHOD(GetCaps)(THIS_ LPD3DDEVICEDESC7 p1) PROXY1(GetCaps)
 	STDMETHOD(EnumTextureFormats)(THIS_ LPD3DENUMPIXELFORMATSCALLBACK p1,LPVOID p2) PROXY2(EnumTextureFormats)
-//    STDMETHOD(BeginScene)(THIS) PROXY0(BeginScene)
-//    STDMETHOD(EndScene)(THIS) PROXY0(EndScene)
-	STDMETHOD(BeginScene)(THIS)
-	{
-		return Proxy_BeginScene();
-	};
-	STDMETHOD(EndScene)(THIS)
-	{
-		return Proxy_EndScene();
-	};
+
+	//    STDMETHOD(BeginScene)(THIS) PROXY0(BeginScene)
+	STDMETHOD(BeginScene)(THIS)	{ return Proxy_BeginScene(); };
+
+	//    STDMETHOD(EndScene)(THIS) PROXY0(EndScene)
+	STDMETHOD(EndScene)(THIS) {	return Proxy_EndScene(); };
+
 	STDMETHOD(GetDirect3D)(THIS_ LPDIRECT3D7* p1) PROXY1(GetDirect3D)
 	STDMETHOD(SetRenderTarget)(THIS_ LPDIRECTDRAWSURFACE7 p1,DWORD p2) PROXY2(SetRenderTarget)
 	STDMETHOD(GetRenderTarget)(THIS_ LPDIRECTDRAWSURFACE7 *p1) PROXY1(GetRenderTarget)
-//    STDMETHOD(Clear)(THIS_ DWORD p1,LPD3DRECT p2,DWORD p3,D3DCOLOR p4,D3DVALUE p5,DWORD p6) PROXY6(Clear)
-	STDMETHOD(Clear)(THIS_ DWORD p1,LPD3DRECT p2,DWORD p3,D3DCOLOR p4,D3DVALUE p5,DWORD p6)
-	{
-		return Proxy_Clear(p1,p2,p3,p4,p5,p6);
-	}
-
+    STDMETHOD(Clear)(THIS_ DWORD p1,LPD3DRECT p2,DWORD p3,D3DCOLOR p4,D3DVALUE p5,DWORD p6) PROXY6(Clear)
     STDMETHOD(SetTransform)(THIS_ D3DTRANSFORMSTATETYPE p1,LPD3DMATRIX p2) PROXY2(SetTransform)
 	STDMETHOD(GetTransform)(THIS_ D3DTRANSFORMSTATETYPE p1,LPD3DMATRIX p2) PROXY2(GetTransform)
-
-//    STDMETHOD(SetViewport)(THIS_ LPD3DVIEWPORT7 p1) PROXY1(SetViewport)
-	STDMETHOD(SetViewport)(THIS_ LPD3DVIEWPORT7 p1)
-	{
-		return Proxy_SetViewport(p1);
-	};
+	STDMETHOD(SetViewport)(THIS_ LPD3DVIEWPORT7 p1) PROXY1(SetViewport)
 
 	STDMETHOD(MultiplyTransform)(THIS_ D3DTRANSFORMSTATETYPE p1,LPD3DMATRIX p2) PROXY2(MultiplyTransform)
 	STDMETHOD(GetViewport)(THIS_ LPD3DVIEWPORT7 p1) PROXY1(GetViewport)
@@ -254,20 +221,15 @@ public:
 	STDMETHOD(GetMaterial)(THIS_ LPD3DMATERIAL7 p1) PROXY1(GetMaterial)
 	STDMETHOD(SetLight)(THIS_ DWORD p1,LPD3DLIGHT7 p2) PROXY2(SetLight)
 	STDMETHOD(GetLight)(THIS_ DWORD p1,LPD3DLIGHT7 p2) PROXY2(GetLight)
-//    STDMETHOD(SetRenderState)(THIS_ D3DRENDERSTATETYPE p1,DWORD p2) PROXY2(SetRenderState)
-	STDMETHOD(SetRenderState)(THIS_ D3DRENDERSTATETYPE p1,DWORD p2)
-	{
-		return Proxy_SetRenderState(p1,p2);
-	}
+
+	//STDMETHOD(SetRenderState)(THIS_ D3DRENDERSTATETYPE p1,DWORD p2) PROXY2(SetRenderState)
+	STDMETHOD(SetRenderState)(THIS_ D3DRENDERSTATETYPE p1,DWORD p2) {return Proxy_SetRenderState(p1,p2);}
+
 	STDMETHOD(GetRenderState)(THIS_ D3DRENDERSTATETYPE p1,LPDWORD p2) PROXY2(GetRenderState)
 	STDMETHOD(BeginStateBlock)(THIS) PROXY0(BeginStateBlock)
 	STDMETHOD(EndStateBlock)(THIS_ LPDWORD p1) PROXY1(EndStateBlock)
 	STDMETHOD(PreLoad)(THIS_ LPDIRECTDRAWSURFACE7 p1) PROXY1(PreLoad)
-	//STDMETHOD(DrawPrimitive)(THIS_ D3DPRIMITIVETYPE p1,DWORD p2,LPVOID p3,DWORD p4,DWORD p5) PROXY5(DrawPrimitive)
-	STDMETHOD(DrawPrimitive)(THIS_ D3DPRIMITIVETYPE p1,DWORD p2,LPVOID p3,DWORD p4,DWORD p5)
-	{
-		return Proxy_DrawPrimitive(p1,p2,p3,p4,p5);
-	}	
+	STDMETHOD(DrawPrimitive)(THIS_ D3DPRIMITIVETYPE p1,DWORD p2,LPVOID p3,DWORD p4,DWORD p5) PROXY5(DrawPrimitive)
 	//
 	STDMETHOD(DrawIndexedPrimitive)(THIS_ D3DPRIMITIVETYPE p1,DWORD p2,LPVOID p3,DWORD p4,LPWORD p5,DWORD p6,DWORD p7) PROXY7(DrawIndexedPrimitive)
 	STDMETHOD(SetClipStatus)(THIS_ LPD3DCLIPSTATUS p1) PROXY1(SetClipStatus)
@@ -278,11 +240,7 @@ public:
 	STDMETHOD(DrawIndexedPrimitiveVB)(THIS_ D3DPRIMITIVETYPE p1,LPDIRECT3DVERTEXBUFFER7 p2,DWORD p3,DWORD p4,LPWORD p5,DWORD p6,DWORD p7) PROXY7(DrawIndexedPrimitiveVB)
 	STDMETHOD(ComputeSphereVisibility)(THIS_ LPD3DVECTOR p1,LPD3DVALUE p2,DWORD p3,DWORD p4,LPDWORD p5) PROXY5(ComputeSphereVisibility)
 	STDMETHOD(GetTexture)(THIS_ DWORD p1,LPDIRECTDRAWSURFACE7 *p2) PROXY2(GetTexture)
-	STDMETHOD(SetTexture)(THIS_ DWORD p1,LPDIRECTDRAWSURFACE7 p2)
-	{
-		return Proxy_SetTexture(p1,p2);
-	}
-//    STDMETHOD(SetTexture)(THIS_ DWORD p1,LPDIRECTDRAWSURFACE7 p2) PROXY2(SetTexture)
+	STDMETHOD(SetTexture)(THIS_ DWORD p1,LPDIRECTDRAWSURFACE7 p2) PROXY2(SetTexture)
 	STDMETHOD(GetTextureStageState)(THIS_ DWORD p1,D3DTEXTURESTAGESTATETYPE p2,LPDWORD p3) PROXY3(GetTextureStageState)
 	STDMETHOD(SetTextureStageState)(THIS_ DWORD p1,D3DTEXTURESTAGESTATETYPE p2,DWORD p3) PROXY3(SetTextureStageState)
 	STDMETHOD(ValidateDevice)(THIS_ LPDWORD p1) PROXY1(ValidateDevice)
@@ -301,13 +259,9 @@ public:
 	//
 	// Proxy Functions
 	//
-	HRESULT Proxy_Clear(DWORD     dwCount,LPD3DRECT lpRects,DWORD     dwFlags,DWORD     dwColor,D3DVALUE  dvZ,DWORD     dwStencil);
-	HRESULT Proxy_DrawPrimitive(D3DPRIMITIVETYPE dptPrimitiveType,DWORD  dwVertexTypeDesc,LPVOID lpvVertices,DWORD  dwVertexCount,DWORD  dwFlags);
+	HRESULT Proxy_SetRenderState(THIS_ D3DRENDERSTATETYPE dwRenderStateType,DWORD dwRenderState);
 	HRESULT Proxy_BeginScene(void);
 	HRESULT Proxy_EndScene(void);
-	HRESULT Proxy_SetViewport(THIS_ LPD3DVIEWPORT7 lpViewport);
-	HRESULT Proxy_SetRenderState(THIS_ D3DRENDERSTATETYPE dwRenderStateType,DWORD dwRenderState);
-	HRESULT Proxy_SetTexture(THIS_ DWORD p1,LPDIRECTDRAWSURFACE7 p2);
 };
 #undef CLASSNAME
 

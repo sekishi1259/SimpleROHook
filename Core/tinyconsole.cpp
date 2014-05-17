@@ -12,14 +12,34 @@ HINSTANCE g_hTCInstance;
 #define IDC_RICHEDIT (101)
 
 TCHAR strPath[MAX_PATH + 1];
-HINSTANCE	hRtLib;
-HWND		hRichEdit = NULL;
+HINSTANCE	s_hRtLib;
+HWND		s_hRichEdit = NULL;
 HANDLE g_hTinyConsole = NULL;
 HANDLE g_hDebugConsole = NULL;
 
 UINT __stdcall TinyConsole(LPVOID lpArg);
 
+class CTinylogger
+{
+private:
+	std::ofstream ofs;
+public:
+	CTinylogger()
+	{
+		ofs.open("_simplerohook.log");
+	}
 
+	void operator<<(char *str)
+	{
+		ofs << str;
+	}
+	virtual ~CTinylogger()
+	{
+		ofs.close();
+	};
+};
+
+CTinylogger *s_pTinyLogger = NULL;
 
 void DebugLogA(const char* format, ...) 
 {
@@ -31,11 +51,14 @@ void DebugLogA(const char* format, ...)
 	vsprintf_s(buf,length + 2, format, argptr );
 	strcat_s(buf,length + 2,"\n");
 
-	if( hRichEdit ){
-		int len = ::GetWindowTextLength(hRichEdit);
+	if( s_pTinyLogger )
+		*s_pTinyLogger << buf;
 
-		::SendMessage( hRichEdit, EM_SETSEL, (WPARAM)len, (LPARAM)len );
-		::SendMessage( hRichEdit, EM_REPLACESEL, 0, (LPARAM)buf );
+	if( s_hRichEdit ){
+		int len = ::GetWindowTextLength(s_hRichEdit);
+
+		::SendMessage( s_hRichEdit, EM_SETSEL, (WPARAM)len, (LPARAM)len );
+		::SendMessage( s_hRichEdit, EM_REPLACESEL, 0, (LPARAM)buf );
 	}
 
 	delete[] buf;
@@ -56,6 +79,7 @@ void CreateTinyConsole(void)
 		::SetEvent( g_hTinyConsole );
 		::WaitForSingleObject( g_hTinyConsole , INFINITE );
 	}
+	s_pTinyLogger = new CTinylogger;
 }
 void ReleaseTinyConsole(void)
 {
@@ -64,6 +88,8 @@ void ReleaseTinyConsole(void)
 	if( g_hTinyConsole )
 		::CloseHandle( g_hTinyConsole );
 
+	if( s_pTinyLogger )
+		delete s_pTinyLogger;
 }
 
 LRESULT CALLBACK TinyConsoleWinProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
@@ -74,8 +100,8 @@ LRESULT CALLBACK TinyConsoleWinProc( HWND hWnd, UINT message, WPARAM wParam, LPA
 		{
 			::GetSystemDirectory(strPath , MAX_PATH + 1);
 			wsprintf(strPath, TEXT("%s\\%s"), strPath, _TEXT("RICHED20.DLL"));
-			hRtLib = ::LoadLibrary((LPCTSTR)strPath);
-			hRichEdit = ::CreateWindowEx(WS_EX_CLIENTEDGE,
+			s_hRtLib = ::LoadLibrary((LPCTSTR)strPath);
+			s_hRichEdit = ::CreateWindowEx(WS_EX_CLIENTEDGE,
 					_T("RichEdit20A"),
 					_T(""),
 					WS_CHILD | WS_VISIBLE | WS_BORDER | ES_MULTILINE | WS_HSCROLL |
@@ -89,9 +115,9 @@ LRESULT CALLBACK TinyConsoleWinProc( HWND hWnd, UINT message, WPARAM wParam, LPA
 			DWORD dwLangOptions;
 			CHARFORMAT  cfm;    // CHARFORMAT structure
 
-			dwLangOptions = ::SendMessage(hRichEdit, EM_GETLANGOPTIONS, 0, 0);
+			dwLangOptions = ::SendMessage(s_hRichEdit, EM_GETLANGOPTIONS, 0, 0);
             dwLangOptions &= ~IMF_DUALFONT;
-            ::SendMessage(hRichEdit, EM_SETLANGOPTIONS, 0, (LPARAM)dwLangOptions);
+            ::SendMessage(s_hRichEdit, EM_SETLANGOPTIONS, 0, (LPARAM)dwLangOptions);
 
 			memset(&cfm, 0, sizeof(CHARFORMAT));
             cfm.cbSize = sizeof(CHARFORMAT);
@@ -105,23 +131,18 @@ LRESULT CALLBACK TinyConsoleWinProc( HWND hWnd, UINT message, WPARAM wParam, LPA
 			cfm.crTextColor = RGB(0, 0, 0);
 			cfm.dwEffects = 0;
 
-            ::SendMessage(hRichEdit,
+            ::SendMessage(s_hRichEdit,
                     EM_SETCHARFORMAT,
                     SCF_SELECTION | SCF_WORD,
                     (LPARAM)&cfm);
-			::SendMessage( hRichEdit, EM_REPLACESEL, FALSE, (LPARAM)(LPCTSTR)_T("hook enable.\n") );
-			{
-				char str[256];
-				sprintf(str,"g_hMapObject=%08X g_pSharedData=%08X",g_hMapObject,g_pSharedData);
-				::SendMessage( hRichEdit, EM_REPLACESEL, FALSE, (LPARAM)(LPCTSTR)str );
-			}
+			::SendMessage( s_hRichEdit, EM_REPLACESEL, FALSE, (LPARAM)(LPCTSTR)_T("hook enable.\n") );
 			if( g_hTinyConsole ){
 				::SetEvent( g_hTinyConsole );
 			}
 		}
 		break;
 	case WM_SIZE:
-		::MoveWindow(hRichEdit, 0, 0, LOWORD(lParam), HIWORD(lParam), TRUE);
+		::MoveWindow(s_hRichEdit, 0, 0, LOWORD(lParam), HIWORD(lParam), TRUE);
 		break;
 	default:
 		return ::DefWindowProc( hWnd, message, wParam, lParam );

@@ -19,6 +19,20 @@
 #include "ro/task.h"
 
 #define D3DFVF_CPOLVERTEX (D3DFVF_XYZRHW|D3DFVF_DIFFUSE)
+#define D3DCOLOR_ARGB(a,r,g,b) \
+	((D3DCOLOR)((((a)&0xff)<<24)|(((r)&0xff)<<16)|(((g)&0xff)<<8)|((b)&0xff)))
+
+void InitRODraw(IDirect3DDevice7* d3ddevice);
+void ReleaseRODraw(void);
+
+void LoadIni(void);
+void DrawM2E(IDirect3DDevice7* d3ddevice);
+
+void DrawOn3DMap(IDirect3DDevice7* d3ddevice);
+void DrawSRHDebug(IDirect3DDevice7* d3ddevice);
+
+void PacketQueueProc(char *buf,int len);
+
 
 struct VERTEX {
 	FLOAT x, y, z, rhw; // The transformed position for the vertex

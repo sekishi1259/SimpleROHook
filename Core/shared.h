@@ -1,6 +1,6 @@
 #pragma once
 
-#define kSHAREDMEMORY_OBJECTNAME _T("SimpleROHook1006")
+#define kSHAREDMEMORY_OBJECTNAME _T("SimpleROHook1008")
 
 typedef struct _StSHAREDMEMORY{
 //	DWORD	used_flag;
@@ -8,6 +8,8 @@ typedef struct _StSHAREDMEMORY{
 
 	DWORD	executeorder;
 
+
+	BOOL	write_packetlog;
 	BOOL	freemouse; 
 	BOOL	m2e; 
 	BOOL	fix_windowmode_vsyncwait;

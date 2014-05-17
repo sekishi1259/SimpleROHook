@@ -28,6 +28,7 @@ HRESULT CProxy_IDirectInput7::Proxy_CreateDevice(THIS_ REFGUID rguid,LPDIRECTINP
 	return Result;
 }
 
+extern DWORD g_MonitorRefreshRate;
 extern DWORD g_ROmouse;
 HWND g_HWND = NULL;
 /*

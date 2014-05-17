@@ -8,6 +8,8 @@
 #include "ProxyDirectDraw.h"
 #include "ProxyDirectInput.h"
 
+
+
 template <typename T>
 BOOL InstallProxyFunction(LPCTSTR dllname,LPCTSTR exportname,T ProxyFunction,T *pOriginalFunction)
 {
@@ -18,7 +20,6 @@ BOOL InstallProxyFunction(LPCTSTR dllname,LPCTSTR exportname,T ProxyFunction,T *
 	HINSTANCE hDll;
 	::GetSystemDirectory( systemdir, MAX_PATH);
 
-	//fullpath.Format(_T("%s\\%s"), systemdir, dllname);
 	fullpath << systemdir << "\\" << dllname;
 	hDll = ::LoadLibrary(fullpath.str().c_str() );
 
@@ -27,6 +28,7 @@ BOOL InstallProxyFunction(LPCTSTR dllname,LPCTSTR exportname,T ProxyFunction,T *
 
 	BYTE *p = (BYTE*)::GetProcAddress( hDll, exportname);
 
+	kDD_LOGGING2( ("hook %s:%s(%08X)\n",dllname,exportname,p) );
 	if( p )
 	{
 		if(     p[ 0] == 0x8b && p[ 1] == 0xff &&
@@ -45,6 +47,7 @@ BOOL InstallProxyFunction(LPCTSTR dllname,LPCTSTR exportname,T ProxyFunction,T *
 			{
 				p[-5] = 0xe9;              // jmp
 				p[ 0] = 0xeb; p[ 1] = 0xf9;// jmp short [pc-7]
+kDD_LOGGING2( ("hook type a\n") );
 
 				*pOriginalFunction = (T)&p[2];
 				*((DWORD*)&p[-4])  = (DWORD)ProxyFunction - (DWORD)&p[-5] -5;
@@ -64,8 +67,33 @@ BOOL InstallProxyFunction(LPCTSTR dllname,LPCTSTR exportname,T ProxyFunction,T *
 			{
 				*pOriginalFunction = (T)(*((DWORD*)&p[-4]) + (DWORD)&p[-5] +5);
 				*((DWORD*)&p[-4])  = (DWORD)ProxyFunction - (DWORD)&p[-5] -5;
+kDD_LOGGING2( ("hook type b\n") );
 
 				::VirtualProtect( (LPVOID)&p[-5], 7 , flOldProtect, &flDontCare);
+				result = TRUE;
+			}
+		}else
+		if(     p[ 0] == 0xe9 &&
+			( ( p[-5] == 0x90 && p[-4] == 0x90 && p[-3] == 0x90 && p[-2] == 0x90 && p[-1] == 0x90 ) || 
+			  ( p[-5] == 0xcc && p[-4] == 0xcc && p[-3] == 0xcc && p[-2] == 0xcc && p[-1] == 0xcc ) )  )
+		{
+			// find irregular hook code. case by iro
+			//
+			// 9090909090 nop  x 5
+			// e9******** jmp  im4byte 
+			//       or
+			// cccccccccc int 3 x 5
+			// e9******** jmp  im4byte
+			DWORD flOldProtect, flDontCare;
+			if ( ::VirtualProtect(   (LPVOID)&p[0], 5 , PAGE_READWRITE, &flOldProtect) )
+			{
+				*pOriginalFunction = (T)(*((DWORD*)&p[1]) + (DWORD)&p[0] +5);
+
+				*((DWORD*)&p[1])  = (DWORD)ProxyFunction - (DWORD)&p[0] -5;
+
+kDD_LOGGING2( ("hook type c\n") );
+
+				::VirtualProtect( (LPVOID)&p[0], 5 , flOldProtect, &flDontCare);
 				result = TRUE;
 			}
 		}
@@ -142,34 +170,19 @@ tDirectDrawCreateEx OrigDirectDrawCreateEx = NULL;
 tDirectInputCreateA OrigDirectInputCreateA = NULL;
 tWS32_recv OrigWS32_recv = NULL;
 
-//tPeekMessageA OrigPeekMessageA = NULL;
-//
-//BOOL WINAPI ProxyPeekMessageA(
-//	LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg)
-//{
-//	return OrigPeekMessageA(lpMsg,hWnd,wMsgFilterMin,wMsgFilterMax,wRemoveMsg);
-//}
 
 int WSAAPI ProxyWS32_recv( SOCKET s, char *buf,int len,int flags )
 {
 	int result;
 
 	result = OrigWS32_recv(s,buf,len,flags);
-	if( result >= 2 ){
-		kDD_LOGGING2( ("recv [0]=%02X [1]=%02X\n",(unsigned char)buf[0],(unsigned char)buf[1]) );
-	}
+	//if( result >= 2 )
+	//	kDD_LOGGING2( ("recv len %d [0]=%02X [1]=%02X\n",result,(unsigned char)buf[0],(unsigned char)buf[1]) );
+	PacketQueueProc( buf,result );
+
 	return result;
 }
 
-void hook_ws2_32_recv(void)
-{
-	if( InstallProxyFunction( _T("ws2_32.dll"), _T("recv"), ProxyWS32_recv, &OrigWS32_recv ) )
-	{
-		MessageBox(NULL,"ws2_32 hook enable","debug",MB_OK);
-	}else{
-		MessageBox(NULL,"ws2_32 hook failed","debug",MB_OK);
-	}
-}
 
 
 
@@ -225,13 +238,6 @@ BOOL IsRagnarokApp(void)
 	if( _tcsicmp( filename, _T("Ragexe.exe") ) == 0
 	 || _tcsicmp( filename, _T("Sakexe.exe") ) == 0
 	 || _tcsicmp( filename, _T("clragexe.exe") ) == 0
-	 || _tcsicmp( filename, _T("2011-11-22_Ragexe.exe") ) == 0
-	 || _tcsicmp( filename, _T("2011-12-01aRagexe.exe") ) == 0
-	 || _tcsicmp( filename, _T("2012-8-21data_gm_r_Ragexe.exe") ) == 0
-	 || _tcsicmp( filename, _T("2012-8-16data_gm_r_Ragexe.exe") ) == 0
-	 || _tcsicmp( filename, _T("2012-8-16data_gm_r_clragexe.exe") ) == 0
-	 || _tcsicmp( filename, _T("2012-11-15data_gm_Ragexe.exe") ) == 0
-	 || _tcsicmp( filename, _T("F2P_Ragexe.exe") ) == 0
 	 || _tcsicmp( filename, _T("RagFree.exe") ) == 0
 	 || _tcsicmp( filename, _T("HighPriest.exe") ) == 0
 		)
@@ -260,20 +266,24 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			::DisableThreadLibraryCalls( hModule );
 			CreateTinyConsole();
 			OpenSharedMemory();
-			//::MessageBox(NULL,_T("DLL_PROCESS_ATTACH"),_T("debug"),MB_OK);
-			InstallProxyFunction( _T("ddraw.dll"),  _T("DirectDrawCreateEx"), ProxyDirectDrawCreateEx, &OrigDirectDrawCreateEx );
-			InstallProxyFunction( _T("dinput.dll"), _T("DirectInputCreateA"), ProxyDirectInputCreateA, &OrigDirectInputCreateA );
-			//InstallProxyFunction( _T("ws2_32.dll"), _T("recv"), ProxyWS32_recv, &OrigWS32_recv );
+
+			InstallProxyFunction(
+				_T("ddraw.dll"),  _T("DirectDrawCreateEx"), 
+				ProxyDirectDrawCreateEx, &OrigDirectDrawCreateEx );
+			InstallProxyFunction(
+				_T("dinput.dll"), _T("DirectInputCreateA"),
+				ProxyDirectInputCreateA, &OrigDirectInputCreateA );
+			InstallProxyFunction(
+				_T("ws2_32.dll"), _T("recv"),
+				ProxyWS32_recv, &OrigWS32_recv );
 
 			if( g_pSharedData ){
 				::GetCurrentDirectory(MAX_PATH,temppath);
 				strcat_s( temppath,"\\BGM\\");
-				//
+
 				::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,
 					temppath,strlen(temppath)+1,
 					g_pSharedData->musicfilename,MAX_PATH);
-				//strcpy_s( g_pSharedData->musicfilename,temppath );
-				//MessageBox(NULL,g_pSharedData->musicfilename,"BGM path",MB_OK);
 				g_MouseFreeSw = g_pSharedData->freemouse;
 				if( g_pSharedData->_44khz_audiomode )
 					RagexeSoundRateFixer();

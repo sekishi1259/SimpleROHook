@@ -27,7 +27,6 @@
 #include <ddraw.h>
 #include <d3d.h>
 #include <dinput.h>
-
 /*
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS      // 一部の CString コンストラクターは明示的です。
 #include <atlbase.h>
@@ -44,3 +43,8 @@
 #include <array>
 #include <iostream>
 #include <iomanip>
+
+#include <fstream>
+
+#include <cwchar>
+#include <regex>
