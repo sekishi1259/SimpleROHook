@@ -1,10 +1,9 @@
 #include "stdafx.h"
 
-#include "shared.h"
-
 #include "tinyconsole.h"
-#include "RoCodeBind.h"
 #include "ProxyDirectInput.h"
+
+#include "Core/RoCodeBind.h"
 
 HRESULT CProxy_IDirectInput7::Proxy_CreateDevice(THIS_ REFGUID rguid,LPDIRECTINPUTDEVICEA *lpIDD,LPUNKNOWN pUnkOuter)
 {

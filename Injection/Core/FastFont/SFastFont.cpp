@@ -1,13 +1,11 @@
 #include "stdafx.h"
 #include "SFastFont.h"
-#include "tchar.h"
 
 //#define defDebugLog
 
 #ifndef  defDebugLog
 #define DPRINTF(a)
 #else
-#include <stdio.h>
 #define DPRINTF(a) OutputDebugFile a
 static void OutputDebugFile(LPCSTR format, ...);
 static void OutputDebugFile(LPCSTR format, ...)

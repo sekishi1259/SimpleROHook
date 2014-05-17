@@ -1,7 +1,7 @@
 #include "stdafx.h"
-#include "tinyconsole.h"
+#include "../tinyconsole.h"
 #include "RoCodeBind.h"
-#include "SFastFont.h"
+#include "FastFont/SFastFont.h"
 
 HANDLE         g_hMapObject = 0;
 StSHAREDMEMORY *g_pSharedData = 0;
@@ -509,37 +509,11 @@ struct p_std_map_packetlen
 };
 
 
-BOOL FindCallNear(DWORD calladdress,LPBYTE address)
-{
-	if( address[0] == 0xe8 ){
-		DWORD im_calladdress = *(DWORD*)&address[1];
-		// convert to immediate address 
-		im_calladdress += (DWORD)address + 5;
-
-		if( im_calladdress == calladdress )
-			return TRUE;
-	}
-	return FALSE;
-}
-
-BOOL PatternMatcher(StFindMemInfo *patterndata,int nums,LPBYTE address)
-{
-	for(int ii = 0;ii < nums;ii ++)
-	{
-		if( patterndata[ii].flag && ( patterndata[ii].x != address[ii] ) )
-			return FALSE;
-	}
-	return TRUE;
-}
-
-
-
 #define ROPACKET_MAXLEN 0x2000
 
 int g_packetLenMap_table[ROPACKET_MAXLEN];
 int g_packetLenMap_table_index = 0;
-
-int GetPacketLength(int opcode)
+ int GetPacketLength(int opcode)
 {
 	int result = -1;
 

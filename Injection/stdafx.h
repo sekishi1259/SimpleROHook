@@ -27,24 +27,21 @@
 #include <ddraw.h>
 #include <d3d.h>
 #include <dinput.h>
-/*
-#define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS      // 一部の CString コンストラクターは明示的です。
-#include <atlbase.h>
-#include <atlstr.h>
-#include <atlsimpcoll.h>
-#include <atlcoll.h>
-*/
 
 // TODO: プログラムに必要な追加ヘッダーをここで参照してください。
 #include <process.h>
 
-#include <string>
+
 #include <vector>
 #include <array>
+#include <list>
+#include <map>
+
 #include <iostream>
 #include <iomanip>
 
+#include <string>
+#include <sstream>
 #include <fstream>
 
 #include <cwchar>
-#include <regex>

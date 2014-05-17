@@ -13,7 +13,8 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{46651709-BCBF-4645-8CE6-11EBA347A529}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>Core</RootNamespace>
+    <RootNamespace>Injection</RootNamespace>
+    <ProjectName>Injection</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -53,14 +54,13 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;CORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;INJECTION_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
-      <ModuleDefinitionFile>core.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -70,7 +70,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;CORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;INJECTION_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
@@ -87,31 +87,31 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CacheInfo.h" />
-    <ClInclude Include="Core.h" />
-    <ClInclude Include="FastFont.h" />
+    <ClInclude Include="Core\FastFont\CacheInfo.h" />
+    <ClInclude Include="Hook.h" />
+    <ClInclude Include="Core\FastFont\FastFont.h" />
     <ClInclude Include="ProxyDirectDraw.h" />
     <ClInclude Include="ProxyDirectInput.h" />
     <ClInclude Include="ProxyHelper.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="RoCodeBind.h" />
-    <ClInclude Include="ro\map.h" />
-    <ClInclude Include="ro\mouse.h" />
-    <ClInclude Include="ro\object.h" />
-    <ClInclude Include="ro\res.h" />
-    <ClInclude Include="ro\system.h" />
-    <ClInclude Include="ro\task.h" />
-    <ClInclude Include="ro\ui.h" />
-    <ClInclude Include="ro\unit.h" />
-    <ClInclude Include="SFastFont.h" />
-    <ClInclude Include="shared.h" />
+    <ClInclude Include="Core\RoCodeBind.h" />
+    <ClInclude Include="Core\FastFont\SFastFont.h" />
+    <ClInclude Include="Core\ro\map.h" />
+    <ClInclude Include="Core\ro\mouse.h" />
+    <ClInclude Include="Core\ro\object.h" />
+    <ClInclude Include="Core\ro\res.h" />
+    <ClInclude Include="Core\ro\system.h" />
+    <ClInclude Include="Core\ro\task.h" />
+    <ClInclude Include="Core\ro\ui.h" />
+    <ClInclude Include="Core\ro\unit.h" />
+    <ClInclude Include="Core\shared.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="tinyconsole.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CacheInfo.cpp" />
-    <ClCompile Include="Core.cpp" />
+    <ClCompile Include="Core\FastFont\CacheInfo.cpp" />
+    <ClCompile Include="Hook.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -120,11 +120,11 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="FastFont.cpp" />
+    <ClCompile Include="Core\FastFont\FastFont.cpp" />
     <ClCompile Include="ProxyDirectDraw.cpp" />
     <ClCompile Include="ProxyDirectInput.cpp" />
-    <ClCompile Include="RoCodeBind.cpp" />
-    <ClCompile Include="SFastFont.cpp" />
+    <ClCompile Include="Core\RoCodeBind.cpp" />
+    <ClCompile Include="Core\FastFont\SFastFont.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -132,7 +132,7 @@
     <ClCompile Include="tinyconsole.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Core.rc" />
+    <ResourceCompile Include="Injection.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -3,10 +3,10 @@
 
 #include "tinyconsole.h"
 
-#include "RoCodeBind.h"
-
 #include "ProxyDirectDraw.h"
 #include "ProxyDirectInput.h"
+
+#include "Core/RoCodeBind.h"
 
 
 

@@ -1,6 +1,5 @@
 #pragma once
 
-//#define JRO_CLIENT_STRUCTURE
 
 struct ACTOR_COLOR {
 	unsigned char a;

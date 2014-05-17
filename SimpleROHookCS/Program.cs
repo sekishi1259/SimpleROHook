@@ -27,7 +27,7 @@ namespace SimpleROHookCS
             {
                 if (mutex.WaitOne(0, false))
                 {
-                    int hModule = LoadLibrary(@"Core.dll");
+                    int hModule = LoadLibrary(@"Injection.dll");
 
                     if (hModule == 0)
                     {

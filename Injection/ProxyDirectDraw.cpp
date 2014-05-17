@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "tinyconsole.h"
-#include "RoCodeBind.h"
 #include "ProxyDirectDraw.h"
+
+#include "Core/RoCodeBind.h"
 
 int g_executecount = 0;
 double g_VSyncWaitTick = 0.0;

@@ -1,10 +1,5 @@
 #include "stdafx.h"
 
-#include "RoCodeBind.h"
-
-extern HANDLE         g_hMapObject;
-extern StSHAREDMEMORY *g_pSharedData;
-
 
 HINSTANCE g_hTCInstance;
 

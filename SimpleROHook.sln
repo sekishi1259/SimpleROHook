@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core", "Core\Core.vcxproj", "{46651709-BCBF-4645-8CE6-11EBA347A529}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Injection", "Injection\Injection.vcxproj", "{46651709-BCBF-4645-8CE6-11EBA347A529}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleROHookCS", "SimpleROHookCS\SimpleROHookCS.csproj", "{DD2A9D1E-449E-4F85-B3CA-934212878CEA}"
 EndProject

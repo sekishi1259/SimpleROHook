@@ -2,12 +2,7 @@
 
 #include "shared.h"
 
-#include <iostream>
-#include <vector>
-#include <list>
-#include <string>
-#include <sstream>
-#include <map>
+//#define JRO_CLIENT_STRUCTURE
 
 #include "ro/system.h"
 #include "ro/mouse.h"

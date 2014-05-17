@@ -2,7 +2,7 @@
 //
 
 #include "stdafx.h"
-#include "Core.h"
+#include "Hook.h"
 
 HINSTANCE g_hDLL;
 
@@ -20,12 +20,12 @@ LRESULT CALLBACK HookProc(int nCode, WPARAM wParam, LPARAM lParam)
     return ::CallNextHookEx( g_hHook, nCode, wParam, lParam); 
 }
 
-CORE_API void InstallHook()
+INJECTION_API void InstallHook()
 {
 	g_hHook = ::SetWindowsHookEx( WH_CBT, HookProc, g_hDLL, 0 ); 
 }
 
-CORE_API void RemoveHook()
+INJECTION_API void RemoveHook()
 {
     ::UnhookWindowsHookEx( g_hHook );
 	g_hHook = NULL;
