@@ -1,11 +1,11 @@
 #include "stdafx.h"
 
 #include "tinyconsole.h"
-#include "ProxyDirectInput.h"
+#include "ProxyIDirectInput.h"
 
 #include "Core/RoCodeBind.h"
 
-HRESULT CProxy_IDirectInput7::Proxy_CreateDevice(THIS_ REFGUID rguid,LPDIRECTINPUTDEVICEA *lpIDD,LPUNKNOWN pUnkOuter)
+HRESULT CProxyIDirectInput7::Proxy_CreateDevice(THIS_ REFGUID rguid,LPDIRECTINPUTDEVICEA *lpIDD,LPUNKNOWN pUnkOuter)
 {
 	kDD_LOGGING(("IDirectInput7::CreateDevice()\n"));
 
@@ -19,15 +19,14 @@ HRESULT CProxy_IDirectInput7::Proxy_CreateDevice(THIS_ REFGUID rguid,LPDIRECTINP
 	 && rguid.Data3 == GUID_SysMouse.Data3 
 	 && *(UINT64*)rguid.Data4 == *(UINT64*)GUID_SysMouse.Data4
 	 ){
-		kDD_LOGGING(("IDirectInput7::Hook_cProxy_IDirectInputDevice7 0x%0x ",lpDirectInputDevice7));
-		ret_cProxy = (void*)(new CProxy_IDirectInputDevice7(lpDirectInputDevice7));
+		kDD_LOGGING(("IDirectInput7::Hook_CProxyIDirectInputDevice7 0x%0x ",lpDirectInputDevice7));
+		ret_cProxy = (void*)(new CProxyIDirectInputDevice7(lpDirectInputDevice7));
 		*lpIDD = (LPDIRECTINPUTDEVICEA)ret_cProxy;
 	}
 
 	return Result;
 }
 
-extern DWORD g_MonitorRefreshRate;
 extern DWORD g_ROmouse;
 HWND g_HWND = NULL;
 /*
@@ -38,7 +37,7 @@ extern double g_FrameRate;
 extern int g_executecount;
 extern double g_VSyncWaitTick;
 DWORD oldtime = 0;
-HRESULT CProxy_IDirectInputDevice7::Proxy_GetDeviceState(THIS_ DWORD cbData,LPVOID lpvData)
+HRESULT CProxyIDirectInputDevice7::Proxy_GetDeviceState(THIS_ DWORD cbData,LPVOID lpvData)
 {
 	HRESULT Result;
 
@@ -84,16 +83,17 @@ HRESULT CProxy_IDirectInputDevice7::Proxy_GetDeviceState(THIS_ DWORD cbData,LPVO
 			lpCMouse->m_yPos -= pMouseData[1];
 		}
 	}
+	// cpu cooler
 	if( g_pSharedData ){
 		if( g_pSharedData->cpucoolerlevel ){
 			int level = g_pSharedData->cpucoolerlevel;
 			int CoolerLevelTable[4]={1,1,3,10};
-			int ref = g_MonitorRefreshRate;
+			int ref = g_PerformanceCounter.GetMonitorRefreshRate();
 			if( level < 0 )level = 0;
 			else if( level > 3 )level = 3;
 
 			ref /= CoolerLevelTable[level];
-			if(ref){
+			if( ref ){
 				::Sleep( 1000/ref );
 			}
 		}
@@ -102,7 +102,7 @@ HRESULT CProxy_IDirectInputDevice7::Proxy_GetDeviceState(THIS_ DWORD cbData,LPVO
 	return Result;
 }
 
-HRESULT CProxy_IDirectInputDevice7::Proxy_SetCooperativeLevel(HWND hwnd, DWORD dwflags)
+HRESULT CProxyIDirectInputDevice7::Proxy_SetCooperativeLevel(HWND hwnd, DWORD dwflags)
 {
 	HRESULT Result;
 	kDD_LOGGING(("lpDI->SetCooperativeLevel\n"));

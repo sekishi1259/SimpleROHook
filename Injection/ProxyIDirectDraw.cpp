@@ -1,57 +1,56 @@
 #include "stdafx.h"
 #include "tinyconsole.h"
-#include "ProxyDirectDraw.h"
+#include "ProxyIDirectDraw.h"
 
 #include "Core/RoCodeBind.h"
 
 int g_executecount = 0;
 double g_VSyncWaitTick = 0.0;
-DWORD g_MonitorRefreshRate;
 
-CProxy_IDirectDraw7*    CProxy_IDirectDraw7::lpthis;
+CProxyIDirectDraw7*    CProxyIDirectDraw7::lpthis;
 
-CProxy_IDirectDraw7::CProxy_IDirectDraw7(IDirectDraw7* ptr):m_Instance(ptr), CooperativeLevel(0), PrimarySurfaceFlag(0), TargetSurface(NULL)
+CProxyIDirectDraw7::CProxyIDirectDraw7(IDirectDraw7* ptr):m_Instance(ptr), CooperativeLevel(0), PrimarySurfaceFlag(0), TargetSurface(NULL)
 {
 	kDD_LOGGING(("IDirectDraw7::Create"));
 }
 
-CProxy_IDirectDraw7::~CProxy_IDirectDraw7()
+CProxyIDirectDraw7::~CProxyIDirectDraw7()
 {
 	kDD_LOGGING(("IDirectDraw7::Releace"));
 }
 
-ULONG CProxy_IDirectDraw7::Proxy_Release(void)
+ULONG CProxyIDirectDraw7::Proxy_Release(void)
 {
 	ULONG Count;
 
 	Count = m_Instance->Release();
-	kDD_LOGGING(("cProxy_IDirectDraw7::Release()  RefCount = %d", Count));
+	kDD_LOGGING(("CProxyIDirectDraw7::Release()  RefCount = %d", Count));
 	delete this;
 
 	return Count;
 }
 
-HRESULT CProxy_IDirectDraw7::Proxy_RestoreAllSurfaces(void)
+HRESULT CProxyIDirectDraw7::Proxy_RestoreAllSurfaces(void)
 {
 	return m_Instance->RestoreAllSurfaces();
 }
 
 
-HRESULT CProxy_IDirectDraw7::Proxy_QueryInterface(THIS_ REFIID riid, LPVOID FAR * ppvObj)
+HRESULT CProxyIDirectDraw7::Proxy_QueryInterface(THIS_ REFIID riid, LPVOID FAR * ppvObj)
 {
-	kDD_LOGGING(("CProxy_IDirectDraw7::QueryInterface()"));
+	kDD_LOGGING(("CProxyIDirectDraw7::QueryInterface()"));
 
 	if( riid.Data1 == IID_IDirect3D7.Data1
 	 && riid.Data2 == IID_IDirect3D7.Data2
 	 && riid.Data3 == IID_IDirect3D7.Data3
 	 && *(UINT64*)riid.Data4 == *(UINT64*)IID_IDirect3D7.Data4 )
 	{
-		kDD_LOGGING(("CProxy_IDirectDraw7::IDirect3D7 create"));
+		kDD_LOGGING(("CProxyIDirectDraw7::IDirect3D7 create"));
 		HRESULT temp_ret = m_Instance->QueryInterface(riid, ppvObj);
 		if(temp_ret == S_OK){
 			void *ret_cProxy;
 			//LPVOID FAR * ppvObj_proxy;
-			ret_cProxy = new CProxy_IDirect3D7( (IDirect3D7*) *ppvObj);
+			ret_cProxy = new CProxyIDirect3D7( (IDirect3D7*) *ppvObj);
 			*ppvObj = ret_cProxy;
 
 			return S_OK;
@@ -63,7 +62,7 @@ HRESULT CProxy_IDirectDraw7::Proxy_QueryInterface(THIS_ REFIID riid, LPVOID FAR 
 	return m_Instance->QueryInterface(riid, ppvObj);
 }
 
-HRESULT CProxy_IDirectDraw7::Proxy_CreateSurface(LPDDSURFACEDESC2 SurfaceDesc,
+HRESULT CProxyIDirectDraw7::Proxy_CreateSurface(LPDDSURFACEDESC2 SurfaceDesc,
 			LPDIRECTDRAWSURFACE7 FAR * CreatedSurface, IUnknown FAR * pUnkOuter)
 {
 	DDSURFACEDESC2 OrgSurfaceDesc2 = *SurfaceDesc;
@@ -85,7 +84,7 @@ HRESULT CProxy_IDirectDraw7::Proxy_CreateSurface(LPDDSURFACEDESC2 SurfaceDesc,
 			SurfaceDesc->dwHeight
 			));
 		if( Caps->dwCaps & DDSCAPS_PRIMARYSURFACE ){
-			*CreatedSurface = new CProxy_IDirectDrawSurface7(*CreatedSurface);
+			*CreatedSurface = new CProxyIDirectDrawSurface7(*CreatedSurface);
 			kDD_LOGGING(("Primary Surface = %0x",CreatedSurface));
 			PrimarySurfaceFlag = 1;
 		}else
@@ -93,23 +92,23 @@ HRESULT CProxy_IDirectDraw7::Proxy_CreateSurface(LPDDSURFACEDESC2 SurfaceDesc,
 			if(CooperativeLevel & DDSCL_FULLSCREEN && !PrimarySurfaceFlag){
 				kDD_LOGGING(("Hook the 3D Device Rendering Surface."));
 				kDD_LOGGING(("  FullScreen Mode"));
-				*CreatedSurface = new CProxy_IDirectDrawSurface7(*CreatedSurface);
-				g_screen_width  = SurfaceDesc->dwWidth;
-				g_screen_height = SurfaceDesc->dwHeight;
+				*CreatedSurface = new CProxyIDirectDrawSurface7(*CreatedSurface);
+
+				SetScreenSize( (int)SurfaceDesc->dwWidth , (int)SurfaceDesc->dwHeight );
 
 			}else{
 				kDD_LOGGING(("Hook the 3D Device Rendering Surface."));
 				kDD_LOGGING(("  Window Mode"));
 				TargetSurface = *CreatedSurface;
-				g_screen_width  = SurfaceDesc->dwWidth;
-				g_screen_height = SurfaceDesc->dwHeight;
+
+				SetScreenSize( (int)SurfaceDesc->dwWidth , (int)SurfaceDesc->dwHeight );
 			}
 		}else{
 			if(CooperativeLevel & DDSCL_FULLSCREEN){
 				if(Caps->dwCaps & DDSCAPS_BACKBUFFER){
 					kDD_LOGGING(("Hook Rendering Surface without 3D Device."));
 					kDD_LOGGING(("  FullScreen Mode"));
-					*CreatedSurface = new CProxy_IDirectDrawSurface7(*CreatedSurface);
+					*CreatedSurface = new CProxyIDirectDrawSurface7(*CreatedSurface);
 				}
 			}else{
 				if(Caps->dwCaps & DDSCAPS_BACKBUFFER){
@@ -124,7 +123,7 @@ HRESULT CProxy_IDirectDraw7::Proxy_CreateSurface(LPDDSURFACEDESC2 SurfaceDesc,
 	return Result;
 
 }
-HRESULT CProxy_IDirectDraw7::Proxy_GetDisplayMode(LPDDSURFACEDESC2 Desc)
+HRESULT CProxyIDirectDraw7::Proxy_GetDisplayMode(LPDDSURFACEDESC2 Desc)
 {
 	kDD_LOGGING(("IDirectDraw7::GetDisplayMode()"));
 	HRESULT Result = m_Instance->GetDisplayMode(Desc);
@@ -138,13 +137,12 @@ HRESULT CProxy_IDirectDraw7::Proxy_GetDisplayMode(LPDDSURFACEDESC2 Desc)
 		RefreshRate = 100;
 	}
 
-	g_MonitorRefreshRate = RefreshRate;
 	g_PerformanceCounter.SetMonitorRefreshRate( (int)RefreshRate );
 
 	return Result;
 }
 
-HRESULT CProxy_IDirectDraw7::Proxy_SetCooperativeLevel(HWND hWnd, DWORD dwFlags)
+HRESULT CProxyIDirectDraw7::Proxy_SetCooperativeLevel(HWND hWnd, DWORD dwFlags)
 {
 	kDD_LOGGING(("IDirectDraw7::SetCooperativeLevel()  dwFlags = 0x%x", dwFlags));
 	if( g_pSharedData ){
@@ -158,7 +156,7 @@ HRESULT CProxy_IDirectDraw7::Proxy_SetCooperativeLevel(HWND hWnd, DWORD dwFlags)
 	return m_Instance->SetCooperativeLevel(hWnd, dwFlags);
 }
 
-HRESULT CProxy_IDirectDraw7::Proxy_SetDisplayMode(DWORD p1, DWORD p2, DWORD p3, DWORD p4, DWORD p5)
+HRESULT CProxyIDirectDraw7::Proxy_SetDisplayMode(DWORD p1, DWORD p2, DWORD p3, DWORD p4, DWORD p5)
 {
 	kDD_LOGGING(("IDirectDraw7::SetDisplayMode()"));
 	HRESULT Result = m_Instance->SetDisplayMode(p1, p2, p3, p4, p5);
@@ -178,12 +176,11 @@ HRESULT CProxy_IDirectDraw7::Proxy_SetDisplayMode(DWORD p1, DWORD p2, DWORD p3, 
 		RefreshRate = 100;
 	}
 
-	g_MonitorRefreshRate = RefreshRate;
 	g_PerformanceCounter.SetMonitorRefreshRate( (int)RefreshRate );
 
 	return Result;
 }
-HRESULT CProxy_IDirectDraw7::Proxy_WaitForVerticalBlank(DWORD dwFlags, HANDLE hEvent)
+HRESULT CProxyIDirectDraw7::Proxy_WaitForVerticalBlank(DWORD dwFlags, HANDLE hEvent)
 {
 //	kDD_LOGGING(("IDirectDraw7::WaitForVerticalBlank()  dwFlags = 0x%x  hEvent = 0x%x", dwFlags, hEvent));
 	HRESULT result;
@@ -211,28 +208,28 @@ HRESULT CProxy_IDirectDraw7::Proxy_WaitForVerticalBlank(DWORD dwFlags, HANDLE hE
 }
 
 
-HRESULT CProxy_IDirect3D7::Proxy_CreateDevice( REFCLSID rclsid,LPDIRECTDRAWSURFACE7 lpDDS,LPDIRECT3DDEVICE7 *  lplpD3DDevice)
+HRESULT CProxyIDirect3D7::Proxy_CreateDevice( REFCLSID rclsid,LPDIRECTDRAWSURFACE7 lpDDS,LPDIRECT3DDEVICE7 *  lplpD3DDevice)
 {
-	kDD_LOGGING(("CProxy_IDirect3D7::CreateDevice2()"));
+	kDD_LOGGING(("CProxyIDirect3D7::CreateDevice2()"));
 	HRESULT temp_ret = m_Instance->CreateDevice(rclsid,lpDDS,lplpD3DDevice);
 
 	if(temp_ret == D3D_OK ){
 		void *ret_cProxy;
-		ret_cProxy = new CProxy_IDirect3DDevice7( (IDirect3DDevice7*) *lplpD3DDevice,lpDDS);
+		ret_cProxy = new CProxyIDirect3DDevice7( (IDirect3DDevice7*) *lplpD3DDevice,lpDDS);
 		*lplpD3DDevice = (LPDIRECT3DDEVICE7)ret_cProxy;
 		return D3D_OK ;
 	}
 	return temp_ret;
 }
 
-void CProxy_IDirect3DDevice7::Proxy_Release(void)
+void CProxyIDirect3DDevice7::Proxy_Release(void)
 {
 	ReleaseRODraw();
 }
 
-HRESULT CProxy_IDirect3DDevice7::Proxy_SetRenderState(THIS_ D3DRENDERSTATETYPE dwRenderStateType,DWORD dwRenderState)
+HRESULT CProxyIDirect3DDevice7::Proxy_SetRenderState(THIS_ D3DRENDERSTATETYPE dwRenderStateType,DWORD dwRenderState)
 {
-	//kDD_LOGGING2(("CProxy_IDirect3D7::Proxy_SetRenderState() type:%08X val:%08X",dwRenderStateType,dwRenderState));
+	//kDD_LOGGING2(("CProxyIDirect3D7::Proxy_SetRenderState() type:%08X val:%08X",dwRenderStateType,dwRenderState));
 	if( dwRenderStateType == D3DRENDERSTATE_ZENABLE && dwRenderState == 0 ){
 		//
 		// UI is drawn after the Zbuffer is disabled.
@@ -242,23 +239,22 @@ HRESULT CProxy_IDirect3DDevice7::Proxy_SetRenderState(THIS_ D3DRENDERSTATETYPE d
 	return m_Instance->SetRenderState(dwRenderStateType,dwRenderState);
 }
 
-HRESULT CProxy_IDirect3DDevice7::Proxy_BeginScene(void)
+HRESULT CProxyIDirect3DDevice7::Proxy_BeginScene(void)
 {
 	HRESULT result;
 	if( m_firstonce ){
 		m_firstonce = false;
 		InitRODraw(m_Instance);
 	}
-	m_DrawState = enDRAW3D;
 	m_frameonce = TRUE;
-	//kDD_LOGGING2(("CProxy_IDirect3D7::Proxy_BeginScene()"));
+	//kDD_LOGGING2(("CProxyIDirect3D7::Proxy_BeginScene()"));
 
 	result = m_Instance->BeginScene();
 
 	return result;
 }
 
-HRESULT CProxy_IDirect3DDevice7::Proxy_EndScene(void)
+HRESULT CProxyIDirect3DDevice7::Proxy_EndScene(void)
 {
 	g_PerformanceCounter.ModifiFrameRate();
 	DrawSRHDebug( m_Instance );

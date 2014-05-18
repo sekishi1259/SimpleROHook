@@ -2,7 +2,9 @@
 
 #include "shared.h"
 
+// Required to create a dll for jRO.
 //#define JRO_CLIENT_STRUCTURE
+//
 
 #include "ro/system.h"
 #include "ro/mouse.h"
@@ -37,8 +39,8 @@ struct VERTEX {
 
 typedef void (__cdecl *tPlayStream)(const char *streamFileName,int playflag);
 
-extern int g_screen_width;
-extern int g_screen_height;
+void SetScreenSize(int width,int height);
+
 void Transform2screen(struct vector3d& i,vector3d& o,float& rhw);
 
 extern BOOL g_MouseFreeSw;
@@ -107,6 +109,11 @@ public:
 	{
 		m_MonitorRefreshRate = value;
 	}
+	int GetMonitorRefreshRate(void)
+	{
+		return m_MonitorRefreshRate;
+	}
+
 	int GetFrameRate(void)
 	{
 		return (int)(m_FrameRate + 0.9);

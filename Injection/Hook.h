@@ -5,9 +5,10 @@
 // CORE_API 関数を DLL からインポートされたと見なすのに対し、この DLL は、このマクロで定義された
 // シンボルをエクスポートされたと見なします。
 #ifdef INJECTION_EXPORTS
-#define INJECTION_API extern "C" __declspec(dllexport)
+	extern HINSTANCE g_hDLL;
+	#define INJECTION_API extern "C" __declspec(dllexport)
 #else
-#define INJECTION_API extern "C" __declspec(dllimport)
+	#define INJECTION_API extern "C" __declspec(dllimport)
 #endif
 
 INJECTION_API void InstallHook();

@@ -2,20 +2,20 @@
 
 
 #define CLASSNAME "IDirectDraw7"
-class CProxy_IDirectDraw7 : public IDirectDraw7{
+class CProxyIDirectDraw7 : public IDirectDraw7{
 private:
 	IDirectDraw7*			m_Instance;
 	DWORD					CooperativeLevel;
 	DWORD					PrimarySurfaceFlag;
 	IDirectDrawSurface7*	TargetSurface;
 public:
-	static CProxy_IDirectDraw7*    lpthis;
+	static CProxyIDirectDraw7*    lpthis;
 
-	CProxy_IDirectDraw7(IDirectDraw7* ptr);
-	~CProxy_IDirectDraw7();
+	CProxyIDirectDraw7(IDirectDraw7* ptr);
+	~CProxyIDirectDraw7();
 	
-	static CProxy_IDirectDraw7* getLPProxyIDirectDraw7(void){return lpthis;};
-	void   setThis(CProxy_IDirectDraw7* _lpthis){lpthis = _lpthis;};
+	static CProxyIDirectDraw7* getLPProxyIDirectDraw7(void){return lpthis;};
+	void   setThis(CProxyIDirectDraw7* _lpthis){lpthis = _lpthis;};
 
 	/*** IUnknown methods ***/
 	STDMETHOD(QueryInterface) (THIS_ REFIID riid, LPVOID FAR * ppvObj)
@@ -93,11 +93,11 @@ public:
 
 
 #define CLASSNAME "IDirectDrawSurface7"
-class CProxy_IDirectDrawSurface7 : public IDirectDrawSurface7{
+class CProxyIDirectDrawSurface7 : public IDirectDrawSurface7{
 private:
 	IDirectDrawSurface7* m_Instance;
 public:
-	CProxy_IDirectDrawSurface7(IDirectDrawSurface7* ptr) : m_Instance(ptr) {}
+	CProxyIDirectDrawSurface7(IDirectDrawSurface7* ptr) : m_Instance(ptr) {}
 
 	/*** IUnknown methods ***/
 	STDMETHOD(QueryInterface) (THIS_ REFIID p1, LPVOID FAR * p2)	PROXY2(QueryInterface)
@@ -167,21 +167,16 @@ public:
 
 // D3DDev HOOK
 #define CLASSNAME "IDirect3DDevice7"
-class CProxy_IDirect3DDevice7 : public IDirect3DDevice7{
+class CProxyIDirect3DDevice7 : public IDirect3DDevice7{
 private:
 	IDirect3DDevice7*			m_Instance;
 	IDirectDrawSurface7*	TargetSurface;
-	enum enDRAWSTATUS{
-		enDRAW3D = 0,
-		enDRAWSPR,
-		enDRAWGUI
-	};
-	enDRAWSTATUS			m_DrawState;
+
 	BOOL					m_firstonce;
 	BOOL					m_frameonce;
 public:
 
-	CProxy_IDirect3DDevice7(IDirect3DDevice7* ptr,IDirectDrawSurface7* psf) : m_Instance(ptr), TargetSurface(psf), m_firstonce(true) {}
+	CProxyIDirect3DDevice7(IDirect3DDevice7* ptr,IDirectDrawSurface7* psf) : m_Instance(ptr), TargetSurface(psf), m_firstonce(true) {}
 
 	/*** IUnknown methods ***/
 	STDMETHOD(QueryInterface)(THIS_ REFIID p1, LPVOID * p2) PROXY2(QueryInterface)
@@ -268,11 +263,11 @@ public:
 
 // D3D HOOK
 #define CLASSNAME "IDirect3D7"
-class CProxy_IDirect3D7 : public IDirect3D7{
+class CProxyIDirect3D7 : public IDirect3D7{
 private:
 	IDirect3D7*			m_Instance;
 public:
-	CProxy_IDirect3D7(IDirect3D7* ptr) : m_Instance(ptr) {}
+	CProxyIDirect3D7(IDirect3D7* ptr) : m_Instance(ptr) {}
 
 	/*** IUnknown methods ***/
 	STDMETHOD(QueryInterface)(THIS_ REFIID p1, LPVOID * p2) PROXY2(QueryInterface)

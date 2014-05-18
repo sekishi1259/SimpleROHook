@@ -1,12 +1,12 @@
 #include "ProxyHelper.h"
 
 #define CLASSNAME "IDirectInput7"
-class CProxy_IDirectInput7 : public IDirectInput7
+class CProxyIDirectInput7 : public IDirectInput7
 {
 private:
 	IDirectInput7*			m_Instance;
 public:
-	CProxy_IDirectInput7(IDirectInput7* ptr) : m_Instance(ptr) {}
+	CProxyIDirectInput7(IDirectInput7* ptr) : m_Instance(ptr) {}
 
 	/*** IUnknown methods ***/
 	STDMETHOD(QueryInterface)(THIS_ REFIID p1, LPVOID * p2) PROXY2(QueryInterface)
@@ -36,11 +36,11 @@ public:
 #undef CLASSNAME
 
 #define CLASSNAME "IDirectInputDevice7"
-class CProxy_IDirectInputDevice7 : public IDirectInputDevice7{
+class CProxyIDirectInputDevice7 : public IDirectInputDevice7{
 private:
 	IDirectInputDevice7*			m_Instance;
 public:
-	CProxy_IDirectInputDevice7(IDirectInputDevice7* ptr) : m_Instance(ptr) {}
+	CProxyIDirectInputDevice7(IDirectInputDevice7* ptr) : m_Instance(ptr) {}
 
 	/*** IUnknown methods ***/
 	STDMETHOD(QueryInterface)(THIS_ REFIID p1, LPVOID * p2) PROXY2(QueryInterface)

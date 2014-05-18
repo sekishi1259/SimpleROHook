@@ -55,7 +55,6 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;INJECTION_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -71,7 +70,6 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;INJECTION_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -90,8 +88,8 @@
     <ClInclude Include="Core\FastFont\CacheInfo.h" />
     <ClInclude Include="Hook.h" />
     <ClInclude Include="Core\FastFont\FastFont.h" />
-    <ClInclude Include="ProxyDirectDraw.h" />
-    <ClInclude Include="ProxyDirectInput.h" />
+    <ClInclude Include="ProxyIDirectDraw.h" />
+    <ClInclude Include="ProxyIDirectInput.h" />
     <ClInclude Include="ProxyHelper.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Core\RoCodeBind.h" />
@@ -121,8 +119,8 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Core\FastFont\FastFont.cpp" />
-    <ClCompile Include="ProxyDirectDraw.cpp" />
-    <ClCompile Include="ProxyDirectInput.cpp" />
+    <ClCompile Include="ProxyIDirectDraw.cpp" />
+    <ClCompile Include="ProxyIDirectInput.cpp" />
     <ClCompile Include="Core\RoCodeBind.cpp" />
     <ClCompile Include="Core\FastFont\SFastFont.cpp" />
     <ClCompile Include="stdafx.cpp">

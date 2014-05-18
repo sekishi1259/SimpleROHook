@@ -78,12 +78,6 @@
     <ClInclude Include="tinyconsole.h">
       <Filter>ヘッダー ファイル\Dll-Injection</Filter>
     </ClInclude>
-    <ClInclude Include="ProxyDirectDraw.h">
-      <Filter>ヘッダー ファイル\Dll-Injection</Filter>
-    </ClInclude>
-    <ClInclude Include="ProxyDirectInput.h">
-      <Filter>ヘッダー ファイル\Dll-Injection</Filter>
-    </ClInclude>
     <ClInclude Include="ProxyHelper.h">
       <Filter>ヘッダー ファイル\Dll-Injection</Filter>
     </ClInclude>
@@ -102,6 +96,12 @@
     <ClInclude Include="Core\FastFont\SFastFont.h">
       <Filter>ヘッダー ファイル\Core\FastFont</Filter>
     </ClInclude>
+    <ClInclude Include="ProxyIDirectDraw.h">
+      <Filter>ヘッダー ファイル\Dll-Injection</Filter>
+    </ClInclude>
+    <ClInclude Include="ProxyIDirectInput.h">
+      <Filter>ヘッダー ファイル\Dll-Injection</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\RoCodeBind.cpp">
@@ -116,12 +116,6 @@
     <ClCompile Include="Hook.cpp">
       <Filter>ソース ファイル\Dll-Injection</Filter>
     </ClCompile>
-    <ClCompile Include="ProxyDirectDraw.cpp">
-      <Filter>ソース ファイル\Dll-Injection</Filter>
-    </ClCompile>
-    <ClCompile Include="ProxyDirectInput.cpp">
-      <Filter>ソース ファイル\Dll-Injection</Filter>
-    </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>ソース ファイル\Dll-Injection</Filter>
     </ClCompile>
@@ -133,6 +127,12 @@
     </ClCompile>
     <ClCompile Include="Core\FastFont\SFastFont.cpp">
       <Filter>ソース ファイル\Core\FastFont</Filter>
+    </ClCompile>
+    <ClCompile Include="ProxyIDirectDraw.cpp">
+      <Filter>ソース ファイル\Dll-Injection</Filter>
+    </ClCompile>
+    <ClCompile Include="ProxyIDirectInput.cpp">
+      <Filter>ソース ファイル\Dll-Injection</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

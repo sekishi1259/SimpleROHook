@@ -1,10 +1,11 @@
 // dllmain.cpp : DLL アプリケーションのエントリ ポイントを定義します。
 #include "stdafx.h"
+#include "Hook.h"
 
 #include "tinyconsole.h"
 
-#include "ProxyDirectDraw.h"
-#include "ProxyDirectInput.h"
+#include "ProxyIDirectDraw.h"
+#include "ProxyIDirectInput.h"
 
 #include "Core/RoCodeBind.h"
 
@@ -157,7 +158,6 @@ BOOL RagexeSoundRateFixer(void)
 
 
 
-extern HINSTANCE g_hDLL;
 
 typedef HRESULT (WINAPI *tDirectDrawCreateEx)( GUID FAR *lpGUID, LPVOID *lplpDD, REFIID iid, IUnknown FAR *pUnkOuter );
 typedef HRESULT (WINAPI *tDirectInputCreateA)( HINSTANCE hinst, DWORD dwVersion, LPDIRECTINPUTA *ppDI, LPUNKNOWN punkOuter);
@@ -198,8 +198,8 @@ HRESULT WINAPI ProxyDirectDrawCreateEx(
 	if(FAILED(Result))
 		return Result;
 
-	CProxy_IDirectDraw7 *lpcDD;
-	*lplpDD = lpcDD = new CProxy_IDirectDraw7((IDirectDraw7*)*lplpDD);
+	CProxyIDirectDraw7 *lpcDD;
+	*lplpDD = lpcDD = new CProxyIDirectDraw7((IDirectDraw7*)*lplpDD);
 	lpcDD->setThis(lpcDD);
 
 	kDD_LOGGING( ("DirectDrawCreateEx Hook hookfunc") );
@@ -220,7 +220,7 @@ HRESULT WINAPI ProxyDirectInputCreateA(
 	if(FAILED(Result))
 		return Result;
 	if(dwVersion == 0x0700){
-		*ppDI = new CProxy_IDirectInput7((IDirectInput7*)*ppDI);
+		*ppDI = new CProxyIDirectInput7((IDirectInput7*)*ppDI);
 	}
 	kDD_LOGGING( ("DirectInputCreateA Hook hookfunc") );
 

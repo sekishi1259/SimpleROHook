@@ -108,8 +108,14 @@ void ReleaseRODraw(void)
 
 
 
-int g_screen_width = 0;
-int g_screen_height = 0;
+int s_screen_width = 0;
+int s_screen_height = 0;
+
+void SetScreenSize(int width,int height)
+{
+	s_screen_width  = width;
+	s_screen_height = height;
+}
 
 void vector3d::MatrixMult(struct vector3d& v, struct matrix& m)
 {
@@ -133,15 +139,18 @@ void Transform2screen(struct vector3d& i,vector3d& o,float& rhw)
 	o.y = o.y / i.z;
 	o.z = o.z / i.z + projmatrix.v43 / (i.z-1.0f);
 
-	o.x = o.x * (g_screen_height * 0.5f) + (g_screen_width  * 0.5f);
-	o.y = o.y * (g_screen_height * 0.5f) + (g_screen_height * 0.5f);
+//	o.x = o.x * (s_screen_height * 0.5f) + (s_screen_width  * 0.5f);
+//	o.y = o.y * (s_screen_height * 0.5f) + (s_screen_height * 0.5f);
+
+	o.x = (o.x * s_screen_height + s_screen_width  ) * 0.5f;
+	o.y = (o.y * s_screen_height + s_screen_height ) * 0.5f;
 
 	rhw = 1.0f / i.z;
 }
 
 void LoadIni(void)
 {
-	if( g_pSharedData){
+	if( g_pSharedData ){
 
 		int sectionsize;
 		char Sectionbuf[32768];
@@ -844,10 +853,6 @@ void SearchRagexeMemory(void)
 
 	LPBYTE pRagexeBase;
 	MEMORY_BASIC_INFORMATION mbi;
-
-	//::MessageBox(NULL,_T("SearchRagexeMemory"),_T("debug"),MB_OK);
-	//kDD_LOGGING2( ("SearchRagexeMemory debug") );
-	//return;
 
 	pRagexeBase = (LPBYTE)::GetModuleHandle(NULL);
 	pRagexeBase += 0x1000;
