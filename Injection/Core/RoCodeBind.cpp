@@ -5,10 +5,51 @@
 
 HANDLE         g_hMapObject = 0;
 StSHAREDMEMORY *g_pSharedData = 0;
+
+BOOL OpenSharedMemory(void)
+{
+	g_hMapObject = ::OpenFileMapping( FILE_MAP_ALL_ACCESS , FALSE, SHAREDMEMORY_OBJECTNAME );
+	if( !g_hMapObject ){
+		DEBUG_LOGGING_NORMAL( ("shared memory:Initialize Failed.") );
+		return FALSE;
+	}
+	g_pSharedData = (StSHAREDMEMORY*)::MapViewOfFile(g_hMapObject,
+		FILE_MAP_ALL_ACCESS,0,0,0);
+	if(!g_pSharedData){
+		DEBUG_LOGGING_NORMAL( ("shared memory:DataMap Failed.") );
+		::CloseHandle( g_hMapObject);
+		g_hMapObject = NULL;
+		return FALSE;
+	}
+	return TRUE;
+}
+BOOL ReleaceSharedMemory(void)
+{
+	if(g_pSharedData){
+		g_pSharedData->g_hROWindow = 0;
+		::UnmapViewOfFile( g_pSharedData );
+		g_pSharedData = NULL;
+	}
+	if(g_hMapObject){
+		::CloseHandle( g_hMapObject);
+		g_hMapObject = NULL;
+	}
+	return TRUE;
+}
+
+CPerformanceCounter g_PerformanceCounter(60);
+
+CRoCodeBind* g_pRoCodeBind = NULL;
+
+
+
+tPlayStream funcRagexe_PlayStream = NULL;
+
+
 BOOL g_MouseFreeSw = FALSE;
 
-#define kFloorSkillTypeMAX 0x100
-DWORD g_M2ESkillColor[kFloorSkillTypeMAX];
+#define MAX_FLLORSKILLTYPE 0x100
+DWORD g_M2ESkillColor[MAX_FLLORSKILLTYPE];
 
 CSFastFont *g_pSFastFont = NULL;
 LPDIRECTDRAWSURFACE7 g_pddsFontTexture = NULL;
@@ -29,7 +70,10 @@ static HRESULT CALLBACK TextureSearchCallback( DDPIXELFORMAT* pddpf,
     return DDENUMRET_CANCEL;
 }
 
-void InitRODraw(IDirect3DDevice7* d3ddevice)
+//void InitRODraw(IDirect3DDevice7* d3ddevice)
+CRoCodeBind::CRoCodeBind(IDirect3DDevice7* d3ddevice) :
+	m_packetLenMap_table_index(0),m_packetqueue_head(0),
+	g_renderer(NULL),g_pmodeMgr(NULL),g_mouse(NULL)
 {
 	SearchRagexeMemory();
 	LoadIni();
@@ -46,12 +90,13 @@ void InitRODraw(IDirect3DDevice7* d3ddevice)
 	ddsd.dwWidth         = 512;
 	ddsd.dwHeight        = 512;
 
-	if( ddDesc.deviceGUID == IID_IDirect3DHALDevice )
+	if( ddDesc.deviceGUID == IID_IDirect3DHALDevice ){
 		ddsd.ddsCaps.dwCaps2 = DDSCAPS2_TEXTUREMANAGE;
-	else if( ddDesc.deviceGUID == IID_IDirect3DTnLHalDevice )
+	} else if( ddDesc.deviceGUID == IID_IDirect3DTnLHalDevice ){
 		ddsd.ddsCaps.dwCaps2 = DDSCAPS2_TEXTUREMANAGE;
-	else
+	} else {
 		ddsd.ddsCaps.dwCaps |= DDSCAPS_SYSTEMMEMORY;
+	}
 
 	d3ddevice->EnumTextureFormats( TextureSearchCallback, &ddsd.ddpfPixelFormat );
 	if( ddsd.ddpfPixelFormat.dwRGBBitCount ){
@@ -65,15 +110,15 @@ void InitRODraw(IDirect3DDevice7* d3ddevice)
 		}
 		if( pDD ){
 			if( SUCCEEDED( pDD->CreateSurface( &ddsd, &g_pddsFontTexture, NULL )) ){
-				kDD_LOGGING2(( "font texture created." ));
+				DEBUG_LOGGING_NORMAL(( "font texture created." ));
 			} else {
-				kDD_LOGGING2(( "failed create a font texture." ));
+				DEBUG_LOGGING_NORMAL(( "failed create a font texture." ));
 			}
 			pDD->Release();
 		}
 		if( g_pddsFontTexture ){
 			LOGFONT logfont;
-			logfont.lfHeight         = -10;
+			logfont.lfHeight         = -12;
 			logfont.lfWidth          = 0;
 			logfont.lfEscapement     = 0;
 			logfont.lfOrientation    = 0;
@@ -96,7 +141,8 @@ void InitRODraw(IDirect3DDevice7* d3ddevice)
 
 }
 
-void ReleaseRODraw(void)
+//void ReleaseRODraw(void)
+CRoCodeBind::~CRoCodeBind(void)
 {
 	if( g_pSFastFont )
 		delete g_pSFastFont;
@@ -106,49 +152,54 @@ void ReleaseRODraw(void)
 	}
 }
 
-
-
-int s_screen_width = 0;
-int s_screen_height = 0;
-
-void SetScreenSize(int width,int height)
+void CRoCodeBind::SetMouseCurPos(int x,int y)
 {
-	s_screen_width  = width;
-	s_screen_height = height;
+	if( g_mouse ){
+		g_mouse->m_xPos = x;
+		g_mouse->m_yPos = y;
+	}
 }
 
 void vector3d::MatrixMult(struct vector3d& v, struct matrix& m)
 {
-	x = v.x * m.v11 + v.y * m.v21 + v.z * m.v31;
-	y = v.x * m.v12 + v.y * m.v22 + v.z * m.v32;
-	z = v.x * m.v13 + v.y * m.v23 + v.z * m.v33;
-};
-
-void Transform2screen(struct vector3d& i,vector3d& o,float& rhw)
-{
-	matrix projmatrix = {
-	7.595756f     , 0.0f      , 0.0f ,
-		0.0f      , 7.595756f , 0.0f ,
-		0.0f      , 0.0f      , 1.006711f ,
-		0.0f      , 0.0f      ,-10.067114f
-	};
-
-	o.MatrixMult(i,projmatrix);
-
-	o.x = o.x / i.z;
-	o.y = o.y / i.z;
-	o.z = o.z / i.z + projmatrix.v43 / (i.z-1.0f);
-
-//	o.x = o.x * (s_screen_height * 0.5f) + (s_screen_width  * 0.5f);
-//	o.y = o.y * (s_screen_height * 0.5f) + (s_screen_height * 0.5f);
-
-	o.x = (o.x * s_screen_height + s_screen_width  ) * 0.5f;
-	o.y = (o.y * s_screen_height + s_screen_height ) * 0.5f;
-
-	rhw = 1.0f / i.z;
+	x = v.x * m.v11 + v.y * m.v21 + v.z * m.v31 + m.v41;
+	y = v.x * m.v12 + v.y * m.v22 + v.z * m.v32 + m.v42;
+	z = v.x * m.v13 + v.y * m.v23 + v.z * m.v33 + m.v43;
 }
 
-void LoadIni(void)
+// CRenderer::ProjectVertex
+void CRoCodeBind::ProjectVertex(vector3d& src,matrix& vtm,float *x,float *y,float *oow)
+{
+	if( !g_renderer && !*g_renderer )return;
+
+	vector3d viewvect;
+	viewvect.MatrixMult( src , vtm );
+
+	float w = 1.0f / viewvect.z;
+
+	*x = viewvect.x * w * (*g_renderer)->m_hpc + (*g_renderer)->m_xoffset;
+	*y = viewvect.y * w * (*g_renderer)->m_vpc + (*g_renderer)->m_yoffset;
+	*oow = w;
+}
+
+// CRenderer::ProjectVertex
+void CRoCodeBind::ProjectVertex(vector3d& src,matrix& vtm,tlvertex3d *vert)
+{
+	if( !g_renderer && !*g_renderer )return;
+
+	vector3d viewvect;
+	viewvect.MatrixMult( src , vtm );
+
+	float w = 1.0f / viewvect.z;
+
+	vert->x = viewvect.x * w * (*g_renderer)->m_hpc + (*g_renderer)->m_halfWidth;
+	vert->y = viewvect.y * w * (*g_renderer)->m_vpc + (*g_renderer)->m_halfHeight;
+	vert->z = (1500 / (1500.0f - 10.0f)) * (( 1.0f / w ) - 10.0f) * w;
+	vert->oow = w;
+}
+
+
+void CRoCodeBind::LoadIni(void)
 {
 	if( g_pSharedData ){
 
@@ -162,13 +213,13 @@ void LoadIni(void)
 			filename,sizeof(filename),
 			NULL,NULL) ){
 
-		kDD_LOGGING2( ("LoadIni startup") );
-		kDD_LOGGING2( ("%s",filename) );
+		DEBUG_LOGGING_NORMAL( ("LoadIni startup") );
+		DEBUG_LOGGING_NORMAL( ("%s",filename) );
 
 			sectionsize = GetPrivateProfileSection(_T("M2E"),Sectionbuf,32768,filename);
 			pkey = Sectionbuf;
 
-			for(int ii = 0;ii < kFloorSkillTypeMAX;ii++)
+			for(int ii = 0;ii < MAX_FLLORSKILLTYPE;ii++)
 				g_M2ESkillColor[ii]=0;
 
 			
@@ -191,9 +242,11 @@ void LoadIni(void)
 	}
 }
 
-void DrawSRHDebug(IDirect3DDevice7* d3ddevice)
+void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 {
 	if( !g_pSharedData )return;
+	if( !g_renderer )return;
+	if( !*g_renderer )return;
 
 	if( g_pSharedData->show_framerate ){
 		std::stringstream str;
@@ -215,40 +268,94 @@ void DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 			C3dAttr *pAttr = p_gamemode->m_world->m_attr;
 
 			if( p_gamemode->m_world->m_player ){
-				C3dAttr *pattr = p_gamemode->m_world->m_attr;
-				ViewInfo3d *pVinfo = &pView->m_cur;
-				vector3d pos;
-				vector3d tpos,spos;
-				float rhw;
 				std::stringstream putinfostr;
+				C3dAttr *pattr = p_gamemode->m_world->m_attr;
+
 				CPlayer *pPlayer = (CPlayer*)p_gamemode->m_world->m_player;
+
+				// CRenderObject
+				str << "m_BodyAni = "      << (int)pPlayer->m_BodyAni << "\n";
+				str << "m_BodyAct = "      << (int)pPlayer->m_BodyAct << "\n";
+				str << "m_BodyAniFrame = " << (int)pPlayer->m_BodyAniFrame << "\n";
+				str << "m_sprRes = "       << std::hex << pPlayer->m_sprRes << "\n";
+				str << "m_actRes = "       << std::hex << pPlayer->m_actRes << "\n\n";
+				// CAbleToMakeEffect
+				str << "m_efId = "         << pPlayer->m_efId << "\n";
+				str << "m_Sk_Level = "     << pPlayer->m_Sk_Level << "\n\n";
+
+				// CGameActor
+				str << "m_moveDestX/Y = " << std::dec 
+					<< pPlayer->m_moveDestX << ","
+					<< pPlayer->m_moveDestY << "\n\n";
+				str << "m_speed = " << pPlayer->m_speed << "\n\n";
 
 				str << "m_clevel = " << pPlayer->m_clevel << "\n";
 				str << "m_gid = " << std::hex << (unsigned long)pPlayer->m_gid << "\n";
 				str << "m_job = " << std::hex << (unsigned long)pPlayer->m_job << "\n";
-				str << "m_sex = " << std::hex << (unsigned long)pPlayer->m_sex << "\n";
+				str << "m_sex = " << std::hex << (unsigned long)pPlayer->m_sex << "\n\n";
 
+				unsigned char *pdump = (unsigned char*)&pPlayer->m_efId;
+				for(int ii = 0;ii < 64 ;ii++){
+					str << std::setfill('0') << std::setw(2) << std::hex << (int)pdump[ii] << ",";
+					if( (ii % 0x10)==0x0f ){
+						str << std::endl;
+					}
+				}
+				str << std::endl;
+
+				matrix *pm = &p_gamemode->m_view->m_viewMatrix;
+				str << "m_viewMatrix\n"
+					<< pm->v11 << " , "
+					<< pm->v12 << " , "
+					<< pm->v13 << "\n"
+					<< pm->v21 << " , "
+					<< pm->v22 << " , "
+					<< pm->v23 << "\n"
+					<< pm->v31 << " , "
+					<< pm->v32 << " , "
+					<< pm->v33 << "\n"
+					<< pm->v41 << " , "
+					<< pm->v42 << " , "
+					<< pm->v43 << std::endl;
+
+				str << "CRenderer = " << *g_renderer << "\n"
+					<< "m_hpc = " << (*g_renderer)->m_hpc << "\n"
+					<< "m_vpc = " << (*g_renderer)->m_vpc << "\n"
+					<< "m_hratio = " << (*g_renderer)->m_hratio << "\n"
+					<< "m_vratio = " << (*g_renderer)->m_vratio << "\n"
+					<< "m_aspectRatio = " << (*g_renderer)->m_aspectRatio << "\n"
+					<< "m_screenXFactor = " << (*g_renderer)->m_screenXFactor << "\n"
+					<< "m_screenYFactor = " << (*g_renderer)->m_screenYFactor << "\n"
+					<< "m_xoffset = " << (*g_renderer)->m_xoffset << "\n"
+					<< "m_yoffset = " << (*g_renderer)->m_yoffset << "\n"
+					<< "m_width = " << (*g_renderer)->m_width << "\n"
+					<< "m_height = " << (*g_renderer)->m_height << "\n"
+					<< "m_halfWidth = " << (*g_renderer)->m_halfWidth << "\n"
+					<< "m_halfHeight = " << (*g_renderer)->m_halfHeight << "\n"
+					<< "m_curFrame = " << (*g_renderer)->m_curFrame << "\n"
+					<< "m_bRGBBitCount = " << (*g_renderer)->m_bRGBBitCount << "\n"
+					<< "m_fpsFrameCount = " << (*g_renderer)->m_fpsFrameCount << "\n"
+					<< "m_dwScreenWidth = " << (*g_renderer)->m_dwScreenWidth << "\n"
+					<< "m_dwScreenHeight = " << (*g_renderer)->m_dwScreenHeight << "\n"
+					<< std::endl;
 
 				//
 				//  world position to cell position
 				//
-				pos.x = pPlayer->m_pos.x - pVinfo->at.x;
-				pos.y = pPlayer->m_pos.y - pVinfo->at.y;
-				pos.z = pPlayer->m_pos.z - pVinfo->at.z;
-				//
-				tpos.MatrixMult(pos,pView->m_viewMatrix);
-				tpos.z += pVinfo->distance;
-				tpos += pView->m_up;
 				long cx,cy;
 				pattr->ConvertToCellCoor(pPlayer->m_pos.x,pPlayer->m_pos.z,cx,cy);
 				//
 				//
 				//
 				putinfostr << "(" << cx << "," << cy << ")" << std::endl;
+
 				int sx,sy;
-				Transform2screen(tpos,spos,rhw);
-				sx = (int)spos.x;
-				sy = (int)spos.y;
+				float fx,fy,oow;
+				ProjectVertex( pPlayer->m_pos,pView->m_viewMatrix,&fx,&fy,&oow);
+				sx = (int)fx;
+				sy = (int)fy;
+
+
 				g_pSFastFont->DrawText((LPSTR)putinfostr.str().c_str(), sx, sy,D3DCOLOR_ARGB(255,255,255,255),2,NULL);
 			}
 
@@ -263,19 +370,6 @@ void DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 			{
 				CItem *pItem = *it;
 				if( pItem ){
-					ViewInfo3d *pVinfo = &pView->m_cur;
-					vector3d pos;
-					vector3d tpos,spos;
-					float rhw;
-					pos.x = pItem->m_pos.x - pVinfo->at.x;
-					pos.y = pItem->m_pos.y - pVinfo->at.y;
-					pos.z = pItem->m_pos.z - pVinfo->at.z;
-					//
-					tpos.MatrixMult(pos,pView->m_viewMatrix);
-					tpos.z += pVinfo->distance;
-
-					Transform2screen(tpos,spos,rhw);
-
 					long cx,cy;
 					pAttr->ConvertToCellCoor(pItem->m_pos.x,pItem->m_pos.z,cx,cy);
 
@@ -286,8 +380,11 @@ void DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 					putinfostr << "itemid = " << pItem->m_itemid2 << std::endl;
 
 					int sx,sy;
-					sx = (int)spos.x;
-					sy = (int)spos.y;
+					float fx,fy,oow;
+					ProjectVertex( pItem->m_pos,pView->m_viewMatrix,&fx,&fy,&oow);
+					sx = (int)fx;
+					sy = (int)fy;
+
 					g_pSFastFont->DrawText((LPSTR)putinfostr.str().c_str(), sx, sy,D3DCOLOR_ARGB(255,255,255,255),2,NULL);
 				}
 			}
@@ -300,19 +397,6 @@ void DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 			{
 				CGameActor *pGameActor = *it;
 				if( pGameActor ){
-					ViewInfo3d *pVinfo = &pView->m_cur;
-					vector3d pos;
-					vector3d tpos,spos;
-					float rhw;
-					pos.x = pGameActor->m_pos.x - pVinfo->at.x;
-					pos.y = pGameActor->m_pos.y - pVinfo->at.y;
-					pos.z = pGameActor->m_pos.z - pVinfo->at.z;
-					//
-					tpos.MatrixMult(pos,pView->m_viewMatrix);
-					tpos.z += pVinfo->distance;
-
-					Transform2screen(tpos,spos,rhw);
-
 					long cx,cy;
 					pAttr->ConvertToCellCoor(pGameActor->m_pos.x,pGameActor->m_pos.z,cx,cy);
 
@@ -323,8 +407,11 @@ void DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 					putinfostr << "job = " << pGameActor->m_job << std::endl;
 
 					int sx,sy;
-					sx = (int)spos.x;
-					sy = (int)spos.y;
+					float fx,fy,oow;
+					ProjectVertex( pGameActor->m_pos,pView->m_viewMatrix,&fx,&fy,&oow);
+					sx = (int)fx;
+					sy = (int)fy;
+
 					g_pSFastFont->DrawText((LPSTR)putinfostr.str().c_str(), sx, sy,D3DCOLOR_ARGB(255,255,255,255),2,NULL);
 				}
 			}
@@ -337,12 +424,12 @@ void DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 
 }
 
-void DrawOn3DMap(IDirect3DDevice7* d3ddevice)
+void CRoCodeBind::DrawOn3DMap(IDirect3DDevice7* d3ddevice)
 {
 	DrawM2E(d3ddevice);
 }
 
-void DrawM2E(IDirect3DDevice7* d3ddevice)
+void CRoCodeBind::DrawM2E(IDirect3DDevice7* d3ddevice)
 {
 	if( !g_pSharedData )return;
 	if( g_pSharedData->m2e == FALSE )return;
@@ -366,8 +453,7 @@ void DrawM2E(IDirect3DDevice7* d3ddevice)
 		DWORD _state_alpharef;
 		DWORD _state_srcblend;
 		DWORD _state_destblend;
-		//LPDIRECTDRAWSURFACE7 lpOriginalTexture = NULL;
-		//d3ddevice->GetTexture(0, &lpOriginalTexture);
+
 		d3ddevice->GetRenderState(D3DRENDERSTATE_ZENABLE,        &_state_zenable);
 		d3ddevice->GetRenderState(D3DRENDERSTATE_ZWRITEENABLE,   &_state_zwriteenable);
 		d3ddevice->GetRenderState(D3DRENDERSTATE_ZBIAS,          &_state_zbias);
@@ -401,23 +487,13 @@ void DrawM2E(IDirect3DDevice7* d3ddevice)
 				//
 				if( pSkill && pSkill->m_job < 0x100 && g_M2ESkillColor[pSkill->m_job] ){
 					DWORD color = g_M2ESkillColor[pSkill->m_job];
-					VERTEX vertex[4] =
+					CPOLVERTEX vertex[4] =
 					{
 						{   0.0,  0.0,   0.0f,  1.0f, color },
 						{ 100.0,  0.0,   0.0f,  1.0f, color },
 						{   0.0,100.0,   0.0f,  1.0f, color },
 						{ 100.0,100.0,   0.0f,  1.0f, color }
 					};
-					ViewInfo3d *pVinfo = &pView->m_cur;
-					vector3d pos;
-					vector3d tpos,spos;
-					float rhw;
-					pos.x = pSkill->m_pos.x - pVinfo->at.x;
-					pos.y = pSkill->m_pos.y - pVinfo->at.y;
-					pos.z = pSkill->m_pos.z - pVinfo->at.z;
-					//
-					tpos.MatrixMult(pos,pView->m_viewMatrix);
-					tpos.z += pVinfo->distance;
 
 					long cx,cy;
 					CAttrCell *pCell;
@@ -432,16 +508,13 @@ void DrawM2E(IDirect3DDevice7* d3ddevice)
 					polvect[3].Set(centerpos.x +2.4f, pCell->h4 ,centerpos.z +2.4f);
 
 					for(int ii = 0; ii < 4; ii ++){
-						pos.x = polvect[ii].x - pVinfo->at.x;
-						pos.y = polvect[ii].y - pVinfo->at.y;
-						pos.z = polvect[ii].z - pVinfo->at.z;
-						tpos.MatrixMult(pos,pView->m_viewMatrix);
-						tpos.z += pVinfo->distance;
-						Transform2screen(tpos,spos,rhw);
-						vertex[ii].x = spos.x;
-						vertex[ii].y = spos.y;
-						vertex[ii].z = spos.z;
-						vertex[ii].rhw = rhw;
+						tlvertex3d tlv3d;
+						ProjectVertex( polvect[ii] , pView->m_viewMatrix,&tlv3d );
+
+						vertex[ii].x = tlv3d.x;
+						vertex[ii].y = tlv3d.y;
+						vertex[ii].z = tlv3d.z;
+						vertex[ii].rhw = tlv3d.oow;
 					}
 					d3ddevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, D3DFVF_CPOLVERTEX, vertex, 4, 0);
 				}
@@ -456,144 +529,87 @@ void DrawM2E(IDirect3DDevice7* d3ddevice)
 		d3ddevice->SetRenderState(D3DRENDERSTATE_ALPHAREF,       _state_alpharef);
 		d3ddevice->SetRenderState(D3DRENDERSTATE_SRCBLEND ,      _state_srcblend);
 		d3ddevice->SetRenderState(D3DRENDERSTATE_DESTBLEND,      _state_destblend);
-		//d3ddevice->SetTexture(0, lpOriginalTexture);
 	}
 }
 
 
 
 
-CPerformanceCounter g_PerformanceCounter(60);
 
-DWORD g_ROmouse = NULL;
-DWORD g_CModeMgr__GetGameMode = NULL;
-DWORD g_CViewOffset_CGameMode = 0;
-
-CModeMgr *g_pmodeMgr = NULL;
-
-tPlayStream funcRagexe_PlayStream = NULL;
-
-BOOL OpenSharedMemory(void)
-{
-	g_hMapObject = ::OpenFileMapping( FILE_MAP_ALL_ACCESS , FALSE, kSHAREDMEMORY_OBJECTNAME );
-	if( !g_hMapObject ){
-		kDD_LOGGING2( ("shared memory:Initialize Failed.") );
-		return FALSE;
-	}
-	g_pSharedData = (StSHAREDMEMORY*)::MapViewOfFile(g_hMapObject,
-		FILE_MAP_ALL_ACCESS,0,0,0);
-	if(!g_pSharedData){
-		kDD_LOGGING2( ("shared memory:DataMap Failed.") );
-		::CloseHandle( g_hMapObject);
-		g_hMapObject = NULL;
-		return FALSE;
-	}
-	return TRUE;
-}
-BOOL ReleaceSharedMemory(void)
-{
-	if(g_pSharedData){
-		g_pSharedData->g_hROWindow = 0;
-		::UnmapViewOfFile( g_pSharedData );
-		g_pSharedData = NULL;
-	}
-	if(g_hMapObject){
-		::CloseHandle( g_hMapObject);
-		g_hMapObject = NULL;
-	}
-	return TRUE;
-}
-
-
-
-DWORD g_temp_eax,g_temp_ecx,g_temp_edx,g_temp_ebx,g_temp_esp;
 
 typedef int (__stdcall *Func_CRagConnection__GetPacketSize)(DWORD opcode);
 
-struct p_std_map_packetlen
-{
-	struct p_std_map_packetlen *left, *parent, *right;
-	DWORD key;
-	int value;
-};
 
 
-#define ROPACKET_MAXLEN 0x2000
-
-int g_packetLenMap_table[ROPACKET_MAXLEN];
-int g_packetLenMap_table_index = 0;
- int GetPacketLength(int opcode)
+ int CRoCodeBind::GetPacketLength(int opcode)
 {
 	int result = -1;
 
-	if( g_packetLenMap_table_index >= opcode )
+	if( m_packetLenMap_table_index >= opcode )
 	{
-		result = g_packetLenMap_table[ opcode ];
+		result = m_packetLenMap_table[ opcode ];
 	}
 	return result;
 }
 
-int GetTreeData(p_std_map_packetlen* node) 
+int CRoCodeBind::GetTreeData(p_std_map_packetlen* node)
 {
 	if ( node->parent == NULL || node->key >= ROPACKET_MAXLEN || node->key == 0)
-		return g_packetLenMap_table_index;
+		return m_packetLenMap_table_index;
 
 	GetTreeData( node->left );
 
-	if( g_packetLenMap_table_index < (int)node->key )
-		 g_packetLenMap_table_index = node->key;
+	if( m_packetLenMap_table_index < (int)node->key )
+		 m_packetLenMap_table_index = node->key;
 
-	g_packetLenMap_table[ node->key ] = node->value;
-	//kDD_LOGGING2( ("[ %08X ] = %d",node->key,node->value) );
+	m_packetLenMap_table[ node->key ] = node->value;
+	//DEBUG_LOGGING_NORMAL( ("[ %08X ] = %d",node->key,node->value) );
 
 	GetTreeData( node->right );
 
-	return g_packetLenMap_table_index;
+	return m_packetLenMap_table_index;
 }
 
-#define PACKETQUEUE_BUFFERSIZE 40960
-char packetqueuebuffer[PACKETQUEUE_BUFFERSIZE];
-unsigned int packetqueue_head = 0;
 
-void PacketQueueProc(char *buf,int len)
+void CRoCodeBind::PacketQueueProc(char *buf,int len)
 {
 	if( len > 0 ){
-		if( packetqueue_head + len >= PACKETQUEUE_BUFFERSIZE ){
-			kDD_LOGGING2( ("packet buffer has overflowed.\n") );
+		if( m_packetqueue_head + len >= PACKETQUEUE_BUFFERSIZE ){
+			DEBUG_LOGGING_NORMAL( ("packet buffer has overflowed.\n") );
 			return;
 		}
-		memcpy( &packetqueuebuffer[packetqueue_head] , buf,
+		memcpy( &m_packetqueuebuffer[m_packetqueue_head] , buf,
 			len);
-		packetqueue_head += len;
-		while( packetqueue_head > 1 ){
-			unsigned short opcode = *(unsigned short*)packetqueuebuffer;
+		m_packetqueue_head += len;
+		while( m_packetqueue_head > 1 ){
+			unsigned short opcode = *(unsigned short*)m_packetqueuebuffer;
 			unsigned int packetlength;
 
-			if( packetqueue_head == 4 && len == 4 ){
+			if( m_packetqueue_head == 4 && len == 4 ){
 				packetlength = 4;
 			}else{
 				packetlength = GetPacketLength( opcode );
 				if( packetlength == -1 ){
-					if( packetqueue_head < 4 )break;
-					packetlength = *(unsigned int*)packetqueuebuffer;
+					if( m_packetqueue_head < 4 )break;
+					packetlength = *(unsigned int*)m_packetqueuebuffer;
 					packetlength >>= 16;
 				}
 			}
-			if( packetqueue_head >= packetlength ){
+			if( m_packetqueue_head >= packetlength ){
 				if( g_pSharedData && g_pSharedData->write_packetlog ){
 					std::stringstream str;
 					str << "[" << std::setfill('0') << std::setw(8) << timeGetTime() << "] R ";
 					for(int ii = 0;ii < (int)packetlength ;ii++)
-						str << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << (int)(unsigned char)packetqueuebuffer[ii] << " ";
+						str << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << (int)(unsigned char)m_packetqueuebuffer[ii] << " ";
 					str << std::flush;
-					//kDD_LOGGING2( ("Opcode %04X size = %d / %d\n",opcode,packetlength,packetqueue_head) );
-					kDD_LOGGING2(( str.str().c_str() ));
+					//DEBUG_LOGGING_NORMAL( ("Opcode %04X size = %d / %d\n",opcode,packetlength,packetqueue_head) );
+					DEBUG_LOGGING_NORMAL(( str.str().c_str() ));
 				}
 
-				packetqueue_head -= packetlength;
-				if( packetqueue_head ){
-					memmove( packetqueuebuffer, &packetqueuebuffer[packetlength],
-						packetqueue_head );
+				m_packetqueue_head -= packetlength;
+				if( m_packetqueue_head ){
+					memmove( m_packetqueuebuffer, &m_packetqueuebuffer[packetlength],
+						m_packetqueue_head );
 				}
 			}else{
 				break;
@@ -602,9 +618,7 @@ void PacketQueueProc(char *buf,int len)
 	}
 }
 
-
-
-void SearchRagexeMemory(void)
+void CRoCodeBind::SearchRagexeMemory(void)
 {
 	// CZ_UIYourItemWnd::SendMsg CZ_REQ_WEAR_EQUIP handler
 	// Marker '1' CModeMgr g_modeMgr (C++ Class Instance)
@@ -760,7 +774,7 @@ void SearchRagexeMemory(void)
 	CSearchCode winmain_init_CMouse_Init_call(
 		"b9*1******"		// mov     ecx,g_mouse
 		"e8*2******"		// call    near CMouse__Init
-		"a1********"		// mov     eax, g_renderer__CRenderer
+		"a1*3******"		// mov     eax, g_renderer__CRenderer
 		);
 
 	CSearchCode funcPlayStrem_based_HighPrest_exe(
@@ -828,31 +842,9 @@ void SearchRagexeMemory(void)
 		"0f84********"      //   jz      near C00719393
 		);
 
-	CSearchCode SetView_CView_BuildViewMatrix_based_20140226_155100iRagexe_exe(
-		// new
-		// 005ad138
-		"d88688000000"      //   fadd    dword [esi+000000088h]
-		"d99e88000000"      //   fstp    dword [esi+000000088h]
-		"e8*1******"        //   call    near F005a5eb0 ; CModeMgr__GetGameMode
-		"d98688000000"      //   fld     dword [esi+000000088h]
-		"8b80*2******"      //   mov     eax,dword [eax+0000000d0h]
-		"8b4840"            //   mov     ecx,dword [eax+040h]
-		);
-	CSearchCode SetView_CView_BuildViewMatrix_based_HightPriest(
-		// HightPriest & Ragexe2010_11_02aJ & Ragexe2011-04-29aJ
-		//004f1f2e
-		"d88688000000"      //   fadd    dword [esi+000000088h]
-		"d99e88000000"      //   fstp    dword [esi+000000088h]
-		"e8*1******"        //   call    near F004edf20
-		"8b80*2******"      //   mov     eax,dword [eax+0000000b4h]
-		"8b8e88000000"      //   mov     ecx,dword [esi+000000088h]
-		"8b17"              //   mov     edx,dword [edi]
-		"51"                //   push    ecx
-		"8b4840"            //   mov     ecx,dword [eax+040h]
-		);
-
 	LPBYTE pRagexeBase;
 	MEMORY_BASIC_INFORMATION mbi;
+	DWORD temp_eax,temp_ecx,temp_edx,temp_esp;
 
 	pRagexeBase = (LPBYTE)::GetModuleHandle(NULL);
 	pRagexeBase += 0x1000;
@@ -863,10 +855,10 @@ void SearchRagexeMemory(void)
 
 		p_std_map_packetlen *packetLenMap = 0;
 
-		kDD_LOGGING2( ("MEMORY_BASIC_INFORMATION lpAddres:%08X",pRagexeBase) );
-		kDD_LOGGING2( ("mbi.AllocationBase = %08X",mbi.AllocationBase) );
-		kDD_LOGGING2( ("mbi.BaseAddress    = %08X",mbi.BaseAddress) );
-		kDD_LOGGING2( ("mbi.RegionSize     = %08X",mbi.RegionSize) );
+		DEBUG_LOGGING_NORMAL( ("MEMORY_BASIC_INFORMATION lpAddres:%08X",pRagexeBase) );
+		DEBUG_LOGGING_NORMAL( ("mbi.AllocationBase = %08X",mbi.AllocationBase) );
+		DEBUG_LOGGING_NORMAL( ("mbi.BaseAddress    = %08X",mbi.BaseAddress) );
+		DEBUG_LOGGING_NORMAL( ("mbi.RegionSize     = %08X",mbi.RegionSize) );
 
 		// snatch the packetLenMap
 		for( UINT ii = 0; ii < mbi.RegionSize - 1000 ; ii++ )
@@ -880,23 +872,21 @@ void SearchRagexeMemory(void)
 					UIYourItemWnd__SendMsg_0A9Handler_TypeA.Get4BIndexDWORD( &pBase[ii] , '4' );
 				__asm push 0x0A9
 				__asm call GetPacketSizeAddr
-				__asm mov g_temp_esp,esp
+				__asm mov temp_esp,esp
 
 				p_std_map_packetlen *plen = (p_std_map_packetlen*)
-					*(DWORD*) (*(DWORD*)(g_temp_esp-19*4) + 4);
+					*(DWORD*) (*(DWORD*)(temp_esp-19*4) + 4);
 
 				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_0A9Handler_TypeA
 					.GetImmediateDWORD( &pBase[ii], '1' );
-				g_CModeMgr__GetGameMode = UIYourItemWnd__SendMsg_0A9Handler_TypeA
-					.GetNearJmpAddress( &pBase[ii], '2' );
 
-				kDD_LOGGING2( ("TypeA GetPacketSizeAddr %08X",GetPacketSizeAddr) );
-				kDD_LOGGING2( (" esp = %08X",g_temp_esp) );
+				DEBUG_LOGGING_NORMAL( ("TypeA GetPacketSizeAddr %08X",GetPacketSizeAddr) );
+				DEBUG_LOGGING_NORMAL( (" esp = %08X",temp_esp) );
 				while(1)
 				{
 					if( plen->key > 0xffff || (plen->key == 0 && plen->value == 0) ){
 						packetLenMap = plen;
-						kDD_LOGGING2( ("packetLenMap = %08X",packetLenMap) );
+						DEBUG_LOGGING_NORMAL( ("packetLenMap = %08X",packetLenMap) );
 						break;
 					}
 					plen = plen->parent;
@@ -910,28 +900,26 @@ void SearchRagexeMemory(void)
 					UIYourItemWnd__SendMsg_0A9Handler_TypeB.Get4BIndexDWORD( &pBase[ii] , '4' );
 				__asm push 0x0A9
 				__asm call GetPacketSizeAddr
-				__asm mov g_temp_eax,eax
-				__asm mov g_temp_ecx,ecx
-				__asm mov g_temp_edx,edx
+				__asm mov temp_eax,eax
+				__asm mov temp_ecx,ecx
+				__asm mov temp_edx,edx
 				p_std_map_packetlen *plen;
-				if( g_temp_eax == g_temp_edx ){
-					plen = (p_std_map_packetlen*)g_temp_ecx;
+				if( temp_eax == temp_edx ){
+					plen = (p_std_map_packetlen*)temp_ecx;
 				}else{
-					plen = (p_std_map_packetlen*)g_temp_edx;
+					plen = (p_std_map_packetlen*)temp_edx;
 				}
 
 				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_0A9Handler_TypeB
 					.GetImmediateDWORD( &pBase[ii], '1' );
-				g_CModeMgr__GetGameMode = UIYourItemWnd__SendMsg_0A9Handler_TypeB
-					.GetNearJmpAddress( &pBase[ii], '2' );
 
-				kDD_LOGGING2( ("TypeB GetPacketSizeAddr     = %08X eax = %08X ecx = %08X edx =%08X",
-					GetPacketSizeAddr,g_temp_eax,g_temp_ecx,g_temp_edx) );
+				DEBUG_LOGGING_NORMAL( ("TypeB GetPacketSizeAddr     = %08X eax = %08X ecx = %08X edx =%08X",
+					GetPacketSizeAddr,temp_eax,temp_ecx,temp_edx) );
 				while(1)
 				{
 					if( plen->key > 0xffff || (plen->key == 0 && plen->value == 0) ){
 						packetLenMap = plen;
-						kDD_LOGGING2( ("packetLenMap = %08X",packetLenMap) );
+						DEBUG_LOGGING_NORMAL( ("packetLenMap = %08X",packetLenMap) );
 						break;
 					}
 					plen = plen->parent;
@@ -948,20 +936,18 @@ void SearchRagexeMemory(void)
 				//GetPacketSize(0x0A9);
 				__asm push 0x0A9
 				__asm call GetPacketSizeAddr
-				__asm mov g_temp_ecx,ecx
-				p_std_map_packetlen *plen = (p_std_map_packetlen*)g_temp_ecx;
+				__asm mov temp_ecx,ecx
+				p_std_map_packetlen *plen = (p_std_map_packetlen*)temp_ecx;
 
 				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_0A9Handler_TypeC
 					.GetImmediateDWORD( &pBase[ii], '1' );
-				g_CModeMgr__GetGameMode = UIYourItemWnd__SendMsg_0A9Handler_TypeC
-					.GetNearJmpAddress( &pBase[ii], '2' );
 
-				kDD_LOGGING2( ("TypeC GetPacketSizeAddr     = %08X ecx = %08X",GetPacketSizeAddr,g_temp_ecx) );
+				DEBUG_LOGGING_NORMAL( ("TypeC GetPacketSizeAddr     = %08X ecx = %08X",GetPacketSizeAddr,temp_ecx) );
 				while(1)
 				{
 					if( plen->key > 0xffff || (plen->key == 0 && plen->value == 0) ){
 						packetLenMap = plen;
-						kDD_LOGGING2( ("packetLenMap = %08X",packetLenMap) );
+						DEBUG_LOGGING_NORMAL( ("packetLenMap = %08X",packetLenMap) );
 						break;
 					}
 					plen = plen->parent;
@@ -978,20 +964,18 @@ void SearchRagexeMemory(void)
 				//GetPacketSize(0x0A9);
 				__asm push 0x0A9
 				__asm call GetPacketSizeAddr
-				__asm mov g_temp_ecx,ecx
-				p_std_map_packetlen *plen = (p_std_map_packetlen*)g_temp_ecx;
+				__asm mov temp_ecx,ecx
+				p_std_map_packetlen *plen = (p_std_map_packetlen*)temp_ecx;
 
 				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_0A9Handler_TypeD
 					.GetImmediateDWORD( &pBase[ii], '1' );
-				g_CModeMgr__GetGameMode = UIYourItemWnd__SendMsg_0A9Handler_TypeD
-					.GetNearJmpAddress( &pBase[ii], '2' );
 
-				kDD_LOGGING2( ("TypeD GetPacketSizeAddr     = %08X ecx = %08X",GetPacketSizeAddr,g_temp_ecx) );
+				DEBUG_LOGGING_NORMAL( ("TypeD GetPacketSizeAddr     = %08X ecx = %08X",GetPacketSizeAddr,temp_ecx) );
 				while(1)
 				{
 					if( plen->key > 0xffff || (plen->key == 0 && plen->value == 0) ){
 						packetLenMap = plen;
-						kDD_LOGGING2( ("packetLenMap = %08X",packetLenMap) );
+						DEBUG_LOGGING_NORMAL( ("packetLenMap = %08X",packetLenMap) );
 						break;
 					}
 					plen = plen->parent;
@@ -1008,20 +992,18 @@ void SearchRagexeMemory(void)
 				//GetPacketSize(0x0A9);
 				__asm push 0x0A9
 				__asm call GetPacketSizeAddr
-				__asm mov g_temp_ecx,ecx
-				p_std_map_packetlen *plen = (p_std_map_packetlen*)g_temp_ecx;
+				__asm mov temp_ecx,ecx
+				p_std_map_packetlen *plen = (p_std_map_packetlen*)temp_ecx;
 
 				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_0A9Handler_TypeE
 					.GetImmediateDWORD( &pBase[ii], '1' );
-				g_CModeMgr__GetGameMode = UIYourItemWnd__SendMsg_0A9Handler_TypeE
-					.GetNearJmpAddress( &pBase[ii], '2' );
 
-				kDD_LOGGING2( ("TypeE GetPacketSizeAddr     = %08X ecx = %08X",GetPacketSizeAddr,g_temp_ecx) );
+				DEBUG_LOGGING_NORMAL( ("TypeE GetPacketSizeAddr     = %08X ecx = %08X",GetPacketSizeAddr,temp_ecx) );
 				while(1)
 				{
 					if( plen->key > 0xffff || (plen->key == 0 && plen->value == 0) ){
 						packetLenMap = plen;
-						kDD_LOGGING2( ("packetLenMap = %08X",packetLenMap) );
+						DEBUG_LOGGING_NORMAL( ("packetLenMap = %08X",packetLenMap) );
 						break;
 					}
 					plen = plen->parent;
@@ -1039,7 +1021,7 @@ void SearchRagexeMemory(void)
 				)
 			{
 				ptr_CMouse_Init = (DWORD)( &pBase[ii] );
-				kDD_LOGGING2( ("find CMouse::Init = %08X",pBase + ii) );
+				DEBUG_LOGGING_NORMAL( ("find CMouse::Init = %08X",pBase + ii) );
 				break;
 			}
 		}
@@ -1050,12 +1032,14 @@ void SearchRagexeMemory(void)
 				LPBYTE pBase = (LPBYTE)mbi.BaseAddress;
 				if( winmain_init_CMouse_Init_call.PatternMatcher( &pBase[ii] ) )
 				{
-					kDD_LOGGING2( ("find CMouse::Init call : %08X",pBase + ii) );
+					DEBUG_LOGGING_NORMAL( ("find CMouse::Init call : %08X",pBase + ii) );
 					if( winmain_init_CMouse_Init_call.NearJmpAddressMatcher( &pBase[ii],'2',ptr_CMouse_Init ) )
 					{
-						DWORD ptr_g_mouse = winmain_init_CMouse_Init_call.GetImmediateDWORD(&pBase[ii],'1');
-						kDD_LOGGING2( ("find g_mouse = %08X",ptr_g_mouse) );
-						g_ROmouse = ptr_g_mouse;
+						g_mouse = (CMouse*)winmain_init_CMouse_Init_call.GetImmediateDWORD(&pBase[ii],'1');
+						g_renderer = (CRenderer**)winmain_init_CMouse_Init_call.GetImmediateDWORD(&pBase[ii],'3');
+						
+						DEBUG_LOGGING_NORMAL( ("find g_mouse = %08X",g_mouse) );
+						DEBUG_LOGGING_NORMAL( ("find *g_renderer = %08X",g_renderer) );
 						break;
 					}
 				}
@@ -1072,9 +1056,9 @@ void SearchRagexeMemory(void)
 				funcRagexe_PlayStream = (tPlayStream)&pBase[ii];
 				DWORD pPlayStream;
 				pPlayStream = (DWORD)&pBase[ii];
-				kDD_LOGGING2( ("based_20140226_155100iRagexe : %08X",&pBase[ii]) );
-				kDD_LOGGING2( ("g_soundMode == %08X",(char*)funcPlayStrem_based_20140226_155100iRagexe_exe.GetImmediateDWORD(&pBase[ii],'1')) );
-				kDD_LOGGING2( ("void PlayStream(const char *streamFileName) = %08X",pPlayStream) );
+				DEBUG_LOGGING_NORMAL( ("based_20140226_155100iRagexe : %08X",&pBase[ii]) );
+				DEBUG_LOGGING_NORMAL( ("g_soundMode == %08X",(char*)funcPlayStrem_based_20140226_155100iRagexe_exe.GetImmediateDWORD(&pBase[ii],'1')) );
+				DEBUG_LOGGING_NORMAL( ("void PlayStream(const char *streamFileName) = %08X",pPlayStream) );
 				break;
 			}
 			if( funcPlayStrem_based_HighPrest_exe.PatternMatcher( &pBase[ii] )	)
@@ -1082,9 +1066,9 @@ void SearchRagexeMemory(void)
 				funcRagexe_PlayStream = (tPlayStream)&pBase[ii];
 				DWORD pPlayStream;
 				pPlayStream = (DWORD)&pBase[ii];
-				kDD_LOGGING2( ("based_HighPrest_exe : %08X",&pBase[ii]) );
-				kDD_LOGGING2( ("g_soundMode == %08X",(char*)funcPlayStrem_based_HighPrest_exe.GetImmediateDWORD(&pBase[ii],'1')) );
-				kDD_LOGGING2( ("void PlayStream(const char *streamFileName) = %08X",pPlayStream) );
+				DEBUG_LOGGING_NORMAL( ("based_HighPrest_exe : %08X",&pBase[ii]) );
+				DEBUG_LOGGING_NORMAL( ("g_soundMode == %08X",(char*)funcPlayStrem_based_HighPrest_exe.GetImmediateDWORD(&pBase[ii],'1')) );
+				DEBUG_LOGGING_NORMAL( ("void PlayStream(const char *streamFileName) = %08X",pPlayStream) );
 				break;
 			}
 			if( funcPlayStrem_based_RagFree_exe.PatternMatcher( &pBase[ii] )	)
@@ -1092,9 +1076,9 @@ void SearchRagexeMemory(void)
 				funcRagexe_PlayStream = (tPlayStream)&pBase[ii];
 				DWORD pPlayStream;
 				pPlayStream = (DWORD)&pBase[ii];
-				kDD_LOGGING2( ("based_RagFree_exe : %08X",&pBase[ii]) );
-				kDD_LOGGING2( ("g_soundMode == %08X",(char*)funcPlayStrem_based_RagFree_exe.GetImmediateDWORD(&pBase[ii],'1')) );
-				kDD_LOGGING2( ("void PlayStream(const char *streamFileName,int playflag) = %08X",pPlayStream) );
+				DEBUG_LOGGING_NORMAL( ("based_RagFree_exe : %08X",&pBase[ii]) );
+				DEBUG_LOGGING_NORMAL( ("g_soundMode == %08X",(char*)funcPlayStrem_based_RagFree_exe.GetImmediateDWORD(&pBase[ii],'1')) );
+				DEBUG_LOGGING_NORMAL( ("void PlayStream(const char *streamFileName,int playflag) = %08X",pPlayStream) );
 				break;
 			}
 			if( funcPlayStrem_based_2011111201aRagexe_exe.PatternMatcher( &pBase[ii] )	)
@@ -1102,9 +1086,9 @@ void SearchRagexeMemory(void)
 				funcRagexe_PlayStream = (tPlayStream)&pBase[ii];
 				DWORD pPlayStream;
 				pPlayStream = (DWORD)&pBase[ii];
-				kDD_LOGGING2( ("based_2011111201aRagexe_exe : %08X",&pBase[ii]) );
-				kDD_LOGGING2( ("g_soundMode == %08X",(char*)funcPlayStrem_based_2011111201aRagexe_exe.GetImmediateDWORD(&pBase[ii],'1')) );
-				kDD_LOGGING2( ("void PlayStream(const char *streamFileName,int playflag) = %08X",pPlayStream) );
+				DEBUG_LOGGING_NORMAL( ("based_2011111201aRagexe_exe : %08X",&pBase[ii]) );
+				DEBUG_LOGGING_NORMAL( ("g_soundMode == %08X",(char*)funcPlayStrem_based_2011111201aRagexe_exe.GetImmediateDWORD(&pBase[ii],'1')) );
+				DEBUG_LOGGING_NORMAL( ("void PlayStream(const char *streamFileName,int playflag) = %08X",pPlayStream) );
 				break;
 			}
 		}
@@ -1117,20 +1101,20 @@ void SearchRagexeMemory(void)
 				for(int ii = 0;ii < packetnums ;ii++){
 					if( (ii % 0x40)==0 ){
 						onelinestr << "# 0x" << std::setfill('0') << std::setw(4) << std::hex << ii;
-						kDD_LOGGING2(( onelinestr.str().c_str() ));
+						DEBUG_LOGGING_NORMAL(( onelinestr.str().c_str() ));
 						onelinestr.str("");
 					}
 					if( (ii % 0x10)==0 ){
 						onelinestr << " ";
 					}
-					onelinestr << std::setfill(' ') << std::setw(4) << std::dec << g_packetLenMap_table[ii] << ",";
+					onelinestr << std::setfill(' ') << std::setw(4) << std::dec << m_packetLenMap_table[ii] << ",";
 					if( (ii % 0x10)==0x0f ){
-						kDD_LOGGING2(( onelinestr.str().c_str() ));
+						DEBUG_LOGGING_NORMAL(( onelinestr.str().c_str() ));
 						onelinestr.str("");
 					}
 				}
-				kDD_LOGGING2(( onelinestr.str().c_str() ));
-				kDD_LOGGING2(( "" ));
+				DEBUG_LOGGING_NORMAL(( onelinestr.str().c_str() ));
+				DEBUG_LOGGING_NORMAL(( "" ));
 			}
 		}
 

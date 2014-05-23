@@ -86,6 +86,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\FastFont\CacheInfo.h" />
+    <ClInclude Include="Core\PerformanceCounter.h" />
+    <ClInclude Include="Core\SearchCode.h" />
     <ClInclude Include="Hook.h" />
     <ClInclude Include="Core\FastFont\FastFont.h" />
     <ClInclude Include="ProxyIDirectDraw.h" />

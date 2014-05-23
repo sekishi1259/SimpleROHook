@@ -7,7 +7,7 @@
 
 HRESULT CProxyIDirectInput7::Proxy_CreateDevice(THIS_ REFGUID rguid,LPDIRECTINPUTDEVICEA *lpIDD,LPUNKNOWN pUnkOuter)
 {
-	kDD_LOGGING(("IDirectInput7::CreateDevice()\n"));
+	DEBUG_LOGGING_DETAIL(("IDirectInput7::CreateDevice()\n"));
 
 	void *ret_cProxy;
 	IDirectInputDevice7* lpDirectInputDevice7;
@@ -19,7 +19,7 @@ HRESULT CProxyIDirectInput7::Proxy_CreateDevice(THIS_ REFGUID rguid,LPDIRECTINPU
 	 && rguid.Data3 == GUID_SysMouse.Data3 
 	 && *(UINT64*)rguid.Data4 == *(UINT64*)GUID_SysMouse.Data4
 	 ){
-		kDD_LOGGING(("IDirectInput7::Hook_CProxyIDirectInputDevice7 0x%0x ",lpDirectInputDevice7));
+		DEBUG_LOGGING_DETAIL(("IDirectInput7::Hook_CProxyIDirectInputDevice7 0x%0x ",lpDirectInputDevice7));
 		ret_cProxy = (void*)(new CProxyIDirectInputDevice7(lpDirectInputDevice7));
 		*lpIDD = (LPDIRECTINPUTDEVICEA)ret_cProxy;
 	}
@@ -29,16 +29,10 @@ HRESULT CProxyIDirectInput7::Proxy_CreateDevice(THIS_ REFGUID rguid,LPDIRECTINPU
 
 extern DWORD g_ROmouse;
 HWND g_HWND = NULL;
-/*
-nowait 1000ms = 1970draw
-vsync  1000ms =   60draw
-*/
-extern double g_FrameRate;
-extern int g_executecount;
-extern double g_VSyncWaitTick;
-DWORD oldtime = 0;
+
 HRESULT CProxyIDirectInputDevice7::Proxy_GetDeviceState(THIS_ DWORD cbData,LPVOID lpvData)
 {
+	static DWORD oldtime = 0;
 	HRESULT Result;
 
 	Result = m_Instance->GetDeviceState(cbData, lpvData);
@@ -60,28 +54,24 @@ HRESULT CProxyIDirectInputDevice7::Proxy_GetDeviceState(THIS_ DWORD cbData,LPVOI
 		if( (timeGetTime() - oldtime) >= 1000 )
 		{
 			double _60frametick = g_PerformanceCounter.GetTotalTick();
-			//kDD_LOGGING2( ("60frametick = %d:%lf VSyncWaitTick:%lf",g_executecount,_60frametick,g_VSyncWaitTick) );
-			g_executecount = 0;
 			oldtime = timeGetTime();
 		}
 	}else{
 		oldtime = timeGetTime();
 	}
 
-	if( g_ROmouse && g_MouseFreeSw ){
-		CMouse *lpCMouse = (CMouse*)g_ROmouse;
+	if( g_pRoCodeBind && g_MouseFreeSw ){
 		int *pMouseData = (int*)lpvData;
 
 		POINT point;
 		::GetCursorPos(&point);
 		::ScreenToClient(g_HWND, &point);
 
-		lpCMouse->m_xPos = point.x;
-		lpCMouse->m_yPos = point.y;
 		if( ::GetActiveWindow() == g_HWND ){
-			lpCMouse->m_xPos -= pMouseData[0];
-			lpCMouse->m_yPos -= pMouseData[1];
+			point.x -= pMouseData[0];
+			point.y -= pMouseData[1];
 		}
+		g_pRoCodeBind->SetMouseCurPos( (int)point.x,(int)point.y );
 	}
 	// cpu cooler
 	if( g_pSharedData ){
@@ -105,7 +95,7 @@ HRESULT CProxyIDirectInputDevice7::Proxy_GetDeviceState(THIS_ DWORD cbData,LPVOI
 HRESULT CProxyIDirectInputDevice7::Proxy_SetCooperativeLevel(HWND hwnd, DWORD dwflags)
 {
 	HRESULT Result;
-	kDD_LOGGING(("lpDI->SetCooperativeLevel\n"));
+	DEBUG_LOGGING_DETAIL(("lpDI->SetCooperativeLevel\n"));
 
 	g_HWND = hwnd;// Window Handle of RO
 	// Mouse Freedom

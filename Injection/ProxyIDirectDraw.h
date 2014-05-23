@@ -1,6 +1,5 @@
 #include "ProxyHelper.h"
 
-
 #define CLASSNAME "IDirectDraw7"
 class CProxyIDirectDraw7 : public IDirectDraw7{
 private:
@@ -185,7 +184,7 @@ public:
 	{
 		Proxy_Release();
 		ULONG Count = m_Instance->Release();
-		kDD_LOGGING_TEST((CLASSNAME "::Release()  RefCount = %d", Count));
+		DEBUG_LOGGING_MORE_DETAIL((CLASSNAME "::Release()  RefCount = %d", Count));
 		if(Count == 0)
 			delete this;
 		return Count;

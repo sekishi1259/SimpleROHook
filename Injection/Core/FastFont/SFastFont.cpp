@@ -148,7 +148,7 @@ void CSFastFont::DrawChar(int fontcode,int x,int y,DWORD FontColor,SIZE *pSize)
 	  { (float)x                    , (float)(y+(int)pCache->h-1) , 0.0f, 1.0f, FontColor,  0, ((pCache->u            )+0.5f)/m_MaxImageWidth, ((pCache->v+pCache->h-1)+0.5f)/m_MaxImageHeight}, 
 	};
 
-	if( defSSF_VERTEX_MAX > m_SSF_Vertex_index ){
+	if( MAX_SSF_VERTEX > m_SSF_Vertex_index ){
 		memcpy( &m_SFF_Vertex[m_SSF_Vertex_index],v,6*sizeof(D3DTLVERTEX) );
 		m_SSF_Vertex_index+=6;
 	}
@@ -271,7 +271,7 @@ void CSFastFont::DrawCharSC(int fontcode,int x,int y,float scx,float scy,DWORD F
 	  { (float)x     , (float)(y+h) , 0.0f, 1.0f, FontColor,   0, ((pCache->u            )+0.5f)/m_MaxImageWidth, ((pCache->v+pCache->h-1)+0.5f)/m_MaxImageHeight}, 
 	};
 
-	if( (defSSF_VERTEX_MAX-1) > m_SSF_Vertex_index ){
+	if( (MAX_SSF_VERTEX-1) > m_SSF_Vertex_index ){
 		memcpy( &m_SFF_Vertex[m_SSF_Vertex_index],v,6*sizeof(D3DTLVERTEX) );
 		m_SSF_Vertex_index+=6;
 	}

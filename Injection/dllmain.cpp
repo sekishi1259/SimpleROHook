@@ -29,7 +29,7 @@ BOOL InstallProxyFunction(LPCTSTR dllname,LPCTSTR exportname,T ProxyFunction,T *
 
 	BYTE *p = (BYTE*)::GetProcAddress( hDll, exportname);
 
-	kDD_LOGGING2( ("hook %s:%s(%08X)\n",dllname,exportname,p) );
+	DEBUG_LOGGING_NORMAL( ("hook %s:%s(%08X)\n",dllname,exportname,p) );
 	if( p )
 	{
 		if(     p[ 0] == 0x8b && p[ 1] == 0xff &&
@@ -48,7 +48,7 @@ BOOL InstallProxyFunction(LPCTSTR dllname,LPCTSTR exportname,T ProxyFunction,T *
 			{
 				p[-5] = 0xe9;              // jmp
 				p[ 0] = 0xeb; p[ 1] = 0xf9;// jmp short [pc-7]
-kDD_LOGGING2( ("hook type a\n") );
+DEBUG_LOGGING_NORMAL( ("hook type a\n") );
 
 				*pOriginalFunction = (T)&p[2];
 				*((DWORD*)&p[-4])  = (DWORD)ProxyFunction - (DWORD)&p[-5] -5;
@@ -68,7 +68,7 @@ kDD_LOGGING2( ("hook type a\n") );
 			{
 				*pOriginalFunction = (T)(*((DWORD*)&p[-4]) + (DWORD)&p[-5] +5);
 				*((DWORD*)&p[-4])  = (DWORD)ProxyFunction - (DWORD)&p[-5] -5;
-kDD_LOGGING2( ("hook type b\n") );
+DEBUG_LOGGING_NORMAL( ("hook type b\n") );
 
 				::VirtualProtect( (LPVOID)&p[-5], 7 , flOldProtect, &flDontCare);
 				result = TRUE;
@@ -92,7 +92,7 @@ kDD_LOGGING2( ("hook type b\n") );
 
 				*((DWORD*)&p[1])  = (DWORD)ProxyFunction - (DWORD)&p[0] -5;
 
-kDD_LOGGING2( ("hook type c\n") );
+DEBUG_LOGGING_NORMAL( ("hook type c\n") );
 
 				::VirtualProtect( (LPVOID)&p[0], 5 , flOldProtect, &flDontCare);
 				result = TRUE;
@@ -122,7 +122,6 @@ BOOL RagexeSoundRateFixer(void)
 	HINSTANCE hDll;
 	::GetCurrentDirectoryA( MAX_PATH,currentdir );
 
-	//fullpath.Format(_T("%s\\Mss32.dll"), currentdir);
 	fullpath << currentdir << "\\Mss32.dll";
 	hDll = ::LoadLibrary(fullpath.str().c_str() );
 
@@ -177,8 +176,9 @@ int WSAAPI ProxyWS32_recv( SOCKET s, char *buf,int len,int flags )
 
 	result = OrigWS32_recv(s,buf,len,flags);
 	//if( result >= 2 )
-	//	kDD_LOGGING2( ("recv len %d [0]=%02X [1]=%02X\n",result,(unsigned char)buf[0],(unsigned char)buf[1]) );
-	PacketQueueProc( buf,result );
+	//	DEBUG_LOGGING_NORMAL( ("recv len %d [0]=%02X [1]=%02X\n",result,(unsigned char)buf[0],(unsigned char)buf[1]) );
+	if( g_pRoCodeBind )
+		g_pRoCodeBind->PacketQueueProc( buf,result );
 
 	return result;
 }
@@ -192,7 +192,7 @@ HRESULT WINAPI ProxyDirectDrawCreateEx(
 	REFIID        iid,
 	IUnknown FAR *pUnkOuter )
 {
-	kDD_LOGGING( ("DirectDrawCreateEx hookfunc\n") );
+	DEBUG_LOGGING_DETAIL( ("DirectDrawCreateEx hookfunc\n") );
 
 	HRESULT Result = OrigDirectDrawCreateEx( lpGuid, lplpDD, iid, pUnkOuter );
 	if(FAILED(Result))
@@ -202,7 +202,7 @@ HRESULT WINAPI ProxyDirectDrawCreateEx(
 	*lplpDD = lpcDD = new CProxyIDirectDraw7((IDirectDraw7*)*lplpDD);
 	lpcDD->setThis(lpcDD);
 
-	kDD_LOGGING( ("DirectDrawCreateEx Hook hookfunc") );
+	DEBUG_LOGGING_DETAIL( ("DirectDrawCreateEx Hook hookfunc") );
 
     return Result;
 }
@@ -213,7 +213,7 @@ HRESULT WINAPI ProxyDirectInputCreateA(
 	LPDIRECTINPUTA *ppDI,
 	LPUNKNOWN punkOuter )
 {
-	kDD_LOGGING( ("DirectInputCreateA hookfunc instance = %08X",g_ROmouse) );
+	DEBUG_LOGGING_DETAIL( ("DirectInputCreateA hookfunc instance = %08X",hinst) );
 
 	HRESULT Result = OrigDirectInputCreateA( hinst, dwVersion, ppDI, punkOuter );
 
@@ -222,7 +222,7 @@ HRESULT WINAPI ProxyDirectInputCreateA(
 	if(dwVersion == 0x0700){
 		*ppDI = new CProxyIDirectInput7((IDirectInput7*)*ppDI);
 	}
-	kDD_LOGGING( ("DirectInputCreateA Hook hookfunc") );
+	DEBUG_LOGGING_DETAIL( ("DirectInputCreateA Hook hookfunc") );
 
     return Result;
 }

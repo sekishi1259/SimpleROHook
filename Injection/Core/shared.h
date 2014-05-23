@@ -1,6 +1,6 @@
 #pragma once
 
-#define kSHAREDMEMORY_OBJECTNAME _T("SimpleROHook1008")
+#define SHAREDMEMORY_OBJECTNAME _T("SimpleROHook1008")
 
 typedef struct _StSHAREDMEMORY{
 //	DWORD	used_flag;

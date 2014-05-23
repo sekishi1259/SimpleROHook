@@ -102,6 +102,12 @@
     <ClInclude Include="ProxyIDirectInput.h">
       <Filter>ヘッダー ファイル\Dll-Injection</Filter>
     </ClInclude>
+    <ClInclude Include="Core\PerformanceCounter.h">
+      <Filter>ヘッダー ファイル\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\SearchCode.h">
+      <Filter>ヘッダー ファイル\Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\RoCodeBind.cpp">

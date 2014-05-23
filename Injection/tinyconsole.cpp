@@ -7,6 +7,7 @@ HINSTANCE g_hTCInstance;
 #define IDC_RICHEDIT (101)
 
 TCHAR strPath[MAX_PATH + 1];
+
 HINSTANCE	s_hRtLib;
 HWND		s_hRichEdit = NULL;
 HANDLE g_hTinyConsole = NULL;
@@ -36,7 +37,25 @@ public:
 
 CTinylogger *s_pTinyLogger = NULL;
 
-void DebugLogA(const char* format, ...) 
+
+void DebugLogger(const char* format, ...) 
+{
+	va_list argptr;
+	va_start(argptr, format);
+
+	int length = _vscprintf(format, argptr);
+	char* buf = new char [length + 2];
+	vsprintf_s(buf,length + 2, format, argptr );
+	strcat_s(buf,length + 2,"\n");
+
+	if( s_pTinyLogger )
+		*s_pTinyLogger << buf;
+
+	delete[] buf;
+	va_end(argptr);
+}
+
+void DebugLoggerWithLogWindow(const char* format, ...) 
 {
 	va_list argptr;
 	va_start(argptr, format);

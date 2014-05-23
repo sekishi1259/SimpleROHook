@@ -112,7 +112,10 @@ namespace SimpleROHookCS
 
         private void UpdateCheckMenu()
         {
-            playMusicOnClientStreamPlayerToolStripMenuItem.Enabled = (m_SharedData.g_hROWindow == 0)? false : true;
+            playMusicOnClientStreamPlayerToolStripMenuItem.Enabled
+                = (m_SharedData.g_hROWindow == 0)? false : true;
+            packetLogToolStripMenuItem.Checked
+                = m_SharedData.write_packetlog;
             freeMouseToolStripMenuItem.Checked
                 = m_SharedData.freemouse;
             showM2EToolStripMenuItem.Checked

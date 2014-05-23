@@ -58,8 +58,8 @@ public:
 	static bool SFontBlt16Black(void *pData,DWORD alpha);
 
 private:
-#define defSSF_VERTEX_MAX (65536*6)
-	D3DTLVERTEX m_SFF_Vertex[defSSF_VERTEX_MAX];
+#define MAX_SSF_VERTEX (65536*6)
+	D3DTLVERTEX m_SFF_Vertex[MAX_SSF_VERTEX];
 	int m_SSF_Vertex_index;
 
 	CFastFont *m_pFastFont;

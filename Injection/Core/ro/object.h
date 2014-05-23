@@ -1,5 +1,47 @@
 #pragma once
 
+class CRenderer {
+public:
+	float m_hpc;
+	float m_vpc;
+	float m_hratio;
+	float m_vratio;
+	float m_aspectRatio;
+	float m_screenXFactor;
+	float m_screenYFactor;
+	int m_xoffset;
+	int m_yoffset;
+	int m_width;
+	int m_height;
+	int m_halfWidth;
+	int m_halfHeight;
+	int m_curFrame;
+	int m_bRGBBitCount;
+	unsigned long m_fpsFrameCount;
+	unsigned long m_fpsStartTick;
+	int m_isFoggy;
+	int m_fogChanged;
+	int m_isVertexFog;
+	class CTexture* m_oldTexture;
+	class CTexture* m_oldLmapTexture;
+	float m_guardBandLeft;
+	float m_guardBandRight;
+	float m_guardBandTop;
+	float m_guardBandBottom;
+	int m_isShowInfo;
+	struct vector3d m_eyeVector;
+	unsigned long m_nClearColor;
+	struct IDirect3DDevice7* m_device;
+	struct IDirectDrawSurface7* m_lpSurface;
+	void *m_lpUnknown;
+	unsigned long m_dwScreenWidth;
+	unsigned long m_dwScreenHeight;
+//  .
+//  .
+//  .
+	CRenderer(){};
+};
+
 struct RPTriFace {
 	struct tlvertex3d verts[3];
 	CTexture* tex;
