@@ -3,7 +3,6 @@
 #define SHAREDMEMORY_OBJECTNAME _T("SimpleROHook1008")
 
 typedef struct _StSHAREDMEMORY{
-//	DWORD	used_flag;
 	HWND	g_hROWindow;
 
 	DWORD	executeorder;

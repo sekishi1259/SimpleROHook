@@ -1,7 +1,8 @@
 
     SimpleROHook
 
-    Simply extended the Ragnarok Online.
+    Simply extend Ragnarok Online.
+    For example, display font on client screen,it can placed easily in 3D map.
 
     Copyright (C) 2014 redcat Planetleaf.com Lab. All rights reserved.
 

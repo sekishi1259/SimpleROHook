@@ -9,6 +9,7 @@ CProxyIDirectDraw7*    CProxyIDirectDraw7::lpthis;
 
 CProxyIDirectDraw7::CProxyIDirectDraw7(IDirectDraw7* ptr):m_Instance(ptr), CooperativeLevel(0), PrimarySurfaceFlag(0), TargetSurface(NULL)
 {
+	g_pRoCodeBind = new CRoCodeBind();
 	DEBUG_LOGGING_DETAIL(("IDirectDraw7::Create"));
 }
 
@@ -21,6 +22,7 @@ ULONG CProxyIDirectDraw7::Proxy_Release(void)
 {
 	ULONG Count;
 
+	if( g_pRoCodeBind )delete g_pRoCodeBind;
 	Count = m_Instance->Release();
 	DEBUG_LOGGING_DETAIL(("CProxyIDirectDraw7::Release()  RefCount = %d", Count));
 	delete this;
@@ -146,6 +148,7 @@ HRESULT CProxyIDirectDraw7::Proxy_SetCooperativeLevel(HWND hWnd, DWORD dwFlags)
 	if( g_pSharedData ){
 		g_pSharedData->g_hROWindow = hWnd;
 	}
+	if( g_pRoCodeBind )g_pRoCodeBind->InitWindowHandle(hWnd);
 
 	DDSURFACEDESC2 dummy;
 	dummy.dwSize = sizeof(DDSURFACEDESC2);
@@ -222,8 +225,6 @@ HRESULT CProxyIDirect3D7::Proxy_CreateDevice( REFCLSID rclsid,LPDIRECTDRAWSURFAC
 
 void CProxyIDirect3DDevice7::Proxy_Release(void)
 {
-	//ReleaseRODraw();
-	if( g_pRoCodeBind )delete g_pRoCodeBind;
 }
 
 HRESULT CProxyIDirect3DDevice7::Proxy_SetRenderState(THIS_ D3DRENDERSTATETYPE dwRenderStateType,DWORD dwRenderState)
@@ -244,8 +245,7 @@ HRESULT CProxyIDirect3DDevice7::Proxy_BeginScene(void)
 	HRESULT result;
 	if( m_firstonce ){
 		m_firstonce = false;
-		//InitRODraw(m_Instance);
-		g_pRoCodeBind = new CRoCodeBind( m_Instance );
+		if( g_pRoCodeBind )g_pRoCodeBind->Init( m_Instance );
 	}
 	m_frameonce = TRUE;
 	//DEBUG_LOGGING_NORMAL(("CProxyIDirect3D7::Proxy_BeginScene()"));

@@ -284,7 +284,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 				::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,
 					temppath,strlen(temppath)+1,
 					g_pSharedData->musicfilename,MAX_PATH);
-				g_MouseFreeSw = g_pSharedData->freemouse;
+				g_FreeMouseSw = g_pSharedData->freemouse;
 				if( g_pSharedData->_44khz_audiomode )
 					RagexeSoundRateFixer();
 			}

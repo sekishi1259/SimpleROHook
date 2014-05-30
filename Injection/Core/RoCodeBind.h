@@ -20,6 +20,7 @@
 
 #include "PerformanceCounter.h"
 #include "SearchCode.h"
+#include "FastFont/SFastFont.h"
 
 // Required to create a dll for jRO.
 //#define JRO_CLIENT_STRUCTURE
@@ -43,6 +44,8 @@ struct CPOLVERTEX {
 	DWORD color;        // The vertex color
 };
 
+typedef void (__cdecl *tPlayStream)(const char *streamFileName,int playflag);
+
 class CRoCodeBind
 {
 private:
@@ -50,33 +53,54 @@ private:
 	CModeMgr *g_pmodeMgr;
 	CMouse* g_mouse;
 
+	tPlayStream m_funcRagexe_PlayStream;
+
+	HWND m_hWnd;
+
+#define PACKETQUEUE_BUFFERSIZE 40960
+	char m_packetqueuebuffer[PACKETQUEUE_BUFFERSIZE];
+	unsigned int m_packetqueue_head;
+
+#define ROPACKET_MAXLEN 0x2000
+	int m_packetLenMap_table[ROPACKET_MAXLEN];
+	int m_packetLenMap_table_index;
+
+#define MAX_FLLORSKILLTYPE 0x100
+	DWORD m_M2ESkillColor[MAX_FLLORSKILLTYPE];
+
 	struct p_std_map_packetlen
 	{
 		struct p_std_map_packetlen *left, *parent, *right;
 		DWORD key;
 		int value;
 	};
-
-	#define ROPACKET_MAXLEN 0x2000
-	int m_packetLenMap_table[ROPACKET_MAXLEN];
-	int m_packetLenMap_table_index;
-
-	#define PACKETQUEUE_BUFFERSIZE 40960
-	char m_packetqueuebuffer[PACKETQUEUE_BUFFERSIZE];
-	unsigned int m_packetqueue_head;
-
 	int GetTreeData(p_std_map_packetlen* node);
-
-	void LoadIni(void);
-	void SearchRagexeMemory(void);
 
 	void ProjectVertex(vector3d& src,matrix& vtm,float *x,float *y,float *oow);
 	void ProjectVertex(vector3d& src,matrix& vtm,tlvertex3d *vert);
 
+	void LoadIni(void);
+	void SearchRagexeMemory(void);
+
+	LPDIRECTDRAWSURFACE7 m_pddsFontTexture;
+	CSFastFont *m_pSFastFont;
+
+	struct MouseDataStructure
+	{
+		int x_axis,y_axis,wheel;
+		char l_button,r_button,wheel_button,pad;
+	};
+
 public:
-	CRoCodeBind(IDirect3DDevice7* d3ddevice);
+	CRoCodeBind() :
+		m_hWnd(NULL),m_funcRagexe_PlayStream(NULL),
+		m_packetLenMap_table_index(0),m_packetqueue_head(0),
+		m_pSFastFont(NULL),m_pddsFontTexture(NULL),
+		g_renderer(NULL),g_pmodeMgr(NULL),g_mouse(NULL)
+	{};
 	virtual ~CRoCodeBind();
 
+	void Init(IDirect3DDevice7* d3ddevice);
 
 	void DrawSRHDebug(IDirect3DDevice7* d3ddevice);
 	void DrawOn3DMap(IDirect3DDevice7* d3ddevice);
@@ -85,21 +109,15 @@ public:
 	int GetPacketLength(int opcode);
 	void PacketQueueProc(char *buf,int len);
 
+	void InitWindowHandle(HWND hWnd){m_hWnd = hWnd;};
+
+	void MouseProc(HRESULT Result,LPVOID lpvData,BOOL FreeMouse);
 	void SetMouseCurPos(int x,int y);
 };
 
 
-
-
-
-typedef void (__cdecl *tPlayStream)(const char *streamFileName,int playflag);
-
-
-extern BOOL g_MouseFreeSw;
+extern BOOL g_FreeMouseSw;
 extern StSHAREDMEMORY *g_pSharedData;
-
-extern tPlayStream funcRagexe_PlayStream;
-extern CMouse* g_mouse;
 
 extern CRoCodeBind* g_pRoCodeBind;
 
@@ -110,5 +128,4 @@ BOOL ReleaceSharedMemory(void);
 extern CPerformanceCounter g_PerformanceCounter;
 
 
-void SearchRagexeMemory(void);
 

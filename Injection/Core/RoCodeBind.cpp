@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "../tinyconsole.h"
 #include "RoCodeBind.h"
-#include "FastFont/SFastFont.h"
 
 HANDLE         g_hMapObject = 0;
 StSHAREDMEMORY *g_pSharedData = 0;
@@ -43,16 +42,11 @@ CRoCodeBind* g_pRoCodeBind = NULL;
 
 
 
-tPlayStream funcRagexe_PlayStream = NULL;
 
 
-BOOL g_MouseFreeSw = FALSE;
+BOOL g_FreeMouseSw = FALSE;
 
-#define MAX_FLLORSKILLTYPE 0x100
-DWORD g_M2ESkillColor[MAX_FLLORSKILLTYPE];
 
-CSFastFont *g_pSFastFont = NULL;
-LPDIRECTDRAWSURFACE7 g_pddsFontTexture = NULL;
 
 static HRESULT CALLBACK TextureSearchCallback( DDPIXELFORMAT* pddpf,
                                                VOID* param )
@@ -70,10 +64,8 @@ static HRESULT CALLBACK TextureSearchCallback( DDPIXELFORMAT* pddpf,
     return DDENUMRET_CANCEL;
 }
 
-//void InitRODraw(IDirect3DDevice7* d3ddevice)
-CRoCodeBind::CRoCodeBind(IDirect3DDevice7* d3ddevice) :
-	m_packetLenMap_table_index(0),m_packetqueue_head(0),
-	g_renderer(NULL),g_pmodeMgr(NULL),g_mouse(NULL)
+
+void CRoCodeBind::Init(IDirect3DDevice7* d3ddevice)
 {
 	SearchRagexeMemory();
 	LoadIni();
@@ -109,14 +101,14 @@ CRoCodeBind::CRoCodeBind(IDirect3DDevice7* d3ddevice) :
 			pddsRender->Release();
 		}
 		if( pDD ){
-			if( SUCCEEDED( pDD->CreateSurface( &ddsd, &g_pddsFontTexture, NULL )) ){
+			if( SUCCEEDED( pDD->CreateSurface( &ddsd, &m_pddsFontTexture, NULL )) ){
 				DEBUG_LOGGING_NORMAL(( "font texture created." ));
 			} else {
 				DEBUG_LOGGING_NORMAL(( "failed create a font texture." ));
 			}
 			pDD->Release();
 		}
-		if( g_pddsFontTexture ){
+		if( m_pddsFontTexture ){
 			LOGFONT logfont;
 			logfont.lfHeight         = -12;
 			logfont.lfWidth          = 0;
@@ -134,30 +126,85 @@ CRoCodeBind::CRoCodeBind(IDirect3DDevice7* d3ddevice) :
 			logfont.lfPitchAndFamily = FIXED_PITCH | FF_DONTCARE; 
 			_tcscpy_s(logfont.lfFaceName,_T("‚l‚r ‚oƒSƒVƒbƒN"));
 
-			g_pSFastFont = new CSFastFont;
-			g_pSFastFont->CreateFastFont(&logfont,d3ddevice,g_pddsFontTexture,0);
+			m_pSFastFont = new CSFastFont;
+			m_pSFastFont->CreateFastFont(&logfont,d3ddevice,m_pddsFontTexture,0);
 		}
 	}
 
 }
 
-//void ReleaseRODraw(void)
 CRoCodeBind::~CRoCodeBind(void)
 {
-	if( g_pSFastFont )
-		delete g_pSFastFont;
-	if( g_pddsFontTexture ){
-		g_pddsFontTexture->Release();
-		g_pddsFontTexture = NULL;
+	if( m_pSFastFont )
+		delete m_pSFastFont;
+	if( m_pddsFontTexture ){
+		m_pddsFontTexture->Release();
+		m_pddsFontTexture = NULL;
 	}
+}
+
+void CRoCodeBind::MouseProc(HRESULT Result,LPVOID lpvData,BOOL FreeMouse)
+{
+	if( Result == DI_OK ){
+		//
+		//  FreeMouse
+		//
+		if( g_mouse ){
+			if( FreeMouse ){
+				MouseDataStructure *p = (MouseDataStructure*)lpvData;
+
+				POINT point;
+				::GetCursorPos(&point);
+				::ScreenToClient(m_hWnd, &point);
+
+				if( ::GetActiveWindow() == m_hWnd ){
+					point.x -= p->x_axis;
+					point.y -= p->y_axis;
+				}
+				g_mouse->m_xPos = (int)point.x;
+				g_mouse->m_yPos = (int)point.y;
+			}
+		}
+	}
+
+
+	// proc on frame
+	if( g_pSharedData ){
+		if( g_pSharedData->executeorder == 1){
+			g_pSharedData->executeorder = 0;
+			char filename[MAX_PATH];
+			if( ::WideCharToMultiByte(CP_ACP,0,
+				g_pSharedData->musicfilename,wcslen(g_pSharedData->musicfilename)+1,
+				filename,sizeof(filename),
+				NULL,NULL) ){
+				//
+				// Play Sound File
+				//
+				if( m_funcRagexe_PlayStream )
+					m_funcRagexe_PlayStream(filename,0);
+			}
+		}
+
+		// cpu cooler
+		if( g_pSharedData->cpucoolerlevel ){
+			int level = g_pSharedData->cpucoolerlevel;
+			int CoolerLevelTable[4]={1,1,3,10};
+			int ref = g_PerformanceCounter.GetMonitorRefreshRate();
+
+			if( level < 0 )level = 0;
+			else if( level > 3 )level = 3;
+
+			ref /= CoolerLevelTable[level];
+			if( ref ){
+				::Sleep( 1000/ref );
+			}
+		}
+	}
+
 }
 
 void CRoCodeBind::SetMouseCurPos(int x,int y)
 {
-	if( g_mouse ){
-		g_mouse->m_xPos = x;
-		g_mouse->m_yPos = y;
-	}
 }
 
 void vector3d::MatrixMult(struct vector3d& v, struct matrix& m)
@@ -220,7 +267,7 @@ void CRoCodeBind::LoadIni(void)
 			pkey = Sectionbuf;
 
 			for(int ii = 0;ii < MAX_FLLORSKILLTYPE;ii++)
-				g_M2ESkillColor[ii]=0;
+				m_M2ESkillColor[ii]=0;
 
 			
 			while(*pkey!='\0'){
@@ -235,7 +282,7 @@ void CRoCodeBind::LoadIni(void)
 				pkey += linestring.length();
 
 				sscanf_s(linestring.c_str(),"Skill%x=%x",&index,&color);
-				g_M2ESkillColor[index] = color;
+				m_M2ESkillColor[index] = color;
 				pkey++;
 			}
 		}
@@ -252,7 +299,7 @@ void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 		std::stringstream str;
 		str << g_PerformanceCounter.GetFrameRate() << "fps : "<<(int)g_PerformanceCounter.GetTotalTick() << std::endl;
 
-		g_pSFastFont->DrawText((LPSTR)str.str().c_str(), 0, 0,D3DCOLOR_ARGB(255,255,255,255),0,NULL);
+		m_pSFastFont->DrawText((LPSTR)str.str().c_str(), 0, 0,D3DCOLOR_ARGB(255,255,255,255),0,NULL);
 	}
 
 	if( g_pSharedData->objectinformation ){
@@ -356,7 +403,7 @@ void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 				sy = (int)fy;
 
 
-				g_pSFastFont->DrawText((LPSTR)putinfostr.str().c_str(), sx, sy,D3DCOLOR_ARGB(255,255,255,255),2,NULL);
+				m_pSFastFont->DrawText((LPSTR)putinfostr.str().c_str(), sx, sy,D3DCOLOR_ARGB(255,255,255,255),2,NULL);
 			}
 
 			int skillnums = p_gamemode->m_world->m_skillList.size();
@@ -385,7 +432,7 @@ void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 					sx = (int)fx;
 					sy = (int)fy;
 
-					g_pSFastFont->DrawText((LPSTR)putinfostr.str().c_str(), sx, sy,D3DCOLOR_ARGB(255,255,255,255),2,NULL);
+					m_pSFastFont->DrawText((LPSTR)putinfostr.str().c_str(), sx, sy,D3DCOLOR_ARGB(255,255,255,255),2,NULL);
 				}
 			}
 
@@ -412,15 +459,15 @@ void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 					sx = (int)fx;
 					sy = (int)fy;
 
-					g_pSFastFont->DrawText((LPSTR)putinfostr.str().c_str(), sx, sy,D3DCOLOR_ARGB(255,255,255,255),2,NULL);
+					m_pSFastFont->DrawText((LPSTR)putinfostr.str().c_str(), sx, sy,D3DCOLOR_ARGB(255,255,255,255),2,NULL);
 				}
 			}
 			
 		}
 		str << std::endl;
-		g_pSFastFont->DrawText((LPSTR)str.str().c_str(), 0, 16,D3DCOLOR_ARGB(255,255,255,255),0,NULL);
+		m_pSFastFont->DrawText((LPSTR)str.str().c_str(), 0, 16,D3DCOLOR_ARGB(255,255,255,255),0,NULL);
 	}
-	g_pSFastFont->Flush();
+	m_pSFastFont->Flush();
 
 }
 
@@ -485,8 +532,8 @@ void CRoCodeBind::DrawM2E(IDirect3DDevice7* d3ddevice)
 			{
 				CSkill *pSkill = *it;
 				//
-				if( pSkill && pSkill->m_job < 0x100 && g_M2ESkillColor[pSkill->m_job] ){
-					DWORD color = g_M2ESkillColor[pSkill->m_job];
+				if( pSkill && pSkill->m_job < 0x100 && m_M2ESkillColor[pSkill->m_job] ){
+					DWORD color = m_M2ESkillColor[pSkill->m_job];
 					CPOLVERTEX vertex[4] =
 					{
 						{   0.0,  0.0,   0.0f,  1.0f, color },
@@ -533,19 +580,11 @@ void CRoCodeBind::DrawM2E(IDirect3DDevice7* d3ddevice)
 }
 
 
-
-
-
-
-typedef int (__stdcall *Func_CRagConnection__GetPacketSize)(DWORD opcode);
-
-
-
  int CRoCodeBind::GetPacketLength(int opcode)
 {
 	int result = -1;
 
-	if( m_packetLenMap_table_index >= opcode )
+	if( opcode < m_packetLenMap_table_index )
 	{
 		result = m_packetLenMap_table[ opcode ];
 	}
@@ -617,6 +656,8 @@ void CRoCodeBind::PacketQueueProc(char *buf,int len)
 		}
 	}
 }
+
+typedef int (__stdcall *Func_CRagConnection__GetPacketSize)(DWORD opcode);
 
 void CRoCodeBind::SearchRagexeMemory(void)
 {
@@ -1053,7 +1094,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 
 			if( funcPlayStrem_based_20140226_155100iRagexe_exe.PatternMatcher( &pBase[ii] )	)
 			{
-				funcRagexe_PlayStream = (tPlayStream)&pBase[ii];
+				m_funcRagexe_PlayStream = (tPlayStream)&pBase[ii];
 				DWORD pPlayStream;
 				pPlayStream = (DWORD)&pBase[ii];
 				DEBUG_LOGGING_NORMAL( ("based_20140226_155100iRagexe : %08X",&pBase[ii]) );
@@ -1063,7 +1104,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 			}
 			if( funcPlayStrem_based_HighPrest_exe.PatternMatcher( &pBase[ii] )	)
 			{
-				funcRagexe_PlayStream = (tPlayStream)&pBase[ii];
+				m_funcRagexe_PlayStream = (tPlayStream)&pBase[ii];
 				DWORD pPlayStream;
 				pPlayStream = (DWORD)&pBase[ii];
 				DEBUG_LOGGING_NORMAL( ("based_HighPrest_exe : %08X",&pBase[ii]) );
@@ -1073,7 +1114,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 			}
 			if( funcPlayStrem_based_RagFree_exe.PatternMatcher( &pBase[ii] )	)
 			{
-				funcRagexe_PlayStream = (tPlayStream)&pBase[ii];
+				m_funcRagexe_PlayStream = (tPlayStream)&pBase[ii];
 				DWORD pPlayStream;
 				pPlayStream = (DWORD)&pBase[ii];
 				DEBUG_LOGGING_NORMAL( ("based_RagFree_exe : %08X",&pBase[ii]) );
@@ -1083,7 +1124,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 			}
 			if( funcPlayStrem_based_2011111201aRagexe_exe.PatternMatcher( &pBase[ii] )	)
 			{
-				funcRagexe_PlayStream = (tPlayStream)&pBase[ii];
+				m_funcRagexe_PlayStream = (tPlayStream)&pBase[ii];
 				DWORD pPlayStream;
 				pPlayStream = (DWORD)&pBase[ii];
 				DEBUG_LOGGING_NORMAL( ("based_2011111201aRagexe_exe : %08X",&pBase[ii]) );
