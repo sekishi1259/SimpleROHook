@@ -25,7 +25,10 @@ BOOL OpenSharedMemory(void)
 	}
 	return TRUE;
 }
-BOOL ReleaceSharedMemory(void)
+/*
+	Release shared memory
+*/
+BOOL ReleaseSharedMemory(void)
 {
 	if(g_pSharedData){
 		g_pSharedData->g_hROWindow = 0;

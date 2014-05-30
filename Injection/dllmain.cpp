@@ -295,7 +295,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 		if( IsRagnarokApp() )
 		{
 			ReleaseTinyConsole();
-			ReleaceSharedMemory();
+			ReleaseSharedMemory();
 		}
 		break;
 	}

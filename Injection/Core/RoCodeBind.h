@@ -122,7 +122,7 @@ extern StSHAREDMEMORY *g_pSharedData;
 extern CRoCodeBind* g_pRoCodeBind;
 
 BOOL OpenSharedMemory(void);
-BOOL ReleaceSharedMemory(void);
+BOOL ReleaseSharedMemory(void);
 
 
 extern CPerformanceCounter g_PerformanceCounter;
