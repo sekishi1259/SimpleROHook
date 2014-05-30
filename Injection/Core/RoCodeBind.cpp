@@ -5,6 +5,9 @@
 HANDLE         g_hMapObject = 0;
 StSHAREDMEMORY *g_pSharedData = 0;
 
+/*
+	Create a shared memory.
+*/
 BOOL OpenSharedMemory(void)
 {
 	g_hMapObject = ::OpenFileMapping( FILE_MAP_ALL_ACCESS , FALSE, SHAREDMEMORY_OBJECTNAME );
