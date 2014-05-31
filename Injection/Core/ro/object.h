@@ -479,7 +479,9 @@ public:
 	std::list<CRagEffect*> m_effectList;
 	CRagEffect* m_beginSpellEffect;
 	CRagEffect* m_magicTargetEffect;
-
+#ifdef JRO_CLIENT_STRUCTURE
+	DWORD m_pad[5];
+#endif
 	virtual ~CAbleToMakeEffect() {};
 };
 
