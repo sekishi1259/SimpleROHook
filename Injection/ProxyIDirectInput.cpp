@@ -14,11 +14,7 @@ HRESULT CProxyIDirectInput7::Proxy_CreateDevice(THIS_ REFGUID rguid,LPDIRECTINPU
 
 	HRESULT Result = m_Instance->CreateDevice(rguid, (LPDIRECTINPUTDEVICEA*)&lpDirectInputDevice7,pUnkOuter);
 
-	if( rguid.Data1 == GUID_SysMouse.Data1 
-	 && rguid.Data2 == GUID_SysMouse.Data2 
-	 && rguid.Data3 == GUID_SysMouse.Data3 
-	 && *(UINT64*)rguid.Data4 == *(UINT64*)GUID_SysMouse.Data4
-	 ){
+	if ( IsEqualGUID(rguid, GUID_SysMouse) ){
 		DEBUG_LOGGING_DETAIL(("IDirectInput7::Hook_CProxyIDirectInputDevice7 0x%0x ",lpDirectInputDevice7));
 		ret_cProxy = (void*)(new CProxyIDirectInputDevice7(lpDirectInputDevice7));
 		*lpIDD = (LPDIRECTINPUTDEVICEA)ret_cProxy;
