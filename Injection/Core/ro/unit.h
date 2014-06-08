@@ -205,12 +205,18 @@ struct tlvertex3d {
 	float y;
 	float z;
 	float oow;
-	unsigned long color;
-	struct COLOR argb;
+	union {
+		unsigned long color;
+		struct COLOR argb;
+	};
 	unsigned long specular;
-	float tu;
-	float tv;
-	struct texCoor coord;
+	union {
+		struct {
+			float tu;
+			float tv;
+		};
+		struct texCoor coord;
+	};
 
 	tlvertex3d(float, float, float, float, unsigned long, unsigned long, float, float) {};
 	tlvertex3d::tlvertex3d() {};
