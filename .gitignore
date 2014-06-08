@@ -1,0 +1,9 @@
+Debug
+Debug-jRO
+Release
+Release-jRO
+ipch
+*.aps
+*.opensdf
+*.sdf
+*.suo
