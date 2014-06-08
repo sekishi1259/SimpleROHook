@@ -40,11 +40,7 @@ HRESULT CProxyIDirectDraw7::Proxy_QueryInterface(THIS_ REFIID riid, LPVOID FAR *
 {
 	DEBUG_LOGGING_MORE_DETAIL(("CProxyIDirectDraw7::QueryInterface()"));
 
-	if( riid.Data1 == IID_IDirect3D7.Data1
-	 && riid.Data2 == IID_IDirect3D7.Data2
-	 && riid.Data3 == IID_IDirect3D7.Data3
-	 && *(UINT64*)riid.Data4 == *(UINT64*)IID_IDirect3D7.Data4 )
-	{
+	if( IsEqualGUID(riid, IID_IDirect3D7) ){
 		DEBUG_LOGGING_MORE_DETAIL(("CProxyIDirectDraw7::IDirect3D7 create"));
 		HRESULT temp_ret = m_Instance->QueryInterface(riid, ppvObj);
 		if(temp_ret == S_OK){
