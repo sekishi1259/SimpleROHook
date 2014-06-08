@@ -5,6 +5,16 @@
 HANDLE         g_hMapObject = 0;
 StSHAREDMEMORY *g_pSharedData = 0;
 
+
+typedef int (WSAAPI *tWS2_32_send)(SOCKET s, char *buf, int len, int flags);
+typedef int (WSAAPI *tWS2_32_recv)(SOCKET s, char *buf, int len, int flags);
+
+tWS2_32_send *pCConnection_s_wsSend = NULL;
+tWS2_32_recv *pCConnection_s_wsRecv = NULL;
+
+extern tWS2_32_recv OrigWS2_32_recv;
+int WSAAPI ProxyWS2_32_recv(SOCKET s, char *buf, int len, int flags);
+
 /*
 	Create a shared memory.
 */
@@ -45,10 +55,6 @@ BOOL ReleaseSharedMemory(void)
 CPerformanceCounter g_PerformanceCounter(60);
 
 CRoCodeBind* g_pRoCodeBind = NULL;
-
-
-
-
 
 BOOL g_FreeMouseSw = FALSE;
 
@@ -149,27 +155,35 @@ CRoCodeBind::~CRoCodeBind(void)
 	}
 }
 
-void CRoCodeBind::MouseProc(HRESULT Result,LPVOID lpvData,BOOL FreeMouse)
+void CRoCodeBind::OneSyncProc(HRESULT Result,LPVOID lpvData,BOOL FreeMouse)
 {
+#ifdef JRO_CLIENT_STRUCTURE
+	if (pCConnection_s_wsRecv){
+		if (*pCConnection_s_wsRecv && OrigWS2_32_recv == 0){
+			OrigWS2_32_recv = *pCConnection_s_wsRecv;
+			*pCConnection_s_wsRecv = &ProxyWS2_32_recv;
+			DEBUG_LOGGING_NORMAL(("Hook CConnection_s_wsRecv(%08X) = %08X old %08X",
+				pCConnection_s_wsRecv, ProxyWS2_32_recv,OrigWS2_32_recv ));
+		}
+	}
+#endif
+
 	if( Result == DI_OK ){
 		//
 		//  FreeMouse
 		//
-		if( g_mouse ){
-			if( FreeMouse ){
-				MouseDataStructure *p = (MouseDataStructure*)lpvData;
+		if( FreeMouse ){
+			MouseDataStructure *p = (MouseDataStructure*)lpvData;
 
-				POINT point;
-				::GetCursorPos(&point);
-				::ScreenToClient(m_hWnd, &point);
+			POINT point;
+			::GetCursorPos(&point);
+			::ScreenToClient(m_hWnd, &point);
 
-				if( ::GetActiveWindow() == m_hWnd ){
-					point.x -= p->x_axis;
-					point.y -= p->y_axis;
-				}
-				g_mouse->m_xPos = (int)point.x;
-				g_mouse->m_yPos = (int)point.y;
+			if( ::GetActiveWindow() == m_hWnd ){
+				point.x -= p->x_axis;
+				point.y -= p->y_axis;
 			}
+			SetMouseCurPos((int)point.x, (int)point.y);
 		}
 	}
 
@@ -211,6 +225,10 @@ void CRoCodeBind::MouseProc(HRESULT Result,LPVOID lpvData,BOOL FreeMouse)
 
 void CRoCodeBind::SetMouseCurPos(int x,int y)
 {
+	if (g_mouse){
+		g_mouse->m_xPos = x;
+		g_mouse->m_yPos = y;
+	}
 }
 
 void vector3d::MatrixMult(struct vector3d& v, struct matrix& m)
@@ -313,6 +331,19 @@ void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 		CModeMgr *pcmode = g_pmodeMgr;
 		//str.str("");
 		CGameMode *p_gamemode = (CGameMode*)pcmode->m_curMode;
+
+		if (pCConnection_s_wsRecv ){
+			BYTE *p = (BYTE*)pCConnection_s_wsRecv;
+
+			str << (DWORD)&p[0] << std::endl;
+			for (int ii = 0; ii < 16; ii++){
+				str << std::setfill('0') << std::setw(2) << std::hex << (int)p[ii] << ",";
+				if ((ii % 0x10) == 0x0f){
+					str << std::endl;
+				}
+			}
+			str << std::endl;
+		}
 
 		if( p_gamemode && pcmode->m_curModeType == 1 
 		 && p_gamemode->m_world && p_gamemode->m_view && p_gamemode->m_world->m_attr ){
@@ -506,6 +537,7 @@ void CRoCodeBind::DrawM2E(IDirect3DDevice7* d3ddevice)
 		DWORD _state_alpharef;
 		DWORD _state_srcblend;
 		DWORD _state_destblend;
+		int zbias = g_pSharedData->m2e_zbias;
 
 		d3ddevice->GetRenderState(D3DRENDERSTATE_ZENABLE,        &_state_zenable);
 		d3ddevice->GetRenderState(D3DRENDERSTATE_ZWRITEENABLE,   &_state_zwriteenable);
@@ -520,7 +552,7 @@ void CRoCodeBind::DrawM2E(IDirect3DDevice7* d3ddevice)
 		d3ddevice->SetTexture(0, NULL);
 		d3ddevice->SetRenderState(D3DRENDERSTATE_ZENABLE, D3DZB_TRUE);
 		d3ddevice->SetRenderState(D3DRENDERSTATE_ZWRITEENABLE, FALSE);
-		d3ddevice->SetRenderState(D3DRENDERSTATE_ZBIAS, 2);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_ZBIAS, zbias);
 		d3ddevice->SetRenderState(D3DRENDERSTATE_FOGENABLE    ,FALSE);
 		d3ddevice->SetRenderState(D3DRENDERSTATE_SPECULARENABLE   ,FALSE);
 		d3ddevice->SetRenderState(D3DRENDERSTATE_ALPHAFUNC,D3DCMP_GREATER);
@@ -608,7 +640,7 @@ int CRoCodeBind::GetTreeData(p_std_map_packetlen* node)
 		 m_packetLenMap_table_index = node->key;
 
 	m_packetLenMap_table[ node->key ] = node->value;
-	//DEBUG_LOGGING_NORMAL( ("[ %08X ] = %d",node->key,node->value) );
+	//DEBUG_LOGGING_DETAIL( ("[ %08X ] = %d",node->key,node->value) );
 
 	GetTreeData( node->right );
 
@@ -619,10 +651,12 @@ int CRoCodeBind::GetTreeData(p_std_map_packetlen* node)
 void CRoCodeBind::PacketQueueProc(char *buf,int len)
 {
 	if( len > 0 ){
+		int now_subMode = -1;
 		if( m_packetqueue_head + len >= PACKETQUEUE_BUFFERSIZE ){
 			DEBUG_LOGGING_NORMAL( ("packet buffer has overflowed.\n") );
 			return;
 		}
+
 		memcpy( &m_packetqueuebuffer[m_packetqueue_head] , buf,
 			len);
 		m_packetqueue_head += len;
@@ -630,7 +664,17 @@ void CRoCodeBind::PacketQueueProc(char *buf,int len)
 			unsigned short opcode = *(unsigned short*)m_packetqueuebuffer;
 			unsigned int packetlength;
 
-			if( m_packetqueue_head == 4 && len == 4 ){
+			if (g_pmodeMgr){
+				CMode *p_mode = g_pmodeMgr->m_curMode;
+				if (p_mode){
+					m_CMode_old_subMode = m_CMode_subMode;
+					m_CMode_subMode = p_mode->m_subMode;
+					DEBUG_LOGGING_DETAIL(("CMode.m_subMode = %08X->%08X m_subModeCnt = %08X\n",
+						m_CMode_old_subMode, m_CMode_subMode, p_mode->m_subModeCnt));
+				}
+			}
+
+			if (m_CMode_subMode != m_CMode_old_subMode && m_CMode_subMode == LSM_WAITRESP_FROM_CHSVR ){
 				packetlength = 4;
 			}else{
 				packetlength = GetPacketLength( opcode );
@@ -647,8 +691,8 @@ void CRoCodeBind::PacketQueueProc(char *buf,int len)
 					for(int ii = 0;ii < (int)packetlength ;ii++)
 						str << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << (int)(unsigned char)m_packetqueuebuffer[ii] << " ";
 					str << std::flush;
-					//DEBUG_LOGGING_NORMAL( ("Opcode %04X size = %d / %d\n",opcode,packetlength,packetqueue_head) );
-					DEBUG_LOGGING_NORMAL(( str.str().c_str() ));
+					DEBUG_LOGGING_DETAIL(("Opcode %04X size = %d / %d\n", opcode, packetlength, m_packetqueue_head));
+					DEBUG_LOGGING_NORMAL((str.str().c_str()));
 				}
 
 				m_packetqueue_head -= packetlength;
@@ -889,6 +933,32 @@ void CRoCodeBind::SearchRagexeMemory(void)
 		"0f84********"      //   jz      near C00719393
 		);
 
+	CSearchCode initCConnection_20140318iRagexe( //  winmain...
+//		"56"                 //  push    esi
+//		"68********"         //  push    dword S00920704; "ws2_32.dll"
+//		"ff15********"       //  call    dword[L008e619c]; ds:LoadLibraryA
+//		"8b35********"       //  mov     esi, dword[L008e6194]; ds:GetProcAddress
+//		"68********"         //  push    dword L009206e8 ; "send"
+//		"50"                 //  push    eax
+//		"a3********"         //  mov[L00a68674], eax; CConnection_s_wsmodule
+//		"ffd6"               //  call    esi; GetProcAddress
+//		"a3********"         //  mov[L00a68678], eax; CConnection_s_wsSend
+//		"a1********"         //  mov     eax, [L00a68674]; CConnection_s_wsmodule
+//		"68********"         //  push    dword S0092078c; "recv"
+//		"50"                 //  push    eax; hModule
+		"ffd6"               //  call    esi; GetProcAddress
+		"833d*1******00"     //  cmp     dword[L00a68678], byte + 000h; CConnection_s_wsSend
+		"8b35********"       //  mov     esi, dword[L008e66e8]; ds:MessageBoxA
+		"a3*2******"         //  mov[L00a68670], eax; CConnection_s_wsRecv
+		"751c"               //  jnz     C007170db
+		"8b0d********"       //  mov     ecx, dword[WS2_32.dll_13]; ds:send
+		"6a00"               //  push    byte + 000h; uType
+	);
+
+
+
+
+
 	LPBYTE pRagexeBase;
 	MEMORY_BASIC_INFORMATION mbi;
 	DWORD temp_eax,temp_ecx,temp_edx,temp_esp;
@@ -906,6 +976,22 @@ void CRoCodeBind::SearchRagexeMemory(void)
 		DEBUG_LOGGING_NORMAL( ("mbi.AllocationBase = %08X",mbi.AllocationBase) );
 		DEBUG_LOGGING_NORMAL( ("mbi.BaseAddress    = %08X",mbi.BaseAddress) );
 		DEBUG_LOGGING_NORMAL( ("mbi.RegionSize     = %08X",mbi.RegionSize) );
+
+		// get s_CMouse instance
+		for (UINT ii = 0; ii < mbi.RegionSize - 1000; ii++)
+		{
+			LPBYTE pBase = (LPBYTE)mbi.BaseAddress;
+
+			if (initCConnection_20140318iRagexe.PatternMatcher(&pBase[ii]))
+			{
+				pCConnection_s_wsSend = (tWS2_32_send*)initCConnection_20140318iRagexe.GetImmediateDWORD(&pBase[ii], '1');
+				pCConnection_s_wsRecv = (tWS2_32_recv*)initCConnection_20140318iRagexe.GetImmediateDWORD(&pBase[ii], '2');
+				DEBUG_LOGGING_NORMAL(("Find s_wsSend,s_wsRecv baseaddress = %08X send = %08X | recv =%08X",
+					&pBase[ii], pCConnection_s_wsSend, pCConnection_s_wsRecv));
+
+				break;
+			}
+		}
 
 		// snatch the packetLenMap
 		for( UINT ii = 0; ii < mbi.RegionSize - 1000 ; ii++ )

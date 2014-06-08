@@ -10,15 +10,13 @@
 #include "Core/RoCodeBind.h"
 
 
-
-template <typename T>
-BOOL InstallProxyFunction(LPCTSTR dllname,LPCTSTR exportname,T ProxyFunction,T *pOriginalFunction)
+BOOL InstallProxyFunction(LPCTSTR dllname,LPCSTR exportname,VOID *ProxyFunction,LPVOID *pOriginalFunction)
 {
 	BOOL result = FALSE;
 	std::stringstream fullpath;
 
 	TCHAR systemdir[MAX_PATH];
-	HINSTANCE hDll;
+	HMODULE hDll;
 	::GetSystemDirectory( systemdir, MAX_PATH);
 
 	fullpath << systemdir << "\\" << dllname;
@@ -27,14 +25,17 @@ BOOL InstallProxyFunction(LPCTSTR dllname,LPCTSTR exportname,T ProxyFunction,T *
 	if( !hDll )
 		return result;
 
-	BYTE *p = (BYTE*)::GetProcAddress( hDll, exportname);
+	DEBUG_LOGGING_DETAIL(("hook %s\n", dllname));
 
-	DEBUG_LOGGING_NORMAL( ("hook %s:%s(%08X)\n",dllname,exportname,p) );
-	if( p )
+	BYTE *p = (BYTE*)::GetProcAddress(hDll, exportname);
+
+	DEBUG_LOGGING_DETAIL(("%08X :%s(%08X)\n", hDll, exportname, p));
+	if (p)
 	{
-		if(     p[ 0] == 0x8b && p[ 1] == 0xff &&
-			( ( p[-5] == 0x90 && p[-4] == 0x90 && p[-3] == 0x90 && p[-2] == 0x90 && p[-1] == 0x90 ) || 
-			  ( p[-5] == 0xcc && p[-4] == 0xcc && p[-3] == 0xcc && p[-2] == 0xcc && p[-1] == 0xcc ) )  )
+		if (p[0] == 0x8b && p[1] == 0xff &&
+			((p[-5] == 0x90 && p[-4] == 0x90 && p[-3] == 0x90 && p[-2] == 0x90 && p[-1] == 0x90) ||
+			 (p[-5] == 0xcc && p[-4] == 0xcc && p[-3] == 0xcc && p[-2] == 0xcc && p[-1] == 0xcc))
+			)
 		{
 			// find hotpatch structure.
 			//
@@ -44,39 +45,41 @@ BOOL InstallProxyFunction(LPCTSTR dllname,LPCTSTR exportname,T ProxyFunction,T *
 			// cccccccccc int 3 x 5
 			// 8bff       mov edi,edi
 			DWORD flOldProtect, flDontCare;
-			if ( ::VirtualProtect(   (LPVOID)&p[-5], 7 , PAGE_READWRITE, &flOldProtect) )
+			if (::VirtualProtect((LPVOID)&p[-5], 7, PAGE_READWRITE, &flOldProtect))
 			{
 				p[-5] = 0xe9;              // jmp
-				p[ 0] = 0xeb; p[ 1] = 0xf9;// jmp short [pc-7]
-DEBUG_LOGGING_NORMAL( ("hook type a\n") );
+				p[0] = 0xeb; p[1] = 0xf9;// jmp short [pc-7]
+				DEBUG_LOGGING_DETAIL(("hook type a\n"));
 
-				*pOriginalFunction = (T)&p[2];
-				*((DWORD*)&p[-4])  = (DWORD)ProxyFunction - (DWORD)&p[-5] -5;
+				*pOriginalFunction = (void*)&p[2];
+				*((DWORD*)&p[-4]) = (DWORD)ProxyFunction - (DWORD)&p[-5] - 5;
 
-				::VirtualProtect( (LPVOID)&p[-5], 7 , flOldProtect, &flDontCare);
+				::VirtualProtect((LPVOID)&p[-5], 7, flOldProtect, &flDontCare);
 				result = TRUE;
 			}
-		}else
-		if( p[-5] == 0xe9 &&
-			p[ 0] == 0xeb && p[ 1] == 0xf9 )
+		}
+		else
+		if (p[-5] == 0xe9 &&
+			p[0] == 0xeb && p[1] == 0xf9)
 		{
 			// find hotpached function.
 			// jmp **** 
 			// jmp short [pc -7]
 			DWORD flOldProtect, flDontCare;
-			if ( ::VirtualProtect(   (LPVOID)&p[-5], 7 , PAGE_READWRITE, &flOldProtect) )
+			if (::VirtualProtect((LPVOID)&p[-5], 7, PAGE_READWRITE, &flOldProtect))
 			{
-				*pOriginalFunction = (T)(*((DWORD*)&p[-4]) + (DWORD)&p[-5] +5);
-				*((DWORD*)&p[-4])  = (DWORD)ProxyFunction - (DWORD)&p[-5] -5;
-DEBUG_LOGGING_NORMAL( ("hook type b\n") );
+				*pOriginalFunction = (LPVOID)(*((DWORD*)&p[-4]) + (DWORD)&p[-5] + 5);
+				*((DWORD*)&p[-4]) = (DWORD)ProxyFunction - (DWORD)&p[-5] - 5;
+				DEBUG_LOGGING_DETAIL(("hook type b\n"));
 
-				::VirtualProtect( (LPVOID)&p[-5], 7 , flOldProtect, &flDontCare);
+				::VirtualProtect((LPVOID)&p[-5], 7, flOldProtect, &flDontCare);
 				result = TRUE;
 			}
-		}else
-		if(     p[ 0] == 0xe9 &&
-			( ( p[-5] == 0x90 && p[-4] == 0x90 && p[-3] == 0x90 && p[-2] == 0x90 && p[-1] == 0x90 ) || 
-			  ( p[-5] == 0xcc && p[-4] == 0xcc && p[-3] == 0xcc && p[-2] == 0xcc && p[-1] == 0xcc ) )  )
+		}
+		else
+		if (p[0] == 0xe9 &&
+			((p[-5] == 0x90 && p[-4] == 0x90 && p[-3] == 0x90 && p[-2] == 0x90 && p[-1] == 0x90) ||
+			(p[-5] == 0xcc && p[-4] == 0xcc && p[-3] == 0xcc && p[-2] == 0xcc && p[-1] == 0xcc)))
 		{
 			// find irregular hook code. case by iro
 			//
@@ -86,19 +89,20 @@ DEBUG_LOGGING_NORMAL( ("hook type b\n") );
 			// cccccccccc int 3 x 5
 			// e9******** jmp  im4byte
 			DWORD flOldProtect, flDontCare;
-			if ( ::VirtualProtect(   (LPVOID)&p[0], 5 , PAGE_READWRITE, &flOldProtect) )
+			if (::VirtualProtect((LPVOID)&p[0], 5, PAGE_READWRITE, &flOldProtect))
 			{
-				*pOriginalFunction = (T)(*((DWORD*)&p[1]) + (DWORD)&p[0] +5);
+				*pOriginalFunction = (LPVOID)(*((DWORD*)&p[1]) + (DWORD)&p[0] + 5);
 
-				*((DWORD*)&p[1])  = (DWORD)ProxyFunction - (DWORD)&p[0] -5;
+				*((DWORD*)&p[1]) = (DWORD)ProxyFunction - (DWORD)&p[0] - 5;
 
-DEBUG_LOGGING_NORMAL( ("hook type c\n") );
+				DEBUG_LOGGING_DETAIL(("hook type c\n"));
 
-				::VirtualProtect( (LPVOID)&p[0], 5 , flOldProtect, &flDontCare);
+				::VirtualProtect((LPVOID)&p[0], 5, flOldProtect, &flDontCare);
 				result = TRUE;
 			}
 		}
 	}
+
 	::FreeLibrary(hDll);
 
 	return result;
@@ -156,34 +160,28 @@ BOOL RagexeSoundRateFixer(void)
 }
 
 
-
-
 typedef HRESULT (WINAPI *tDirectDrawCreateEx)( GUID FAR *lpGUID, LPVOID *lplpDD, REFIID iid, IUnknown FAR *pUnkOuter );
 typedef HRESULT (WINAPI *tDirectInputCreateA)( HINSTANCE hinst, DWORD dwVersion, LPDIRECTINPUTA *ppDI, LPUNKNOWN punkOuter);
 
-typedef int (WSAAPI *tWS32_recv)( SOCKET s, char *buf,int len,int flags );
+typedef int (WSAAPI *tWS2_32_recv)( SOCKET s, char *buf,int len,int flags );
 
-typedef BOOL (WINAPI *tPeekMessageA)(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg);
 
 tDirectDrawCreateEx OrigDirectDrawCreateEx = NULL;
 tDirectInputCreateA OrigDirectInputCreateA = NULL;
-tWS32_recv OrigWS32_recv = NULL;
 
+HMODULE g_ws2_32_dll = NULL;
+tWS2_32_recv OrigWS2_32_recv = NULL;
 
-int WSAAPI ProxyWS32_recv( SOCKET s, char *buf,int len,int flags )
+int WSAAPI ProxyWS2_32_recv( SOCKET s, char *buf,int len,int flags )
 {
 	int result;
 
-	result = OrigWS32_recv(s,buf,len,flags);
-	//if( result >= 2 )
-	//	DEBUG_LOGGING_NORMAL( ("recv len %d [0]=%02X [1]=%02X\n",result,(unsigned char)buf[0],(unsigned char)buf[1]) );
+	result = OrigWS2_32_recv(s,buf,len,flags);
 	if( g_pRoCodeBind )
 		g_pRoCodeBind->PacketQueueProc( buf,result );
 
 	return result;
 }
-
-
 
 
 HRESULT WINAPI ProxyDirectDrawCreateEx(
@@ -192,7 +190,7 @@ HRESULT WINAPI ProxyDirectDrawCreateEx(
 	REFIID        iid,
 	IUnknown FAR *pUnkOuter )
 {
-	DEBUG_LOGGING_DETAIL( ("DirectDrawCreateEx hookfunc\n") );
+	DEBUG_LOGGING_MORE_DETAIL(("DirectDrawCreateEx hookfunc\n"));
 
 	HRESULT Result = OrigDirectDrawCreateEx( lpGuid, lplpDD, iid, pUnkOuter );
 	if(FAILED(Result))
@@ -202,7 +200,7 @@ HRESULT WINAPI ProxyDirectDrawCreateEx(
 	*lplpDD = lpcDD = new CProxyIDirectDraw7((IDirectDraw7*)*lplpDD);
 	lpcDD->setThis(lpcDD);
 
-	DEBUG_LOGGING_DETAIL( ("DirectDrawCreateEx Hook hookfunc") );
+	DEBUG_LOGGING_MORE_DETAIL(("DirectDrawCreateEx Hook hookfunc"));
 
     return Result;
 }
@@ -213,7 +211,7 @@ HRESULT WINAPI ProxyDirectInputCreateA(
 	LPDIRECTINPUTA *ppDI,
 	LPUNKNOWN punkOuter )
 {
-	DEBUG_LOGGING_DETAIL( ("DirectInputCreateA hookfunc instance = %08X",hinst) );
+	DEBUG_LOGGING_MORE_DETAIL(("DirectInputCreateA hookfunc instance = %08X", hinst));
 
 	HRESULT Result = OrigDirectInputCreateA( hinst, dwVersion, ppDI, punkOuter );
 
@@ -222,7 +220,7 @@ HRESULT WINAPI ProxyDirectInputCreateA(
 	if(dwVersion == 0x0700){
 		*ppDI = new CProxyIDirectInput7((IDirectInput7*)*ppDI);
 	}
-	DEBUG_LOGGING_DETAIL( ("DirectInputCreateA Hook hookfunc") );
+	DEBUG_LOGGING_MORE_DETAIL(("DirectInputCreateA Hook hookfunc"));
 
     return Result;
 }
@@ -266,16 +264,17 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			::DisableThreadLibraryCalls( hModule );
 			CreateTinyConsole();
 			OpenSharedMemory();
-
+#ifndef JRO_CLIENT_STRUCTURE
 			InstallProxyFunction(
-				_T("ddraw.dll"),  _T("DirectDrawCreateEx"), 
-				ProxyDirectDrawCreateEx, &OrigDirectDrawCreateEx );
+				_T("ws2_32.dll"), "recv",
+				ProxyWS2_32_recv, (LPVOID*)&OrigWS2_32_recv);
+#endif
 			InstallProxyFunction(
-				_T("dinput.dll"), _T("DirectInputCreateA"),
-				ProxyDirectInputCreateA, &OrigDirectInputCreateA );
+				_T("ddraw.dll"),  "DirectDrawCreateEx", 
+				ProxyDirectDrawCreateEx, (LPVOID*)&OrigDirectDrawCreateEx);
 			InstallProxyFunction(
-				_T("ws2_32.dll"), _T("recv"),
-				ProxyWS32_recv, &OrigWS32_recv );
+				_T("dinput.dll"), "DirectInputCreateA",
+				ProxyDirectInputCreateA, (LPVOID*)&OrigDirectInputCreateA);
 
 			if( g_pSharedData ){
 				::GetCurrentDirectory(MAX_PATH,temppath);

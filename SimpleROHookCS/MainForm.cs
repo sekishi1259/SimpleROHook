@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Windows.Forms;
 
+
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
@@ -21,7 +22,6 @@ namespace SimpleROHookCS
 
             string curentdirstr = System.IO.Directory.GetCurrentDirectory() + "\\config.ini";
             m_SharedData.configfilepath = curentdirstr;
-
             if (File.Exists("config.xml"))
             {
                 #region Load Config XML
@@ -38,6 +38,8 @@ namespace SimpleROHookCS
                         = configration.freemouse;
                     m_SharedData.m2e
                         = configration.m2e;
+                    m_SharedData.m2e_zbias
+                        = configration.m2e_zbias;
                     m_SharedData.fix_windowmode_vsyncwait
                         = configration.fix_windowmode_vsyncwait;
                     m_SharedData.show_framerate
@@ -52,7 +54,7 @@ namespace SimpleROHookCS
                 #endregion
             }
         }
-        public void Dispose()
+        public new void Dispose()
         {
             #region Save Config XML
             using (XmlTextWriter writer = new XmlTextWriter("config.xml", System.Text.Encoding.UTF8))
@@ -66,6 +68,8 @@ namespace SimpleROHookCS
                     = m_SharedData.freemouse;
                 configration.m2e
                     = m_SharedData.m2e;
+                configration.m2e_zbias
+                    = m_SharedData.m2e_zbias;
                 configration.fix_windowmode_vsyncwait
                     = m_SharedData.fix_windowmode_vsyncwait;
                 configration.show_framerate
@@ -118,8 +122,12 @@ namespace SimpleROHookCS
                 = m_SharedData.write_packetlog;
             freeMouseToolStripMenuItem.Checked
                 = m_SharedData.freemouse;
+
             showM2EToolStripMenuItem.Checked
                 = m_SharedData.m2e;
+            m2e_zbias_ToolStripTrackBar.Value
+                = m_SharedData.m2e_zbias;
+
             fixWindowModeVsyncWaitToolStripMenuItem.Checked
                 = m_SharedData.fix_windowmode_vsyncwait;
             showFpsToolStripMenuItem.Checked
@@ -213,10 +221,17 @@ namespace SimpleROHookCS
 
         private void TaskTray_contextMenuStrip_Opening(object sender, CancelEventArgs e)
         {
+            m2e_zbias_ToolStripTrackBar.SetMinMax(0, 16);
+            m2e_zbias_ToolStripTrackBar.SetTickFrequency(1);
+            m2e_zbias_ToolStripTrackBar.SetChangeValue(1, 4);
             UpdateCheckMenu();
             UpdateCoolerMenu();
         }
 
+        private void m2e_zbias_trackBarMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
 
 
     }
@@ -228,6 +243,7 @@ namespace SimpleROHookCS
             write_packetlog = false;
             freemouse = false;
             m2e = true;
+            m2e_zbias = 0;
             fix_windowmode_vsyncwait = true;
             show_framerate = true;
             objectinformation = false;
@@ -238,6 +254,7 @@ namespace SimpleROHookCS
         public bool write_packetlog { get; set; }
         public bool freemouse { get; set; }
         public bool m2e { get; set; }
+        public int  m2e_zbias { get; set; }
         public bool fix_windowmode_vsyncwait { get; set; }
         public bool show_framerate { get; set; }
         public bool objectinformation { get; set; }

@@ -65,6 +65,11 @@ public:
 		}
 		return TRUE;
 	}
+	LPVOID GetTagAddress(LPBYTE address, char code)
+	{
+		return (LPVOID)(address + GetMakerIndex(code));
+	}
+
 	DWORD GetImmediateDWORD(LPBYTE address,char code)
 	{
 		return *(DWORD*)(address + GetMakerIndex( code ));

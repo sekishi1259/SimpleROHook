@@ -20,6 +20,7 @@ namespace SimpleROHookCS
             public int write_packetlog;
             public int freemouse;
             public int m2e;
+            public int m2e_zbias;
             public int fix_windowmode_vsyncwait;
             public int show_framerate;
             public int objectinformation;
@@ -35,7 +36,7 @@ namespace SimpleROHookCS
 
         public SRHSharedData()
         {
-            m_Mmf = MemoryMappedFile.CreateNew(@"SimpleROHook1008",
+            m_Mmf = MemoryMappedFile.CreateNew(@"SimpleROHook1009",
                 Marshal.SizeOf(typeof(StSHAREDMEMORY)),
                 MemoryMappedFileAccess.ReadWrite);
             if (m_Mmf == null)
@@ -49,6 +50,7 @@ namespace SimpleROHookCS
             write_packetlog = false;
             freemouse = false;
             m2e = false;
+            m2e_zbias = 0;
             fix_windowmode_vsyncwait = false;
             show_framerate = false;
             objectinformation = false;
@@ -98,6 +100,18 @@ namespace SimpleROHookCS
                 m_pSharedMemory->m2e = (value == false) ? 0 : 1;
             }
         }
+        public int m2e_zbias
+        {
+            get
+            {
+                return m_pSharedMemory->m2e_zbias;
+            }
+            set
+            {
+                m_pSharedMemory->m2e_zbias = value;
+            }
+        }
+
         public bool fix_windowmode_vsyncwait
         {
             get

@@ -68,6 +68,9 @@ private:
 #define MAX_FLLORSKILLTYPE 0x100
 	DWORD m_M2ESkillColor[MAX_FLLORSKILLTYPE];
 
+	int m_CMode_subMode;
+	int m_CMode_old_subMode;
+
 	struct p_std_map_packetlen
 	{
 		struct p_std_map_packetlen *left, *parent, *right;
@@ -96,8 +99,11 @@ public:
 		m_hWnd(NULL),m_funcRagexe_PlayStream(NULL),
 		m_packetLenMap_table_index(0),m_packetqueue_head(0),
 		m_pSFastFont(NULL),m_pddsFontTexture(NULL),
-		g_renderer(NULL),g_pmodeMgr(NULL),g_mouse(NULL)
-	{};
+		g_renderer(NULL), g_pmodeMgr(NULL), g_mouse(NULL), 
+		m_CMode_old_subMode(-1), m_CMode_subMode(-1)
+	{
+		ZeroMemory(m_packetLenMap_table, sizeof(m_packetLenMap_table));
+	};
 	virtual ~CRoCodeBind();
 
 	void Init(IDirect3DDevice7* d3ddevice);
@@ -111,7 +117,7 @@ public:
 
 	void InitWindowHandle(HWND hWnd){m_hWnd = hWnd;};
 
-	void MouseProc(HRESULT Result,LPVOID lpvData,BOOL FreeMouse);
+	void OneSyncProc(HRESULT Result, LPVOID lpvData, BOOL FreeMouse);
 	void SetMouseCurPos(int x,int y);
 };
 

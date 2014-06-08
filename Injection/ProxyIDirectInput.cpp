@@ -7,7 +7,7 @@
 
 HRESULT CProxyIDirectInput7::Proxy_CreateDevice(THIS_ REFGUID rguid,LPDIRECTINPUTDEVICEA *lpIDD,LPUNKNOWN pUnkOuter)
 {
-	DEBUG_LOGGING_DETAIL(("IDirectInput7::CreateDevice()\n"));
+	DEBUG_LOGGING_MORE_DETAIL(("IDirectInput7::CreateDevice()\n"));
 
 	void *ret_cProxy;
 	IDirectInputDevice7* lpDirectInputDevice7;
@@ -19,7 +19,7 @@ HRESULT CProxyIDirectInput7::Proxy_CreateDevice(THIS_ REFGUID rguid,LPDIRECTINPU
 	 && rguid.Data3 == GUID_SysMouse.Data3 
 	 && *(UINT64*)rguid.Data4 == *(UINT64*)GUID_SysMouse.Data4
 	 ){
-		DEBUG_LOGGING_DETAIL(("IDirectInput7::Hook_CProxyIDirectInputDevice7 0x%0x ",lpDirectInputDevice7));
+		DEBUG_LOGGING_MORE_DETAIL(("IDirectInput7::Hook_CProxyIDirectInputDevice7 0x%0x ", lpDirectInputDevice7));
 		ret_cProxy = (void*)(new CProxyIDirectInputDevice7(lpDirectInputDevice7));
 		*lpIDD = (LPDIRECTINPUTDEVICEA)ret_cProxy;
 	}
@@ -35,7 +35,7 @@ HRESULT CProxyIDirectInputDevice7::Proxy_GetDeviceState(THIS_ DWORD cbData,LPVOI
 	Result = m_Instance->GetDeviceState(cbData, lpvData);
 
 	if( g_pRoCodeBind )
-		g_pRoCodeBind->MouseProc(Result,lpvData,g_FreeMouseSw);
+		g_pRoCodeBind->OneSyncProc(Result, lpvData, g_FreeMouseSw);
 
 	return Result;
 }
@@ -43,7 +43,7 @@ HRESULT CProxyIDirectInputDevice7::Proxy_GetDeviceState(THIS_ DWORD cbData,LPVOI
 HRESULT CProxyIDirectInputDevice7::Proxy_SetCooperativeLevel(HWND hwnd, DWORD dwflags)
 {
 	HRESULT Result;
-	DEBUG_LOGGING_DETAIL(("lpDI->SetCooperativeLevel\n"));
+	DEBUG_LOGGING_MORE_DETAIL(("lpDI->SetCooperativeLevel\n"));
 
 	if( g_FreeMouseSw )
 		dwflags = DISCL_NONEXCLUSIVE | DISCL_BACKGROUND;

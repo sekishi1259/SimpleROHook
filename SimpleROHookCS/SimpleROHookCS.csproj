@@ -113,6 +113,9 @@
       <DependentUpon>SRHAboutBox.cs</DependentUpon>
     </Compile>
     <Compile Include="SRHSharedData.cs" />
+    <Compile Include="ToolStripTrackBar.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
