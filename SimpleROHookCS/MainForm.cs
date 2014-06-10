@@ -53,7 +53,21 @@ namespace SimpleROHookCS
                 }
                 #endregion
             }
+            CustomInitializeComponent();
         }
+        private void CustomInitializeComponent()
+        {
+            m2e_zbias_ToolStripTrackBar.SetMinMax(0, 16);
+            m2e_zbias_ToolStripTrackBar.SetTickFrequency(1);
+            m2e_zbias_ToolStripTrackBar.SetChangeValue(1, 4);
+            Set_ZBiasValue_m2EZBiasToolStripMenuItem(m_SharedData.m2e_zbias);
+
+            CPUCooler_toolStripTrackBar.SetMinMax(0, 3);
+            CPUCooler_toolStripTrackBar.SetTickFrequency(1);
+            CPUCooler_toolStripTrackBar.SetChangeValue(1, 4);
+            Set_CPUCoolerText_toolStripMenuItem(m_SharedData.cpucoolerlevel);
+        }
+
         public new void Dispose()
         {
             #region Save Config XML
@@ -127,6 +141,11 @@ namespace SimpleROHookCS
                 = m_SharedData.m2e;
             m2e_zbias_ToolStripTrackBar.Value
                 = m_SharedData.m2e_zbias;
+            Set_ZBiasValue_m2EZBiasToolStripMenuItem(m_SharedData.m2e_zbias);
+
+            CPUCooler_toolStripTrackBar.Value =
+                m_SharedData.cpucoolerlevel;
+            Set_ZBiasValue_m2EZBiasToolStripMenuItem(m_SharedData.cpucoolerlevel);
 
             fixWindowModeVsyncWaitToolStripMenuItem.Checked
                 = m_SharedData.fix_windowmode_vsyncwait;
@@ -138,38 +157,6 @@ namespace SimpleROHookCS
                 = m_SharedData._44khz_audiomode;
         }
 
-        private void UpdateCoolerMenu()
-        {
-            int level = m_SharedData.cpucoolerlevel;
-            offToolStripMenuItem.Checked = (level == 0) ? true : false;
-            level1ToolStripMenuItem.Checked = (level == 1) ? true : false;
-            level2ToolStripMenuItem.Checked = (level == 2) ? true : false;
-            level3ToolStripMenuItem.Checked = (level == 3) ? true : false;
-        }
-
-        private void offToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            m_SharedData.cpucoolerlevel = 0;
-            UpdateCoolerMenu();
-        }
-
-        private void level1ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            m_SharedData.cpucoolerlevel = 1;
-            UpdateCoolerMenu();
-        }
-
-        private void level2ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            m_SharedData.cpucoolerlevel = 2;
-            UpdateCoolerMenu();
-        }
-
-        private void level3ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            m_SharedData.cpucoolerlevel = 3;
-            UpdateCoolerMenu();
-        }
 
         private void kHzAudioModeonBootToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -221,19 +208,42 @@ namespace SimpleROHookCS
 
         private void TaskTray_contextMenuStrip_Opening(object sender, CancelEventArgs e)
         {
-            m2e_zbias_ToolStripTrackBar.SetMinMax(0, 16);
-            m2e_zbias_ToolStripTrackBar.SetTickFrequency(1);
-            m2e_zbias_ToolStripTrackBar.SetChangeValue(1, 4);
             UpdateCheckMenu();
-            UpdateCoolerMenu();
         }
 
-        private void m2e_zbias_trackBarMenuItem_Click(object sender, EventArgs e)
+        private void m2e_zbias_ToolStripTrackBar_Update(object sender, EventArgs e)
         {
+            ToolStripTrackBar tsTrackbar = (ToolStripTrackBar)sender;
+            m_SharedData.m2e_zbias = tsTrackbar.Value;
+            //m_SharedData.m2e_zbias = m2e_zbias_ToolStripTrackBar.Value;
 
+            Set_ZBiasValue_m2EZBiasToolStripMenuItem(m_SharedData.m2e_zbias);
+        }
+        private void Set_ZBiasValue_m2EZBiasToolStripMenuItem(int value)
+        {
+            m2EZBiasToolStripMenuItem.Text =
+                String.Format("M2E Z Bias {0}", value);
         }
 
+        private void CPUCooler_toolStripTrackBar_Update(object sender, EventArgs e)
+        {
+            ToolStripTrackBar tsTrackbar = (ToolStripTrackBar)sender;
+            m_SharedData.cpucoolerlevel = tsTrackbar.Value;
 
+            Set_CPUCoolerText_toolStripMenuItem(m_SharedData.cpucoolerlevel);
+        }
+        private void Set_CPUCoolerText_toolStripMenuItem(int value)
+        {
+            if (value==0)
+            {
+                CPUCoolerText_toolStripMenuItem.Text = "CPU Cooler OFF";
+            }
+            else
+            {
+                CPUCoolerText_toolStripMenuItem.Text =
+                    String.Format("CPU Cooler Level {0}", value);
+            }
+        }
     }
 
     public class Config

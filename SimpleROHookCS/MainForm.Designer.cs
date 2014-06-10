@@ -43,11 +43,8 @@
             this.showFpsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showObjectInformationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fixWindowModeVsyncWaitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripTextBox1 = new System.Windows.Forms.ToolStripTextBox();
-            this.offToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.level1ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.level2ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.level3ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.CPUCoolerText_toolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.CPUCooler_toolStripTrackBar = new SimpleROHookCS.ToolStripTrackBar();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.aboutSimpleROHookToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -75,16 +72,13 @@
             this.showFpsToolStripMenuItem,
             this.showObjectInformationToolStripMenuItem,
             this.fixWindowModeVsyncWaitToolStripMenuItem,
-            this.toolStripTextBox1,
-            this.offToolStripMenuItem,
-            this.level1ToolStripMenuItem,
-            this.level2ToolStripMenuItem,
-            this.level3ToolStripMenuItem,
+            this.CPUCoolerText_toolStripMenuItem,
+            this.CPUCooler_toolStripTrackBar,
             this.toolStripSeparator2,
             this.aboutSimpleROHookToolStripMenuItem,
             this.exitToolStripMenuItem});
             this.TaskTray_contextMenuStrip.Name = "contextMenuStrip1";
-            this.TaskTray_contextMenuStrip.Size = new System.Drawing.Size(276, 443);
+            this.TaskTray_contextMenuStrip.Size = new System.Drawing.Size(276, 398);
             this.TaskTray_contextMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.TaskTray_contextMenuStrip_Opening);
             // 
             // kHzAudioModeonBootToolStripMenuItem
@@ -138,12 +132,13 @@
             this.m2EZBiasToolStripMenuItem.Size = new System.Drawing.Size(275, 22);
             this.m2EZBiasToolStripMenuItem.Text = "M2E Z Bias";
             // 
-            // m2e_zbias_trackBarMenuItem
+            // m2e_zbias_ToolStripTrackBar
             // 
             this.m2e_zbias_ToolStripTrackBar.Name = "m2e_zbias_ToolStripTrackBar";
             this.m2e_zbias_ToolStripTrackBar.Size = new System.Drawing.Size(215, 45);
             this.m2e_zbias_ToolStripTrackBar.Text = "ToolStripTrackBar1";
             this.m2e_zbias_ToolStripTrackBar.Value = 0;
+            this.m2e_zbias_ToolStripTrackBar.ValueChanged += new System.EventHandler(this.m2e_zbias_ToolStripTrackBar_Update);
             // 
             // showFpsToolStripMenuItem
             // 
@@ -169,40 +164,20 @@
             this.fixWindowModeVsyncWaitToolStripMenuItem.Text = "Fix WindowMode VsyncWait";
             this.fixWindowModeVsyncWaitToolStripMenuItem.Click += new System.EventHandler(this.fixWindowModeVsyncWaitToolStripMenuItem_Click);
             // 
-            // toolStripTextBox1
+            // CPUCoolerText_toolStripMenuItem
             // 
-            this.toolStripTextBox1.Enabled = false;
-            this.toolStripTextBox1.Name = "toolStripTextBox1";
-            this.toolStripTextBox1.Size = new System.Drawing.Size(100, 25);
-            this.toolStripTextBox1.Text = "-- CPU Cooler --";
+            this.CPUCoolerText_toolStripMenuItem.Enabled = false;
+            this.CPUCoolerText_toolStripMenuItem.Name = "CPUCoolerText_toolStripMenuItem";
+            this.CPUCoolerText_toolStripMenuItem.Size = new System.Drawing.Size(275, 22);
+            this.CPUCoolerText_toolStripMenuItem.Text = "CPU Cooler";
             // 
-            // offToolStripMenuItem
+            // CPUCooler_toolStripTrackBar
             // 
-            this.offToolStripMenuItem.Name = "offToolStripMenuItem";
-            this.offToolStripMenuItem.Size = new System.Drawing.Size(275, 22);
-            this.offToolStripMenuItem.Text = "Off";
-            this.offToolStripMenuItem.Click += new System.EventHandler(this.offToolStripMenuItem_Click);
-            // 
-            // level1ToolStripMenuItem
-            // 
-            this.level1ToolStripMenuItem.Name = "level1ToolStripMenuItem";
-            this.level1ToolStripMenuItem.Size = new System.Drawing.Size(275, 22);
-            this.level1ToolStripMenuItem.Text = "Level1";
-            this.level1ToolStripMenuItem.Click += new System.EventHandler(this.level1ToolStripMenuItem_Click);
-            // 
-            // level2ToolStripMenuItem
-            // 
-            this.level2ToolStripMenuItem.Name = "level2ToolStripMenuItem";
-            this.level2ToolStripMenuItem.Size = new System.Drawing.Size(275, 22);
-            this.level2ToolStripMenuItem.Text = "Level2";
-            this.level2ToolStripMenuItem.Click += new System.EventHandler(this.level2ToolStripMenuItem_Click);
-            // 
-            // level3ToolStripMenuItem
-            // 
-            this.level3ToolStripMenuItem.Name = "level3ToolStripMenuItem";
-            this.level3ToolStripMenuItem.Size = new System.Drawing.Size(275, 22);
-            this.level3ToolStripMenuItem.Text = "Level3";
-            this.level3ToolStripMenuItem.Click += new System.EventHandler(this.level3ToolStripMenuItem_Click);
+            this.CPUCooler_toolStripTrackBar.Name = "CPUCooler_toolStripTrackBar";
+            this.CPUCooler_toolStripTrackBar.Size = new System.Drawing.Size(104, 45);
+            this.CPUCooler_toolStripTrackBar.Text = "toolStripTrackBar1";
+            this.CPUCooler_toolStripTrackBar.Value = 0;
+            this.CPUCooler_toolStripTrackBar.ValueChanged += new System.EventHandler(this.CPUCooler_toolStripTrackBar_Update);
             // 
             // toolStripSeparator2
             // 
@@ -248,17 +223,14 @@
         private System.Windows.Forms.ToolStripMenuItem showFpsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showObjectInformationToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fixWindowModeVsyncWaitToolStripMenuItem;
-        private System.Windows.Forms.ToolStripTextBox toolStripTextBox1;
-        private System.Windows.Forms.ToolStripMenuItem offToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem level1ToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem level2ToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem level3ToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripMenuItem aboutSimpleROHookToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem freeMouseToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem packetLogToolStripMenuItem;
-        private ToolStripTrackBar m2e_zbias_ToolStripTrackBar;
         private System.Windows.Forms.ToolStripMenuItem m2EZBiasToolStripMenuItem;
+        private ToolStripTrackBar m2e_zbias_ToolStripTrackBar;
+        private System.Windows.Forms.ToolStripMenuItem CPUCoolerText_toolStripMenuItem;
+        private ToolStripTrackBar CPUCooler_toolStripTrackBar;
     }
 }
 

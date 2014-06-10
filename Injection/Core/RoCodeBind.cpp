@@ -332,19 +332,6 @@ void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 		//str.str("");
 		CGameMode *p_gamemode = (CGameMode*)pcmode->m_curMode;
 
-		if (pCConnection_s_wsRecv ){
-			BYTE *p = (BYTE*)pCConnection_s_wsRecv;
-
-			str << (DWORD)&p[0] << std::endl;
-			for (int ii = 0; ii < 16; ii++){
-				str << std::setfill('0') << std::setw(2) << std::hex << (int)p[ii] << ",";
-				if ((ii % 0x10) == 0x0f){
-					str << std::endl;
-				}
-			}
-			str << std::endl;
-		}
-
 		if( p_gamemode && pcmode->m_curModeType == 1 
 		 && p_gamemode->m_world && p_gamemode->m_view && p_gamemode->m_world->m_attr ){
 			CView *pView = p_gamemode->m_view;
