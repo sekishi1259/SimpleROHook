@@ -145,7 +145,7 @@ namespace SimpleROHookCS
 
             CPUCooler_toolStripTrackBar.Value =
                 m_SharedData.cpucoolerlevel;
-            Set_ZBiasValue_m2EZBiasToolStripMenuItem(m_SharedData.cpucoolerlevel);
+            Set_CPUCoolerText_toolStripMenuItem(m_SharedData.cpucoolerlevel);
 
             fixWindowModeVsyncWaitToolStripMenuItem.Checked
                 = m_SharedData.fix_windowmode_vsyncwait;
