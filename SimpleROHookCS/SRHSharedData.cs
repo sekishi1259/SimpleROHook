@@ -19,8 +19,12 @@ namespace SimpleROHookCS
 
             public int write_packetlog;
             public int freemouse;
+            public int ground_zbias;
+            public int alphalevel;
             public int m2e;
-            public int m2e_zbias;
+            public int bbe;
+            public int deadcell;
+            public int chatscope;
             public int fix_windowmode_vsyncwait;
             public int show_framerate;
             public int objectinformation;
@@ -36,7 +40,7 @@ namespace SimpleROHookCS
 
         public SRHSharedData()
         {
-            m_Mmf = MemoryMappedFile.CreateNew(@"SimpleROHook1009",
+            m_Mmf = MemoryMappedFile.CreateNew(@"SimpleROHook1010",
                 Marshal.SizeOf(typeof(StSHAREDMEMORY)),
                 MemoryMappedFileAccess.ReadWrite);
             if (m_Mmf == null)
@@ -49,8 +53,12 @@ namespace SimpleROHookCS
 
             write_packetlog = false;
             freemouse = false;
+            ground_zbias = 0;
+            alphalevel = 0x7f;
             m2e = false;
-            m2e_zbias = 0;
+            bbe = false;
+            deadcell = false;
+            chatscope = false;
             fix_windowmode_vsyncwait = false;
             show_framerate = false;
             objectinformation = false;
@@ -89,6 +97,29 @@ namespace SimpleROHookCS
                 m_pSharedMemory->freemouse = (value == false)? 0 : 1;
             }
         }
+        public int ground_zbias
+        {
+            get
+            {
+                return m_pSharedMemory->ground_zbias;
+            }
+            set
+            {
+                m_pSharedMemory->ground_zbias = value;
+            }
+        }
+        public int alphalevel
+        {
+            get
+            {
+                return m_pSharedMemory->alphalevel;
+            }
+            set
+            {
+                m_pSharedMemory->alphalevel = value;
+            }
+        }
+
         public bool m2e
         {
             get
@@ -100,15 +131,40 @@ namespace SimpleROHookCS
                 m_pSharedMemory->m2e = (value == false) ? 0 : 1;
             }
         }
-        public int m2e_zbias
+
+        public bool bbe
         {
             get
             {
-                return m_pSharedMemory->m2e_zbias;
+                return (m_pSharedMemory->bbe == 0) ? false : true;
             }
             set
             {
-                m_pSharedMemory->m2e_zbias = value;
+                m_pSharedMemory->bbe = (value == false) ? 0 : 1;
+            }
+        }
+
+        public bool deadcell
+        {
+            get
+            {
+                return (m_pSharedMemory->deadcell == 0) ? false : true;
+            }
+            set
+            {
+                m_pSharedMemory->deadcell = (value == false) ? 0 : 1;
+            }
+        }
+
+        public bool chatscope
+        {
+            get
+            {
+                return (m_pSharedMemory->chatscope == 0) ? false : true;
+            }
+            set
+            {
+                m_pSharedMemory->chatscope = (value == false) ? 0 : 1;
             }
         }
 

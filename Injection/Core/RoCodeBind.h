@@ -71,6 +71,21 @@ private:
 	int m_CMode_subMode;
 	int m_CMode_old_subMode;
 
+	DWORD _state_zenable;
+	DWORD _state_zwriteenable;
+	DWORD _state_zbias;
+	DWORD _state_fogenable;
+	DWORD _state_specularenable;
+	DWORD _state_alphafunc;
+	DWORD _state_alpharef;
+	DWORD _state_srcblend;
+	DWORD _state_destblend;
+	void BackupRenderState(IDirect3DDevice7* d3ddevice);
+	void RestoreRenderState(IDirect3DDevice7* d3ddevice);
+
+	void DrawBBE(IDirect3DDevice7* d3ddevice);
+	void DrawM2E(IDirect3DDevice7* d3ddevice);
+
 	struct p_std_map_packetlen
 	{
 		struct p_std_map_packetlen *left, *parent, *right;
@@ -110,7 +125,6 @@ public:
 
 	void DrawSRHDebug(IDirect3DDevice7* d3ddevice);
 	void DrawOn3DMap(IDirect3DDevice7* d3ddevice);
-	void DrawM2E(IDirect3DDevice7* d3ddevice);
 
 	int GetPacketLength(int opcode);
 	void PacketQueueProc(char *buf,int len);
