@@ -1,6 +1,3 @@
-#include "stdafx.h"
-
-
 HINSTANCE g_hTCInstance;
 
 #define MAX_LOADSTRING 100

@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "../tinyconsole.h"
 #include "RoCodeBind.h"
 

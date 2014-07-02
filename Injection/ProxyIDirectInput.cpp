@@ -1,5 +1,3 @@
-#include "stdafx.h"
-
 #include "tinyconsole.h"
 #include "ProxyIDirectInput.h"
 
