@@ -650,6 +650,7 @@ void CRoCodeBind::PacketQueueProc(char *buf,int len)
 		while( m_packetqueue_head > 1 ){
 			unsigned short opcode = *(unsigned short*)m_packetqueuebuffer;
 			unsigned int packetlength;
+			BOOL isReceivedGID = FALSE;
 
 			if (g_pmodeMgr){
 				CMode *p_mode = g_pmodeMgr->m_curMode;
@@ -663,6 +664,7 @@ void CRoCodeBind::PacketQueueProc(char *buf,int len)
 
 			if (m_CMode_subMode != m_CMode_old_subMode && m_CMode_subMode == LSM_WAITRESP_FROM_CHSVR ){
 				packetlength = 4;
+				isReceivedGID = TRUE;
 			}else{
 				packetlength = GetPacketLength( opcode );
 				if( packetlength == -1 ){
@@ -672,6 +674,9 @@ void CRoCodeBind::PacketQueueProc(char *buf,int len)
 				}
 			}
 			if( m_packetqueue_head >= packetlength ){
+				if (!isReceivedGID){
+
+				}
 				if( g_pSharedData && g_pSharedData->write_packetlog ){
 					std::stringstream str;
 					str << "[" << std::setfill('0') << std::setw(8) << timeGetTime() << "] R ";
