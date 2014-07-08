@@ -51,9 +51,6 @@
     <ClInclude Include="Core\ro\res.h">
       <Filter>ヘッダー ファイル\Core\ro</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>ヘッダー ファイル\Core\ro</Filter>
-    </ClInclude>
     <ClInclude Include="Core\ro\system.h">
       <Filter>ヘッダー ファイル\Core\ro</Filter>
     </ClInclude>
@@ -107,6 +104,9 @@
     </ClInclude>
     <ClInclude Include="Core\SearchCode.h">
       <Filter>ヘッダー ファイル\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>ヘッダー ファイル\Dll-Injection</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
