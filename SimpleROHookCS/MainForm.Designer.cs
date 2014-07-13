@@ -35,13 +35,20 @@
             this.kHzAudioModeonBootToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.playMusicOnClientStreamPlayerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.packetLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.freeMouseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.showM2EToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.m2EZBiasToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.m2e_zbias_ToolStripTrackBar = new SimpleROHookCS.ToolStripTrackBar();
             this.showFpsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showObjectInformationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.packetLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.freeMouseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
+            this.groundZBiasToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ground_zbias_ToolStripTrackBar = new SimpleROHookCS.ToolStripTrackBar();
+            this.alphaLeveltoolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.alphaLeveltoolStripTrackBar = new SimpleROHookCS.ToolStripTrackBar();
+            this.showM2EToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showBBEtoolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showDeadCelltoolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showChatScopetoolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.fixWindowModeVsyncWaitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.CPUCoolerText_toolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.CPUCooler_toolStripTrackBar = new SimpleROHookCS.ToolStripTrackBar();
@@ -64,13 +71,20 @@
             this.kHzAudioModeonBootToolStripMenuItem,
             this.playMusicOnClientStreamPlayerToolStripMenuItem,
             this.toolStripSeparator1,
-            this.packetLogToolStripMenuItem,
-            this.freeMouseToolStripMenuItem,
-            this.showM2EToolStripMenuItem,
-            this.m2EZBiasToolStripMenuItem,
-            this.m2e_zbias_ToolStripTrackBar,
             this.showFpsToolStripMenuItem,
             this.showObjectInformationToolStripMenuItem,
+            this.packetLogToolStripMenuItem,
+            this.freeMouseToolStripMenuItem,
+            this.toolStripSeparator4,
+            this.groundZBiasToolStripMenuItem,
+            this.ground_zbias_ToolStripTrackBar,
+            this.alphaLeveltoolStripMenuItem,
+            this.alphaLeveltoolStripTrackBar,
+            this.showM2EToolStripMenuItem,
+            this.showBBEtoolStripMenuItem,
+            this.showDeadCelltoolStripMenuItem,
+            this.showChatScopetoolStripMenuItem,
+            this.toolStripSeparator3,
             this.fixWindowModeVsyncWaitToolStripMenuItem,
             this.CPUCoolerText_toolStripMenuItem,
             this.CPUCooler_toolStripTrackBar,
@@ -78,7 +92,7 @@
             this.aboutSimpleROHookToolStripMenuItem,
             this.exitToolStripMenuItem});
             this.TaskTray_contextMenuStrip.Name = "contextMenuStrip1";
-            this.TaskTray_contextMenuStrip.Size = new System.Drawing.Size(276, 398);
+            this.TaskTray_contextMenuStrip.Size = new System.Drawing.Size(276, 546);
             this.TaskTray_contextMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.TaskTray_contextMenuStrip_Opening);
             // 
             // kHzAudioModeonBootToolStripMenuItem
@@ -101,6 +115,22 @@
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(272, 6);
             // 
+            // showFpsToolStripMenuItem
+            // 
+            this.showFpsToolStripMenuItem.CheckOnClick = true;
+            this.showFpsToolStripMenuItem.Name = "showFpsToolStripMenuItem";
+            this.showFpsToolStripMenuItem.Size = new System.Drawing.Size(275, 22);
+            this.showFpsToolStripMenuItem.Text = "Show Fps";
+            this.showFpsToolStripMenuItem.Click += new System.EventHandler(this.showFpsToolStripMenuItem_Click);
+            // 
+            // showObjectInformationToolStripMenuItem
+            // 
+            this.showObjectInformationToolStripMenuItem.CheckOnClick = true;
+            this.showObjectInformationToolStripMenuItem.Name = "showObjectInformationToolStripMenuItem";
+            this.showObjectInformationToolStripMenuItem.Size = new System.Drawing.Size(275, 22);
+            this.showObjectInformationToolStripMenuItem.Text = "Show Object Information";
+            this.showObjectInformationToolStripMenuItem.Click += new System.EventHandler(this.showObjectInformationToolStripMenuItem_Click);
+            // 
             // packetLogToolStripMenuItem
             // 
             this.packetLogToolStripMenuItem.CheckOnClick = true;
@@ -117,6 +147,41 @@
             this.freeMouseToolStripMenuItem.Text = "FreeMouse(on boot)";
             this.freeMouseToolStripMenuItem.Click += new System.EventHandler(this.freeMouseToolStripMenuItem_Click);
             // 
+            // toolStripSeparator4
+            // 
+            this.toolStripSeparator4.Name = "toolStripSeparator4";
+            this.toolStripSeparator4.Size = new System.Drawing.Size(272, 6);
+            // 
+            // groundZBiasToolStripMenuItem
+            // 
+            this.groundZBiasToolStripMenuItem.Enabled = false;
+            this.groundZBiasToolStripMenuItem.Name = "groundZBiasToolStripMenuItem";
+            this.groundZBiasToolStripMenuItem.Size = new System.Drawing.Size(275, 22);
+            this.groundZBiasToolStripMenuItem.Text = "Ground Z Bias";
+            // 
+            // ground_zbias_ToolStripTrackBar
+            // 
+            this.ground_zbias_ToolStripTrackBar.Name = "ground_zbias_ToolStripTrackBar";
+            this.ground_zbias_ToolStripTrackBar.Size = new System.Drawing.Size(215, 45);
+            this.ground_zbias_ToolStripTrackBar.Text = "ToolStripTrackBar1";
+            this.ground_zbias_ToolStripTrackBar.Value = 0;
+            this.ground_zbias_ToolStripTrackBar.ValueChanged += new System.EventHandler(this.ground_zbias_ToolStripTrackBar_Update);
+            // 
+            // alphaLeveltoolStripMenuItem
+            // 
+            this.alphaLeveltoolStripMenuItem.Enabled = false;
+            this.alphaLeveltoolStripMenuItem.Name = "alphaLeveltoolStripMenuItem";
+            this.alphaLeveltoolStripMenuItem.Size = new System.Drawing.Size(275, 22);
+            this.alphaLeveltoolStripMenuItem.Text = "Alpha Level";
+            // 
+            // alphaLeveltoolStripTrackBar
+            // 
+            this.alphaLeveltoolStripTrackBar.Name = "alphaLeveltoolStripTrackBar";
+            this.alphaLeveltoolStripTrackBar.Size = new System.Drawing.Size(215, 45);
+            this.alphaLeveltoolStripTrackBar.Text = "ToolStripTrackBar1";
+            this.alphaLeveltoolStripTrackBar.Value = 0;
+            this.alphaLeveltoolStripTrackBar.ValueChanged += new System.EventHandler(this.alphaLeveltoolStripTrackBar_Update);
+            // 
             // showM2EToolStripMenuItem
             // 
             this.showM2EToolStripMenuItem.CheckOnClick = true;
@@ -125,36 +190,34 @@
             this.showM2EToolStripMenuItem.Text = "Show M2E";
             this.showM2EToolStripMenuItem.Click += new System.EventHandler(this.showM2EToolStripMenuItem_Click);
             // 
-            // m2EZBiasToolStripMenuItem
+            // showBBEtoolStripMenuItem
             // 
-            this.m2EZBiasToolStripMenuItem.Enabled = false;
-            this.m2EZBiasToolStripMenuItem.Name = "m2EZBiasToolStripMenuItem";
-            this.m2EZBiasToolStripMenuItem.Size = new System.Drawing.Size(275, 22);
-            this.m2EZBiasToolStripMenuItem.Text = "M2E Z Bias";
+            this.showBBEtoolStripMenuItem.CheckOnClick = true;
+            this.showBBEtoolStripMenuItem.Name = "showBBEtoolStripMenuItem";
+            this.showBBEtoolStripMenuItem.Size = new System.Drawing.Size(275, 22);
+            this.showBBEtoolStripMenuItem.Text = "Show BBE";
+            this.showBBEtoolStripMenuItem.Click += new System.EventHandler(this.showBBEtoolStripMenuItem_Click);
             // 
-            // m2e_zbias_ToolStripTrackBar
+            // showDeadCelltoolStripMenuItem
             // 
-            this.m2e_zbias_ToolStripTrackBar.Name = "m2e_zbias_ToolStripTrackBar";
-            this.m2e_zbias_ToolStripTrackBar.Size = new System.Drawing.Size(215, 45);
-            this.m2e_zbias_ToolStripTrackBar.Text = "ToolStripTrackBar1";
-            this.m2e_zbias_ToolStripTrackBar.Value = 0;
-            this.m2e_zbias_ToolStripTrackBar.ValueChanged += new System.EventHandler(this.m2e_zbias_ToolStripTrackBar_Update);
+            this.showDeadCelltoolStripMenuItem.CheckOnClick = true;
+            this.showDeadCelltoolStripMenuItem.Name = "showDeadCelltoolStripMenuItem";
+            this.showDeadCelltoolStripMenuItem.Size = new System.Drawing.Size(275, 22);
+            this.showDeadCelltoolStripMenuItem.Text = "Show Dead Cell";
+            this.showDeadCelltoolStripMenuItem.Click += new System.EventHandler(this.showDeadCelltoolStripMenuItem_Click);
             // 
-            // showFpsToolStripMenuItem
+            // showChatScopetoolStripMenuItem
             // 
-            this.showFpsToolStripMenuItem.CheckOnClick = true;
-            this.showFpsToolStripMenuItem.Name = "showFpsToolStripMenuItem";
-            this.showFpsToolStripMenuItem.Size = new System.Drawing.Size(275, 22);
-            this.showFpsToolStripMenuItem.Text = "Show Fps";
-            this.showFpsToolStripMenuItem.Click += new System.EventHandler(this.showFpsToolStripMenuItem_Click);
+            this.showChatScopetoolStripMenuItem.CheckOnClick = true;
+            this.showChatScopetoolStripMenuItem.Name = "showChatScopetoolStripMenuItem";
+            this.showChatScopetoolStripMenuItem.Size = new System.Drawing.Size(275, 22);
+            this.showChatScopetoolStripMenuItem.Text = "Show Chat Scope";
+            this.showChatScopetoolStripMenuItem.Click += new System.EventHandler(this.showChatScopetoolStripMenuItem_Click);
             // 
-            // showObjectInformationToolStripMenuItem
+            // toolStripSeparator3
             // 
-            this.showObjectInformationToolStripMenuItem.CheckOnClick = true;
-            this.showObjectInformationToolStripMenuItem.Name = "showObjectInformationToolStripMenuItem";
-            this.showObjectInformationToolStripMenuItem.Size = new System.Drawing.Size(275, 22);
-            this.showObjectInformationToolStripMenuItem.Text = "Show Object Information";
-            this.showObjectInformationToolStripMenuItem.Click += new System.EventHandler(this.showObjectInformationToolStripMenuItem_Click);
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(272, 6);
             // 
             // fixWindowModeVsyncWaitToolStripMenuItem
             // 
@@ -227,10 +290,17 @@
         private System.Windows.Forms.ToolStripMenuItem aboutSimpleROHookToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem freeMouseToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem packetLogToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem m2EZBiasToolStripMenuItem;
-        private ToolStripTrackBar m2e_zbias_ToolStripTrackBar;
+        private System.Windows.Forms.ToolStripMenuItem groundZBiasToolStripMenuItem;
+        private ToolStripTrackBar ground_zbias_ToolStripTrackBar;
         private System.Windows.Forms.ToolStripMenuItem CPUCoolerText_toolStripMenuItem;
         private ToolStripTrackBar CPUCooler_toolStripTrackBar;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
+        private System.Windows.Forms.ToolStripMenuItem alphaLeveltoolStripMenuItem;
+        private ToolStripTrackBar alphaLeveltoolStripTrackBar;
+        private System.Windows.Forms.ToolStripMenuItem showBBEtoolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showDeadCelltoolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showChatScopetoolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
     }
 }
 

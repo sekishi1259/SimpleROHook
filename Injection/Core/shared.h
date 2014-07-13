@@ -1,6 +1,6 @@
 #pragma once
 
-#define SHAREDMEMORY_OBJECTNAME _T("SimpleROHook1009")
+#define SHAREDMEMORY_OBJECTNAME _T("SimpleROHook1010")
 
 typedef struct _StSHAREDMEMORY{
 	HWND	g_hROWindow;
@@ -10,8 +10,12 @@ typedef struct _StSHAREDMEMORY{
 
 	BOOL	write_packetlog;
 	BOOL	freemouse; 
-	BOOL	m2e; 
-	int		m2e_zbias;
+	int		ground_zbias;
+	int		alphalevel;
+	BOOL	m2e;
+	BOOL	bbe;
+	BOOL	deadcell;
+	BOOL	chatscope;
 	BOOL	fix_windowmode_vsyncwait;
 	BOOL	show_framerate;
 	BOOL	objectinformation;

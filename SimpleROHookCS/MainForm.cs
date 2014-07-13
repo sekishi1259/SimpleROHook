@@ -36,10 +36,18 @@ namespace SimpleROHookCS
                         = configration.write_packetlog;
                     m_SharedData.freemouse
                         = configration.freemouse;
+                    m_SharedData.ground_zbias
+                        = configration.ground_zbias;
+                    m_SharedData.alphalevel
+                        = configration.alphalevel;
                     m_SharedData.m2e
                         = configration.m2e;
-                    m_SharedData.m2e_zbias
-                        = configration.m2e_zbias;
+                    m_SharedData.bbe
+                        = configration.bbe;
+                    m_SharedData.deadcell
+                        = configration.deadcell;
+                    m_SharedData.chatscope
+                        = configration.chatscope;
                     m_SharedData.fix_windowmode_vsyncwait
                         = configration.fix_windowmode_vsyncwait;
                     m_SharedData.show_framerate
@@ -57,10 +65,15 @@ namespace SimpleROHookCS
         }
         private void CustomInitializeComponent()
         {
-            m2e_zbias_ToolStripTrackBar.SetMinMax(0, 16);
-            m2e_zbias_ToolStripTrackBar.SetTickFrequency(1);
-            m2e_zbias_ToolStripTrackBar.SetChangeValue(1, 4);
-            Set_ZBiasValue_m2EZBiasToolStripMenuItem(m_SharedData.m2e_zbias);
+            ground_zbias_ToolStripTrackBar.SetMinMax(0, 16);
+            ground_zbias_ToolStripTrackBar.SetTickFrequency(1);
+            ground_zbias_ToolStripTrackBar.SetChangeValue(1, 4);
+            Set_ZBiasValue_groundZBiasToolStripMenuItem(m_SharedData.ground_zbias);
+
+            alphaLeveltoolStripTrackBar.SetMinMax(0, 255);
+            alphaLeveltoolStripTrackBar.SetTickFrequency(4);
+            alphaLeveltoolStripTrackBar.SetChangeValue(1, 16);
+            Set_AlphaLevelValue_alphaLeveltoolStripMenuItem(m_SharedData.alphalevel);
 
             CPUCooler_toolStripTrackBar.SetMinMax(0, 3);
             CPUCooler_toolStripTrackBar.SetTickFrequency(1);
@@ -80,10 +93,18 @@ namespace SimpleROHookCS
                     = m_SharedData.write_packetlog;
                 configration.freemouse
                     = m_SharedData.freemouse;
+                configration.ground_zbias
+                    = m_SharedData.ground_zbias;
+                configration.alphalevel
+                    = m_SharedData.alphalevel;
                 configration.m2e
                     = m_SharedData.m2e;
-                configration.m2e_zbias
-                    = m_SharedData.m2e_zbias;
+                configration.bbe
+                    = m_SharedData.bbe;
+                configration.deadcell
+                    = m_SharedData.deadcell;
+                configration.chatscope
+                    = m_SharedData.chatscope;
                 configration.fix_windowmode_vsyncwait
                     = m_SharedData.fix_windowmode_vsyncwait;
                 configration.show_framerate
@@ -137,12 +158,23 @@ namespace SimpleROHookCS
             freeMouseToolStripMenuItem.Checked
                 = m_SharedData.freemouse;
 
+            ground_zbias_ToolStripTrackBar.Value
+                = m_SharedData.ground_zbias;
+            Set_ZBiasValue_groundZBiasToolStripMenuItem(m_SharedData.ground_zbias);
+
+            alphaLeveltoolStripTrackBar.Value
+                = m_SharedData.alphalevel;
+            Set_AlphaLevelValue_alphaLeveltoolStripMenuItem(m_SharedData.alphalevel);
+
             showM2EToolStripMenuItem.Checked
                 = m_SharedData.m2e;
-            m2e_zbias_ToolStripTrackBar.Value
-                = m_SharedData.m2e_zbias;
-            Set_ZBiasValue_m2EZBiasToolStripMenuItem(m_SharedData.m2e_zbias);
-
+            showBBEtoolStripMenuItem.Checked
+                = m_SharedData.bbe;
+            showDeadCelltoolStripMenuItem.Checked
+                = m_SharedData.deadcell;
+            showChatScopetoolStripMenuItem.Checked
+                = m_SharedData.chatscope;
+            
             CPUCooler_toolStripTrackBar.Value =
                 m_SharedData.cpucoolerlevel;
             Set_CPUCoolerText_toolStripMenuItem(m_SharedData.cpucoolerlevel);
@@ -176,6 +208,21 @@ namespace SimpleROHookCS
             m_SharedData.freemouse = tsm.Checked;
         }
 
+        private void showBBEtoolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var tsm = (ToolStripMenuItem)sender;
+            m_SharedData.bbe = tsm.Checked;
+        }
+        private void showDeadCelltoolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var tsm = (ToolStripMenuItem)sender;
+            m_SharedData.deadcell = tsm.Checked;
+        }
+        private void showChatScopetoolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var tsm = (ToolStripMenuItem)sender;
+            m_SharedData.chatscope = tsm.Checked;
+        }
         private void showM2EToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var tsm = (ToolStripMenuItem)sender;
@@ -211,18 +258,17 @@ namespace SimpleROHookCS
             UpdateCheckMenu();
         }
 
-        private void m2e_zbias_ToolStripTrackBar_Update(object sender, EventArgs e)
+        private void ground_zbias_ToolStripTrackBar_Update(object sender, EventArgs e)
         {
             ToolStripTrackBar tsTrackbar = (ToolStripTrackBar)sender;
-            m_SharedData.m2e_zbias = tsTrackbar.Value;
-            //m_SharedData.m2e_zbias = m2e_zbias_ToolStripTrackBar.Value;
+            m_SharedData.ground_zbias = tsTrackbar.Value;
 
-            Set_ZBiasValue_m2EZBiasToolStripMenuItem(m_SharedData.m2e_zbias);
+            Set_ZBiasValue_groundZBiasToolStripMenuItem(m_SharedData.ground_zbias);
         }
-        private void Set_ZBiasValue_m2EZBiasToolStripMenuItem(int value)
+        private void Set_ZBiasValue_groundZBiasToolStripMenuItem(int value)
         {
-            m2EZBiasToolStripMenuItem.Text =
-                String.Format("M2E Z Bias {0}", value);
+            groundZBiasToolStripMenuItem.Text =
+                String.Format("Ground Z Bias {0}", value);
         }
 
         private void CPUCooler_toolStripTrackBar_Update(object sender, EventArgs e)
@@ -244,6 +290,20 @@ namespace SimpleROHookCS
                     String.Format("CPU Cooler Level {0}", value);
             }
         }
+
+        private void alphaLeveltoolStripTrackBar_Update(object sender, EventArgs e)
+        {
+            ToolStripTrackBar tsTrackbar = (ToolStripTrackBar)sender;
+            m_SharedData.alphalevel = tsTrackbar.Value;
+
+            Set_AlphaLevelValue_alphaLeveltoolStripMenuItem(m_SharedData.alphalevel);
+        }
+        private void Set_AlphaLevelValue_alphaLeveltoolStripMenuItem(int value)
+        {
+            alphaLeveltoolStripMenuItem.Text =
+                String.Format("Alpha Level {0}", value);
+        }
+
     }
 
     public class Config
@@ -252,8 +312,12 @@ namespace SimpleROHookCS
         {
             write_packetlog = false;
             freemouse = false;
+            ground_zbias = 0;
+            alphalevel = 0;
             m2e = true;
-            m2e_zbias = 0;
+            bbe = true;
+            deadcell = true;
+            chatscope = true;
             fix_windowmode_vsyncwait = true;
             show_framerate = true;
             objectinformation = false;
@@ -263,8 +327,12 @@ namespace SimpleROHookCS
 
         public bool write_packetlog { get; set; }
         public bool freemouse { get; set; }
+        public int ground_zbias { get; set; }
+        public int alphalevel { get; set; }
         public bool m2e { get; set; }
-        public int  m2e_zbias { get; set; }
+        public bool bbe { get; set; }
+        public bool deadcell { get; set; }
+        public bool chatscope { get; set; }
         public bool fix_windowmode_vsyncwait { get; set; }
         public bool show_framerate { get; set; }
         public bool objectinformation { get; set; }

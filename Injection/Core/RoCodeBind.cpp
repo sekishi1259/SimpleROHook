@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "../tinyconsole.h"
 #include "RoCodeBind.h"
 
@@ -511,115 +510,217 @@ void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 
 }
 
+void CRoCodeBind::BackupRenderState(IDirect3DDevice7* d3ddevice)
+{
+	d3ddevice->GetRenderState(D3DRENDERSTATE_ZENABLE, &_state_zenable);
+	d3ddevice->GetRenderState(D3DRENDERSTATE_ZWRITEENABLE, &_state_zwriteenable);
+	d3ddevice->GetRenderState(D3DRENDERSTATE_ZBIAS, &_state_zbias);
+	d3ddevice->GetRenderState(D3DRENDERSTATE_FOGENABLE, &_state_fogenable);
+	d3ddevice->GetRenderState(D3DRENDERSTATE_SPECULARENABLE, &_state_specularenable);
+	d3ddevice->GetRenderState(D3DRENDERSTATE_ALPHAFUNC, &_state_alphafunc);
+	d3ddevice->GetRenderState(D3DRENDERSTATE_ALPHAREF, &_state_alpharef);
+	d3ddevice->GetRenderState(D3DRENDERSTATE_SRCBLEND, &_state_srcblend);
+	d3ddevice->GetRenderState(D3DRENDERSTATE_DESTBLEND, &_state_destblend);
+}
+
+void CRoCodeBind::RestoreRenderState(IDirect3DDevice7* d3ddevice)
+{
+	d3ddevice->SetRenderState(D3DRENDERSTATE_ZENABLE, _state_zenable);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_ZWRITEENABLE, _state_zwriteenable);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_ZBIAS, _state_zbias);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_FOGENABLE, _state_specularenable);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_SPECULARENABLE, _state_specularenable);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_ALPHAFUNC, _state_alphafunc);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_ALPHAREF, _state_alpharef);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_SRCBLEND, _state_srcblend);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_DESTBLEND, _state_destblend);
+}
+
 void CRoCodeBind::DrawOn3DMap(IDirect3DDevice7* d3ddevice)
 {
-	DrawM2E(d3ddevice);
+	if (!g_pSharedData)return;
+	if (!g_pmodeMgr)return;
+
+	if (g_pmodeMgr->m_curMode && g_pmodeMgr->m_curModeType == 1){
+		CGameMode *pGamemode = (CGameMode*)g_pmodeMgr->m_curMode;
+		if (!pGamemode->m_world || !pGamemode->m_view)return;
+		if (!pGamemode->m_world->m_player)return;
+
+		BackupRenderState(d3ddevice);
+
+		DrawM2E(d3ddevice);
+		DrawBBE(d3ddevice);
+
+		RestoreRenderState(d3ddevice);
+	}
 }
 
 void CRoCodeBind::DrawM2E(IDirect3DDevice7* d3ddevice)
 {
-	if( !g_pSharedData )return;
 	if( g_pSharedData->m2e == FALSE )return;
-	if( !g_pmodeMgr )return;
 
-	CModeMgr *pcmode = g_pmodeMgr;
-	CWorld *pWorld;
-	CView *pView;
+	CGameMode *pGamemode = (CGameMode*)g_pmodeMgr->m_curMode;
+	CWorld *pWorld = pGamemode->m_world;
+	CView *pView = pGamemode->m_view;
 
-	if( pcmode->m_curMode && pcmode->m_curModeType == 1 ){
-		CGameMode *pGamemode = (CGameMode*)pcmode->m_curMode;
-		pWorld = pGamemode->m_world;
-		pView  = pGamemode->m_view;
+	int zbias = g_pSharedData->ground_zbias;
 
-		DWORD _state_zenable;
-		DWORD _state_zwriteenable;
-		DWORD _state_zbias;
-		DWORD _state_fogenable;
-		DWORD _state_specularenable;
-		DWORD _state_alphafunc;
-		DWORD _state_alpharef;
-		DWORD _state_srcblend;
-		DWORD _state_destblend;
-		int zbias = g_pSharedData->m2e_zbias;
+	d3ddevice->SetTexture(0, NULL);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_ZENABLE, D3DZB_TRUE);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_ZWRITEENABLE, FALSE);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_ZBIAS, zbias);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_FOGENABLE    ,FALSE);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_SPECULARENABLE   ,FALSE);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_ALPHAFUNC,D3DCMP_GREATER);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_ALPHAREF,0x00);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_SRCBLEND ,D3DBLEND_SRCALPHA );
+	d3ddevice->SetRenderState(D3DRENDERSTATE_DESTBLEND,D3DBLEND_INVSRCALPHA);
 
-		d3ddevice->GetRenderState(D3DRENDERSTATE_ZENABLE,        &_state_zenable);
-		d3ddevice->GetRenderState(D3DRENDERSTATE_ZWRITEENABLE,   &_state_zwriteenable);
-		d3ddevice->GetRenderState(D3DRENDERSTATE_ZBIAS,          &_state_zbias);
-		d3ddevice->GetRenderState(D3DRENDERSTATE_FOGENABLE,      &_state_fogenable);
-		d3ddevice->GetRenderState(D3DRENDERSTATE_SPECULARENABLE, &_state_specularenable);
-		d3ddevice->GetRenderState(D3DRENDERSTATE_ALPHAFUNC,      &_state_alphafunc);
-		d3ddevice->GetRenderState(D3DRENDERSTATE_ALPHAREF,       &_state_alpharef);
-		d3ddevice->GetRenderState(D3DRENDERSTATE_SRCBLEND ,      &_state_srcblend);
-		d3ddevice->GetRenderState(D3DRENDERSTATE_DESTBLEND,      &_state_destblend);
+	if( pWorld && pView && pWorld->m_attr ){
+		C3dAttr *pAttr = pWorld->m_attr;
 
-		d3ddevice->SetTexture(0, NULL);
-		d3ddevice->SetRenderState(D3DRENDERSTATE_ZENABLE, D3DZB_TRUE);
-		d3ddevice->SetRenderState(D3DRENDERSTATE_ZWRITEENABLE, FALSE);
-		d3ddevice->SetRenderState(D3DRENDERSTATE_ZBIAS, zbias);
-		d3ddevice->SetRenderState(D3DRENDERSTATE_FOGENABLE    ,FALSE);
-		d3ddevice->SetRenderState(D3DRENDERSTATE_SPECULARENABLE   ,FALSE);
-		d3ddevice->SetRenderState(D3DRENDERSTATE_ALPHAFUNC,D3DCMP_GREATER);
-		d3ddevice->SetRenderState(D3DRENDERSTATE_ALPHAREF,0x00);
-		d3ddevice->SetRenderState(D3DRENDERSTATE_SRCBLEND ,D3DBLEND_SRCALPHA );
-		d3ddevice->SetRenderState(D3DRENDERSTATE_DESTBLEND,D3DBLEND_INVSRCALPHA);
+		int skillnums = pWorld->m_skillList.size();
+		std::list<CSkill*> skillList = pWorld->m_skillList;
 
-		if( pWorld && pView && pWorld->m_attr ){
-			C3dAttr *pAttr = pWorld->m_attr;
+		for( std::list<CSkill*>::iterator it = skillList.begin() ; it != skillList.end() ; it++ )
+		{
+			CSkill *pSkill = *it;
 
-			int skillnums = pWorld->m_skillList.size();
-			std::list<CSkill*> skillList = pWorld->m_skillList;
+			if( pSkill && pSkill->m_job < 0x100 && m_M2ESkillColor[pSkill->m_job] ){
+				DWORD color = m_M2ESkillColor[pSkill->m_job];
+				CPOLVERTEX vertex[4] =
+				{
+					{   0.0,  0.0,   0.0f,  1.0f, color },
+					{ 100.0,  0.0,   0.0f,  1.0f, color },
+					{   0.0,100.0,   0.0f,  1.0f, color },
+					{ 100.0,100.0,   0.0f,  1.0f, color }
+				};
 
-			for( std::list<CSkill*>::iterator it = skillList.begin() ; it != skillList.end() ; it++ )
-			{
-				CSkill *pSkill = *it;
-				//
-				if( pSkill && pSkill->m_job < 0x100 && m_M2ESkillColor[pSkill->m_job] ){
-					DWORD color = m_M2ESkillColor[pSkill->m_job];
-					CPOLVERTEX vertex[4] =
-					{
-						{   0.0,  0.0,   0.0f,  1.0f, color },
-						{ 100.0,  0.0,   0.0f,  1.0f, color },
-						{   0.0,100.0,   0.0f,  1.0f, color },
-						{ 100.0,100.0,   0.0f,  1.0f, color }
-					};
+				long cx,cy;
+				CAttrCell *pCell;
+				vector3d centerpos(pSkill->m_pos),polvect[4];
 
-					long cx,cy;
-					CAttrCell *pCell;
-					vector3d centerpos(pSkill->m_pos),polvect[4];
+				pAttr->ConvertToCellCoor(centerpos.x,centerpos.z,cx,cy);
+				pCell = pAttr->GetCell(cx, cy);
 
-					pAttr->ConvertToCellCoor(centerpos.x,centerpos.z,cx,cy);
-					pCell = pAttr->GetCell(cx, cy);
+				polvect[0].Set(centerpos.x -2.4f, pCell->h1 ,centerpos.z -2.4f);
+				polvect[1].Set(centerpos.x +2.4f, pCell->h2 ,centerpos.z -2.4f);
+				polvect[2].Set(centerpos.x -2.4f, pCell->h3 ,centerpos.z +2.4f);
+				polvect[3].Set(centerpos.x +2.4f, pCell->h4 ,centerpos.z +2.4f);
 
-					polvect[0].Set(centerpos.x -2.4f, pCell->h1 ,centerpos.z -2.4f);
-					polvect[1].Set(centerpos.x +2.4f, pCell->h2 ,centerpos.z -2.4f);
-					polvect[2].Set(centerpos.x -2.4f, pCell->h3 ,centerpos.z +2.4f);
-					polvect[3].Set(centerpos.x +2.4f, pCell->h4 ,centerpos.z +2.4f);
+				for(int ii = 0; ii < 4; ii ++){
+					tlvertex3d tlv3d;
+					ProjectVertex( polvect[ii] , pView->m_viewMatrix,&tlv3d );
 
-					for(int ii = 0; ii < 4; ii ++){
-						tlvertex3d tlv3d;
-						ProjectVertex( polvect[ii] , pView->m_viewMatrix,&tlv3d );
-
-						vertex[ii].x = tlv3d.x;
-						vertex[ii].y = tlv3d.y;
-						vertex[ii].z = tlv3d.z;
-						vertex[ii].rhw = tlv3d.oow;
-					}
-					d3ddevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, D3DFVF_CPOLVERTEX, vertex, 4, 0);
+					vertex[ii].x = tlv3d.x;
+					vertex[ii].y = tlv3d.y;
+					vertex[ii].z = tlv3d.z;
+					vertex[ii].rhw = tlv3d.oow;
 				}
+				d3ddevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, D3DFVF_CPOLVERTEX, vertex, 4, 0);
 			}
 		}
-		d3ddevice->SetRenderState(D3DRENDERSTATE_ZENABLE,        _state_zenable);
-		d3ddevice->SetRenderState(D3DRENDERSTATE_ZWRITEENABLE,   _state_zwriteenable);
-		d3ddevice->SetRenderState(D3DRENDERSTATE_ZBIAS,          _state_zbias);
-		d3ddevice->SetRenderState(D3DRENDERSTATE_FOGENABLE,      _state_specularenable);
-		d3ddevice->SetRenderState(D3DRENDERSTATE_SPECULARENABLE, _state_specularenable);
-		d3ddevice->SetRenderState(D3DRENDERSTATE_ALPHAFUNC,      _state_alphafunc);
-		d3ddevice->SetRenderState(D3DRENDERSTATE_ALPHAREF,       _state_alpharef);
-		d3ddevice->SetRenderState(D3DRENDERSTATE_SRCBLEND ,      _state_srcblend);
-		d3ddevice->SetRenderState(D3DRENDERSTATE_DESTBLEND,      _state_destblend);
 	}
 }
 
+void CRoCodeBind::DrawBBE(IDirect3DDevice7* d3ddevice)
+{
+	CGameMode *pGamemode = (CGameMode*)g_pmodeMgr->m_curMode;
+	CWorld *pWorld = pGamemode->m_world;
+	CView *pView = pGamemode->m_view;
+
+	int zbias = g_pSharedData->ground_zbias;
+	int alphalevel = g_pSharedData->alphalevel;
+	BOOL bbe = g_pSharedData->bbe;
+	BOOL deadcell = g_pSharedData->deadcell;
+	BOOL chatscope = g_pSharedData->chatscope;
+
+	d3ddevice->SetTexture(0, NULL);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_ZENABLE, D3DZB_TRUE);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_ZWRITEENABLE, FALSE);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_ZBIAS, zbias);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_FOGENABLE, FALSE);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_SPECULARENABLE, FALSE);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_ALPHAFUNC, D3DCMP_GREATER);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_ALPHAREF, 0x00);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_SRCBLEND, D3DBLEND_SRCALPHA);
+	d3ddevice->SetRenderState(D3DRENDERSTATE_DESTBLEND, D3DBLEND_INVSRCALPHA);
+
+	if (pWorld && pView && pWorld->m_attr){
+		C3dAttr *pAttr = pWorld->m_attr;
+		CPlayer *pPlayer = pGamemode->m_world->m_player;
+		CPOLVERTEX vertex[4] =
+		{
+			{ 0.0, 0.0, 0.0f, 1.0f, 0 },
+			{ 100.0, 0.0, 0.0f, 1.0f, 0 },
+			{ 0.0, 100.0, 0.0f, 1.0f, 0 },
+			{ 100.0, 100.0, 0.0f, 1.0f, 0 }
+		};
+		long cx, cy,wx,wy;
+
+		pAttr->ConvertToCellCoor(
+			pPlayer->m_pos.x,pPlayer->m_pos.z,
+			cx, cy);
+		wx = 20;
+		wy = 20;
+
+		for (int yy = cy - wy; yy <= cy + wy; yy++) {
+			for (int xx = cx - wx; xx <= cx + wx; xx++) {
+				if (xx >= 0 && yy >= 0 && xx < pAttr->m_width && yy < pAttr->m_height){
+					DWORD color = 0;
+					CAttrCell *pCell = pAttr->GetCell(xx, yy);
+
+					if (!pCell->flag && bbe)
+					{
+						if ((xx % 40 == 0) || (yy % 40 == 0)) {
+							color = 0x00FF0000;
+						}
+						else if ((xx % 40 < 5) || (yy % 40 < 5)) {
+							color = 0x000000FF;
+						}
+					}
+					if (pCell->flag){
+						if (deadcell){
+							color = 0x30ff00ff;
+						}
+					}
+
+					if (chatscope){
+						if ((xx - cx) >= -9 && (xx - cx) <= +9 && ((yy - cy) == -9 || (yy - cy) == +9)
+							|| (yy - cy) >= -9 && (yy - cy) <= +9 && ((xx - cx) == -9 || (xx - cx) == +9)){
+							color = 0x0000ff00;
+						}
+					}
+
+					if (color) {
+						vector3d polvect[4];
+						vector2d wpos;
+
+						color += alphalevel << 24;
+						pAttr->GetWorldPos((float)xx, (float)yy, wpos);
+
+						polvect[0].Set(wpos.x - 2.5f, pCell->h1, wpos.y - 2.5f);
+						polvect[1].Set(wpos.x + 2.5f, pCell->h2, wpos.y - 2.5f);
+						polvect[2].Set(wpos.x - 2.5f, pCell->h3, wpos.y + 2.5f);
+						polvect[3].Set(wpos.x + 2.5f, pCell->h4, wpos.y + 2.5f);
+
+						for (int ii = 0; ii < 4; ii++){
+							tlvertex3d tlv3d;
+							ProjectVertex(polvect[ii], pView->m_viewMatrix, &tlv3d);
+
+							vertex[ii].x = tlv3d.x;
+							vertex[ii].y = tlv3d.y;
+							vertex[ii].z = tlv3d.z;
+							vertex[ii].rhw = tlv3d.oow;
+							vertex[ii].color = color;
+						}
+						d3ddevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, D3DFVF_CPOLVERTEX, vertex, 4, 0);
+					}
+				}
+			}
+		}
+	}
+}
 
  int CRoCodeBind::GetPacketLength(int opcode)
 {

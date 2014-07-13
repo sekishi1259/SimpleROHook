@@ -1,5 +1,3 @@
-#include "stdafx.h"
-
 #include "CacheInfo.h"
 
 CacheInfo::CacheInfo(int HashRootTables)
