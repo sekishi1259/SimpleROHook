@@ -1338,9 +1338,14 @@ void CRoCodeBind::SearchRagexeMemory(void)
 		{
 			void *address = NULL;
 			unsigned int size = 0;
+
+			DEBUG_LOGGING_NORMAL(("call CFileMgr::GetPak"));
 			address = GetPak("data\\idnum2itemdisplaynametable.txt", &size);
-			DEBUG_LOGGING_NORMAL(("loasd data\\idnum2itemdisplaynametable.txt %08X size of %d",
+
+			DEBUG_LOGGING_NORMAL(("load data\\idnum2itemdisplaynametable.txt %08X size of %d",
 				address, size));
+
+			DEBUG_LOGGING_NORMAL(("release data\\idnum2itemdisplaynametable.txt"));
 			ReleasePak(address);
 		}
 
