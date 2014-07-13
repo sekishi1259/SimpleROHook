@@ -46,12 +46,20 @@ struct CPOLVERTEX {
 
 typedef void (__cdecl *tPlayStream)(const char *streamFileName,int playflag);
 
+typedef void* (__thiscall *tCFileMgr__GetData)(/*CFileMgr*/void *this_pt, const char *name, unsigned int *size);
+
+typedef void* (__thiscall *tCFileMgr__GetPak)(/*CFileMgr*/void *this_pt, const char *name, unsigned int *size);
+
 class CRoCodeBind
 {
 private:
 	CRenderer** g_renderer;
 	CModeMgr *g_pmodeMgr;
 	CMouse* g_mouse;
+
+	void* m_CFileMgr__gfileMgr;
+	tCFileMgr__GetData m_functionRagexe_CFileMgr__GetData;
+	tCFileMgr__GetPak m_functionRagexe_CFileMgr__GetPak;
 
 	tPlayStream m_funcRagexe_PlayStream;
 
@@ -112,6 +120,8 @@ private:
 public:
 	CRoCodeBind() :
 		m_hWnd(NULL),m_funcRagexe_PlayStream(NULL),
+		m_CFileMgr__gfileMgr(NULL),
+		m_functionRagexe_CFileMgr__GetPak(NULL),
 		m_packetLenMap_table_index(0),m_packetqueue_head(0),
 		m_pSFastFont(NULL),m_pddsFontTexture(NULL),
 		g_renderer(NULL), g_pmodeMgr(NULL), g_mouse(NULL), 
@@ -130,6 +140,11 @@ public:
 	void PacketQueueProc(char *buf,int len);
 
 	void InitWindowHandle(HWND hWnd){m_hWnd = hWnd;};
+
+
+	void *GetPak(const char *name, unsigned int *size);
+	void ReleasePak(void *handle);
+
 
 	void OneSyncProc(HRESULT Result, LPVOID lpvData, BOOL FreeMouse);
 	void SetMouseCurPos(int x,int y);

@@ -6,6 +6,10 @@ private:
 		char          flag;
 	}StFindMemInfo;
 
+	enum enCOMPAREMODE{
+		enCOMPAREWILDCARD = 0,
+		enCOMPARENORMAL,
+	};
 
 	std::vector<StFindMemInfo> m_FindInfo;
 	std::map<char,int> m_MakerIndex;
@@ -38,17 +42,30 @@ public:
 			if( h1 == '*' ){
 				// wildcard
 				tempInfo.x    = 0x00;
-				tempInfo.flag = 0;
+				tempInfo.flag = enCOMPAREWILDCARD;
 				m_FindInfo.push_back( tempInfo );
 				if( h2 != '*' )
 					m_MakerIndex[ h2 ] = m_FindInfo.size() - 1;
 			}else{
 				tempInfo.x = (ahex2i(h1)<<4) | ahex2i(h2);
-				tempInfo.flag = 1;
+				tempInfo.flag = enCOMPARENORMAL;
 				m_FindInfo.push_back( tempInfo );
 			}
 		}
 	}
+	CSearchCode(int comparemode, char *pattern)
+	{
+		StFindMemInfo tempInfo;
+		tempInfo.flag = enCOMPARENORMAL;
+		while (*pattern != 0)
+		{
+			tempInfo.x = *pattern++;
+			m_FindInfo.push_back(tempInfo);
+		}
+		tempInfo.x = 0;
+		m_FindInfo.push_back(tempInfo);
+	}
+
 	~CSearchCode(){}
 
 	int GetMakerIndex(char code)
