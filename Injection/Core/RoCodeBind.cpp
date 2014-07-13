@@ -155,6 +155,22 @@ CRoCodeBind::~CRoCodeBind(void)
 	}
 }
 
+void *CRoCodeBind::GetPak(const char *name, unsigned int *size)
+{
+	if (m_CFileMgr__gfileMgr && m_functionRagexe_CFileMgr__GetPak)
+	{
+		void *address;
+		address = m_functionRagexe_CFileMgr__GetPak(m_CFileMgr__gfileMgr,name, size);
+		return address;
+	}
+	return NULL;
+}
+void CRoCodeBind::ReleasePak(void *handle)
+{
+	::VirtualFree(handle, 0, MEM_RELEASE);
+}
+
+
 void CRoCodeBind::OneSyncProc(HRESULT Result,LPVOID lpvData,BOOL FreeMouse)
 {
 #ifdef JRO_CLIENT_STRUCTURE
@@ -947,18 +963,54 @@ void CRoCodeBind::SearchRagexeMemory(void)
 		"6a00"               //  push    byte + 000h; uType
 	);
 
+	CSearchCode strings_event_grf(0, "event.grf");
+	LPBYTE strings_event_grf_address = NULL;
+	CSearchCode addPak_event_grf(
+		"68*1******"         //  push    dword *"event.grf"
+		"b9*2******"         //  mov     ecx, dword CFileMgr::g_fileMgr
+		"e8*3******"         //  call    near CFileMgr::AddPak
+	);
 
+	CSearchCode strings_readfolder(0, "readfolder");
+	LPBYTE strings_readfolder_address = NULL;
+	CSearchCode set_g_readFolderFirst(
+		"68*1******"         //  push    dword *"readfolder"
+		"8bce"               //  mov     ecx, esi
+		"e8********"         //  call    near XMLElement::FindChild(char const *)
+		"85c0"               //  test    eax, eax
+		"7407"               //  jz      C005a43ce
+		"c605*2******01"     //  mov     byte[g_readFolderFirst], byte 001h // bool g_readFolderFirst
+	);
+	PBOOL pg_readFolderFirst = NULL;
 
+	CSearchCode subfunction_CFileMgr__Open(
+		"803d*1******00"     //  cmp     byte[ g_readFolderFirst ], byte 000h
+		"53"                 //  push    ebx
+		"8b5d08"             //  mov     ebx, dword[ebp + 008h]
+		"57"                 //  push    edi
+		"8b7d0c"             //  mov     edi, dword[ebp + 00ch]
+		"57"                 //  push    edi
+		"53"                 //  push    ebx
+		"7419"               //  jz      C005c79ac
+		"e8*2******"         //  call    near CFileMgr::GetFile
+		"85c0"               //  test    eax, eax
+		"7522"               //  jnz     C005c79be;; goto
+		"57"                 //  push    edi
+		"53"                 //  push    ebx
+		"8bce"               //  mov     ecx, esi
+		"e8*3******"         //  call    near CFileMgr::GetPak
+	);
 
 
 	LPBYTE pRagexeBase;
-	MEMORY_BASIC_INFORMATION mbi;
-	DWORD temp_eax,temp_ecx,temp_edx,temp_esp;
+	MEMORY_BASIC_INFORMATION mbi,mbi_data;
+	DWORD temp_eax, temp_ecx, temp_edx, temp_esp;
 
 	pRagexeBase = (LPBYTE)::GetModuleHandle(NULL);
 	pRagexeBase += 0x1000;
 
-	if( ::VirtualQuery( pRagexeBase,&mbi,sizeof(mbi) ) )
+	if (::VirtualQuery(pRagexeBase, &mbi, sizeof(mbi)) &&
+		::VirtualQuery((LPBYTE)mbi.BaseAddress + mbi.RegionSize, &mbi_data, sizeof(mbi_data)))
 	{
 		DWORD ptr_CMouse_Init = 0;
 
@@ -968,6 +1020,12 @@ void CRoCodeBind::SearchRagexeMemory(void)
 		DEBUG_LOGGING_NORMAL( ("mbi.AllocationBase = %08X",mbi.AllocationBase) );
 		DEBUG_LOGGING_NORMAL( ("mbi.BaseAddress    = %08X",mbi.BaseAddress) );
 		DEBUG_LOGGING_NORMAL( ("mbi.RegionSize     = %08X",mbi.RegionSize) );
+		DEBUG_LOGGING_NORMAL(("MEMORY_BASIC_INFORMATION lpAddres:%08X", (LPBYTE)mbi.BaseAddress + mbi.RegionSize));
+		DEBUG_LOGGING_NORMAL(("mbi_data.AllocationBase = %08X", mbi_data.AllocationBase));
+		DEBUG_LOGGING_NORMAL(("mbi_data.BaseAddress    = %08X", mbi_data.BaseAddress));
+		DEBUG_LOGGING_NORMAL(("mbi_data.RegionSize     = %08X", mbi_data.RegionSize));
+
+		mbi.RegionSize += mbi_data.RegionSize;
 
 		// get s_CMouse instance
 		for (UINT ii = 0; ii < mbi.RegionSize - 1000; ii++)
@@ -1216,6 +1274,74 @@ void CRoCodeBind::SearchRagexeMemory(void)
 				DEBUG_LOGGING_NORMAL( ("void PlayStream(const char *streamFileName,int playflag) = %08X",pPlayStream) );
 				break;
 			}
+		}
+
+		// find strings
+		for (UINT ii = 0; ii < mbi.RegionSize - 1000; ii++)
+		{
+			LPBYTE pBase = (LPBYTE)mbi.BaseAddress;
+
+			if ( !strings_event_grf_address && strings_event_grf.PatternMatcher(&pBase[ii]))
+			{
+				strings_event_grf_address = &pBase[ii];
+				DEBUG_LOGGING_NORMAL(("find 'event.grf' : %08X", strings_event_grf_address));
+			}
+			if (!strings_readfolder_address && strings_readfolder.PatternMatcher(&pBase[ii]))
+			{
+				strings_readfolder_address = &pBase[ii];
+				DEBUG_LOGGING_NORMAL(("find 'readfolderf' : %08X", strings_readfolder_address));
+			}
+		}
+
+		// get the address of CFileMgr::g_fileMgr
+		for (UINT ii = 0; ii < mbi.RegionSize - 1000; ii++)
+		{
+			LPBYTE pBase = (LPBYTE)mbi.BaseAddress;
+
+			if (addPak_event_grf.PatternMatcher(&pBase[ii]) &&
+				addPak_event_grf.GetImmediateDWORD(&pBase[ii], '1') == (DWORD)strings_event_grf_address)
+			{
+				m_CFileMgr__gfileMgr = (void*)addPak_event_grf.GetImmediateDWORD(&pBase[ii], '2');
+				DEBUG_LOGGING_NORMAL(("find CFileMgr::gfileMgr : %08X", m_CFileMgr__gfileMgr));
+				break;
+			}
+		}
+
+		// get the address of g_readFolderFirst
+		for (UINT ii = 0; ii < mbi.RegionSize - 1000; ii++)
+		{
+			LPBYTE pBase = (LPBYTE)mbi.BaseAddress;
+
+			if (set_g_readFolderFirst.PatternMatcher(&pBase[ii]) &&
+				set_g_readFolderFirst.GetImmediateDWORD(&pBase[ii], '1') == (DWORD)strings_readfolder_address)
+			{
+				pg_readFolderFirst = (PBOOL)set_g_readFolderFirst.GetImmediateDWORD(&pBase[ii], '2');
+				DEBUG_LOGGING_NORMAL(("find g_readFolderFirst : %08X", pg_readFolderFirst));
+				break;
+			}
+		}
+
+		// get the address of g_readFolderFirst
+		for (UINT ii = 0; ii < mbi.RegionSize - 1000; ii++)
+		{
+			LPBYTE pBase = (LPBYTE)mbi.BaseAddress;
+
+			if (subfunction_CFileMgr__Open.PatternMatcher(&pBase[ii]) &&
+				subfunction_CFileMgr__Open.GetImmediateDWORD(&pBase[ii], '1') == (DWORD)pg_readFolderFirst)
+			{
+				m_functionRagexe_CFileMgr__GetPak = (tCFileMgr__GetPak)subfunction_CFileMgr__Open.GetNearJmpAddress(&pBase[ii], '3');
+				DEBUG_LOGGING_NORMAL(("find CFileMgr::GetFile : %08X", subfunction_CFileMgr__Open.GetNearJmpAddress(&pBase[ii], '2') ));
+				DEBUG_LOGGING_NORMAL(("find CFileMgr::GetPak : %08X", m_functionRagexe_CFileMgr__GetPak));
+				break;
+			}
+		}
+		{
+			void *address = NULL;
+			unsigned int size = 0;
+			address = GetPak("data\\idnum2itemdisplaynametable.txt", &size);
+			DEBUG_LOGGING_NORMAL(("loasd data\\idnum2itemdisplaynametable.txt %08X size of %d",
+				address, size));
+			ReleasePak(address);
 		}
 
 		// put packetlengthmap

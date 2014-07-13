@@ -67,22 +67,22 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(DXSDK_AUG07_DIR)Include;$(IncludePath)</IncludePath>
+    <IncludePath>./;$(DXSDK_AUG07_DIR)Include;$(IncludePath)</IncludePath>
     <LibraryPath>$(DXSDK_AUG07_DIR)Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-jRO|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(DXSDK_AUG07_DIR)Include;$(IncludePath)</IncludePath>
+    <IncludePath>./;$(DXSDK_AUG07_DIR)Include;$(IncludePath)</IncludePath>
     <LibraryPath>$(DXSDK_AUG07_DIR)Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(DXSDK_AUG07_DIR)Include;$(IncludePath)</IncludePath>
+    <IncludePath>./;$(DXSDK_AUG07_DIR)Include;$(IncludePath)</IncludePath>
     <LibraryPath>$(DXSDK_AUG07_DIR)Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-jRO|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(DXSDK_AUG07_DIR)Include;$(IncludePath)</IncludePath>
+    <IncludePath>./;$(DXSDK_AUG07_DIR)Include;$(IncludePath)</IncludePath>
     <LibraryPath>$(DXSDK_AUG07_DIR)Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
