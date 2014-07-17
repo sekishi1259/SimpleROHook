@@ -58,7 +58,6 @@ CRoCodeBind* g_pRoCodeBind = NULL;
 BOOL g_FreeMouseSw = FALSE;
 
 
-
 static HRESULT CALLBACK TextureSearchCallback( DDPIXELFORMAT* pddpf,
                                                VOID* param )
 {
@@ -75,10 +74,10 @@ static HRESULT CALLBACK TextureSearchCallback( DDPIXELFORMAT* pddpf,
     return DDENUMRET_CANCEL;
 }
 
-
 void CRoCodeBind::Init(IDirect3DDevice7* d3ddevice)
 {
 	SearchRagexeMemory();
+	InitItemNameMap();
 	LoadIni();
 
 	D3DDEVICEDESC7 ddDesc;
@@ -169,6 +168,64 @@ void CRoCodeBind::ReleasePak(void *handle)
 	::VirtualFree(handle, 0, MEM_RELEASE);
 }
 
+void CRoCodeBind::InitItemNameMap()
+{
+	char *buf = NULL;
+	char *p, *ptoken;
+
+	unsigned int size;
+	buf = (char*)GetPak("data\\idnum2itemdisplaynametable.txt",&size);
+
+	if (!buf)return;
+	p = buf;
+	while (*p != '\0'){
+		ptoken = p;
+		while (*p != '\0' && *p != '\r' && *p != '\n'){
+			p++;
+		}
+		if (*p == '\r')p++;
+		if (*p == '\n')p++;
+
+		if (*ptoken == '/' || *ptoken == '\0' || *ptoken == ' ' || *ptoken == '\r' || *ptoken == '\n')
+			continue;
+		//
+		char numstr[10], *pname;
+		pname = numstr;
+		while (*ptoken != '#')*pname++ = *ptoken++;
+		*pname++ = '\0';
+		int itemid = atoi(numstr);
+
+		char tempstr[256];
+		char *pdname = tempstr;
+		*ptoken++;
+		while (*ptoken != '#'){
+			if (*ptoken != '_'){
+				*pdname++ = *ptoken++;
+			}
+			else{
+				*pdname++ = ' ';
+				ptoken++;
+			}
+		}
+		*pdname++ = '\0';
+		int datasize = (pdname - tempstr);
+
+		m_ItemName[itemid] = tempstr;
+}
+	ReleasePak(buf);
+}
+
+const char *CRoCodeBind::GetItemNameByID(int id)
+{
+	static const char* pUnknownItem = "Unknown Item";
+
+	if (m_ItemName[id].empty()){
+		return pUnknownItem;
+	}
+	else{
+		return m_ItemName[id].c_str();
+	}
+}
 
 void CRoCodeBind::OneSyncProc(HRESULT Result,LPVOID lpvData,BOOL FreeMouse)
 {

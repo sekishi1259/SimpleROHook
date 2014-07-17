@@ -63,6 +63,11 @@ private:
 
 	tPlayStream m_funcRagexe_PlayStream;
 
+
+	std::map<int, std::string> m_ItemName;
+	void InitItemNameMap();
+
+
 	HWND m_hWnd;
 
 #define PACKETQUEUE_BUFFERSIZE 40960
@@ -131,6 +136,7 @@ public:
 	};
 	virtual ~CRoCodeBind();
 
+
 	void Init(IDirect3DDevice7* d3ddevice);
 
 	void DrawSRHDebug(IDirect3DDevice7* d3ddevice);
@@ -141,6 +147,7 @@ public:
 
 	void InitWindowHandle(HWND hWnd){m_hWnd = hWnd;};
 
+	const char *GetItemNameByID(int id);
 
 	void *GetPak(const char *name, unsigned int *size);
 	void ReleasePak(void *handle);
