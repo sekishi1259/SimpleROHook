@@ -1,6 +1,10 @@
 #pragma once
 
-#define SHAREDMEMORY_OBJECTNAME _T("SimpleROHook1010")
+#define SHAREDMEMORY_OBJECTNAME _T("SimpleROHook1011")
+
+enum COPYDATAENTRY{
+	COPYDATA_NPCLogger = 127
+};
 
 typedef struct _StSHAREDMEMORY{
 	HWND	g_hROWindow;

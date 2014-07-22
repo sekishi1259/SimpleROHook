@@ -58,7 +58,6 @@ CRoCodeBind* g_pRoCodeBind = NULL;
 BOOL g_FreeMouseSw = FALSE;
 
 
-
 static HRESULT CALLBACK TextureSearchCallback( DDPIXELFORMAT* pddpf,
                                                VOID* param )
 {
@@ -75,10 +74,11 @@ static HRESULT CALLBACK TextureSearchCallback( DDPIXELFORMAT* pddpf,
     return DDENUMRET_CANCEL;
 }
 
-
 void CRoCodeBind::Init(IDirect3DDevice7* d3ddevice)
 {
 	SearchRagexeMemory();
+	InitItemNameMap();
+	InitPacketHandler();
 	LoadIni();
 
 	D3DDEVICEDESC7 ddDesc;
@@ -169,6 +169,64 @@ void CRoCodeBind::ReleasePak(void *handle)
 	::VirtualFree(handle, 0, MEM_RELEASE);
 }
 
+void CRoCodeBind::InitItemNameMap()
+{
+	char *buf = NULL;
+	char *p, *ptoken;
+
+	unsigned int size;
+	buf = (char*)GetPak("data\\idnum2itemdisplaynametable.txt",&size);
+
+	if (!buf)return;
+	p = buf;
+	while (*p != '\0'){
+		ptoken = p;
+		while (*p != '\0' && *p != '\r' && *p != '\n'){
+			p++;
+		}
+		if (*p == '\r')p++;
+		if (*p == '\n')p++;
+
+		if (*ptoken == '/' || *ptoken == '\0' || *ptoken == ' ' || *ptoken == '\r' || *ptoken == '\n')
+			continue;
+		//
+		char numstr[10], *pname;
+		pname = numstr;
+		while (*ptoken != '#')*pname++ = *ptoken++;
+		*pname++ = '\0';
+		int itemid = atoi(numstr);
+
+		char tempstr[256];
+		char *pdname = tempstr;
+		*ptoken++;
+		while (*ptoken != '#'){
+			if (*ptoken != '_'){
+				*pdname++ = *ptoken++;
+			}
+			else{
+				*pdname++ = ' ';
+				ptoken++;
+			}
+		}
+		*pdname++ = '\0';
+		int datasize = (pdname - tempstr);
+
+		m_ItemName[itemid] = tempstr;
+}
+	ReleasePak(buf);
+}
+
+const char *CRoCodeBind::GetItemNameByID(int id)
+{
+	static const char* pUnknownItem = "Unknown Item";
+
+	if (m_ItemName[id].empty()){
+		return pUnknownItem;
+	}
+	else{
+		return m_ItemName[id].c_str();
+	}
+}
 
 void CRoCodeBind::OneSyncProc(HRESULT Result,LPVOID lpvData,BOOL FreeMouse)
 {
@@ -751,6 +809,164 @@ int CRoCodeBind::GetTreeData(p_std_map_packetlen* node)
 	return m_packetLenMap_table_index;
 }
 
+void CRoCodeBind::PacketProc(const char *packetdata)
+{
+	unsigned short opcode = *(unsigned short*)packetdata;
+	unsigned int packetlength;
+	packetlength = GetPacketLength(opcode);
+	if (m_packetqueue_head < 4)return; // packet is illegal
+	if (packetlength == -1){
+		packetlength = *(unsigned int*)packetdata;
+		packetlength >>= 16;
+	}
+
+	// switch packet handler
+	if (m_packethandler[opcode])
+		(this->*m_packethandler[opcode])(packetdata);
+
+	if (g_pSharedData && g_pSharedData->write_packetlog){
+		std::stringstream str;
+		str << "[" << std::setfill('0') << std::setw(8) << timeGetTime() << "] R ";
+		for (int ii = 0; ii < (int)packetlength; ii++)
+			str << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << (int)(unsigned char)packetdata[ii] << " ";
+		str << std::flush;
+		DEBUG_LOGGING_NORMAL((str.str().c_str()));
+	}
+
+}
+
+void CRoCodeBind::InitPacketHandler(void)
+{
+	m_packethandler[HEADER_ZC_SAY_DIALOG] = &CRoCodeBind::PacketHandler_Cz_Say_Dialog;
+	m_packethandler[HEADER_ZC_MENU_LIST] = &CRoCodeBind::PacketHandler_Cz_Menu_List;
+}
+
+void CRoCodeBind::SendMessageToNPCLogger(const char *src, int size)
+{
+	char buffer[512];
+	char *dst = buffer;
+	while (size){
+		if (*src == '^'){
+			//
+			if (src[1] == 'n'){
+				if (src[2] == 'I'
+					&& src[3] == 't'
+					&& src[4] == 'e'
+					&& src[5] == 'm'
+					&& src[6] == 'I'
+					&& src[7] == 'D'
+					&& src[8] == '^'){
+					//
+					src += 9;
+					size -= 9;
+					//
+					char numstr[10];
+					unsigned char *pname;
+					pname = (unsigned char *)numstr;
+					while (*src >= '0' && *src <= '9'){
+						*pname++ = *src++;
+						size--;
+					}
+					*pname++ = '\0';
+					int itemid;
+					itemid = atoi(numstr);
+					const char *itemname = GetItemNameByID(itemid);
+					while (*itemname != '\0')*dst++ = *itemname++;
+				}
+			}
+			else{
+				*dst++ = *src++;
+				size--;
+			}
+		}
+		else{
+			int c;
+			int mbcode;
+			c = (unsigned char)*src++;
+			mbcode = c << 8 | (unsigned char)*src;
+			if (_ismbclegal(mbcode)){
+				*dst++ = c;
+				c = *src++;
+				size--;
+			}
+			*dst++ = c;
+			size--;
+		}
+	}
+	*dst++ = '\0';
+
+	WCHAR wbuffer[512];
+	int wsize = 0;
+	if ((wsize = ::MultiByteToWideChar(CP_ACP, 0, buffer, -1, wbuffer, sizeof(wbuffer) / sizeof(WCHAR))) != NULL){
+		//DEBUG_LOGGING_NORMAL(("sizeof wbuffer = %d wsize = %d", sizeof(wbuffer),wsize));
+		HWND hNPCLoggerWnd;
+		hNPCLoggerWnd = ::FindWindow(NULL, "NPCLogger");
+		if (hNPCLoggerWnd){
+			COPYDATASTRUCT data;
+			data.dwData = COPYDATA_NPCLogger;
+			data.cbData = wsize * sizeof(WCHAR);
+			data.lpData = wbuffer;
+			::SendMessage(hNPCLoggerWnd, WM_COPYDATA, (WPARAM)m_hWnd, (LPARAM)&data);
+		}
+	}
+
+	//DEBUG_LOGGING_NORMAL((data));
+}
+
+void CRoCodeBind::PacketHandler_Cz_Say_Dialog(const char *packetdata)
+{
+	PACKET_CZ_SAY_DIALOG *p = (PACKET_CZ_SAY_DIALOG*)packetdata;
+	int size = p->PacketLength - sizeof(PACKET_CZ_SAY_DIALOG);
+
+	SendMessageToNPCLogger((const char*)p->Data, size);
+}
+void CRoCodeBind::PacketHandler_Cz_Menu_List(const char *packetdata)
+{
+	PACKET_CZ_MENU_LIST *p = (PACKET_CZ_MENU_LIST*)packetdata;
+	int size = p->PacketLength - sizeof(PACKET_CZ_SAY_DIALOG);
+	char buffer[512];
+	const char *src = (const char*)p->Data;
+	int index = 0;
+
+	while (size){
+		int mbcode;
+		int dlength = 4;
+		char *dst = buffer;
+		*dst++ = '[';
+		*dst++ = 'A' + index;
+		*dst++ = ']';
+		*dst++ = ' ';
+		while (size && *src != ':' && *src != '\0'){
+			int c;
+			c = (unsigned char)*src++;
+			// mbcode
+			mbcode = c << 8 | (unsigned char)*src;
+			if (_ismbclegal(mbcode)){
+				*dst++ = c;
+				c = *src++;
+				size--;
+				dlength++;
+			}
+			*dst++ = c;
+			size--;
+			dlength++;
+		}
+		if (*src == ':'){
+			src++;
+			size--;
+		}
+		*dst++ = '\0';
+		if (dlength <= 5)break;
+
+
+		SendMessageToNPCLogger((const char*)buffer, dlength);
+		//DEBUG_LOGGING_NORMAL((data));
+		//addNPCMessageLog(pRCD, dlength, tempstr);
+		index++;
+	}
+
+}
+
 
 void CRoCodeBind::PacketQueueProc(char *buf,int len)
 {
@@ -791,17 +1007,12 @@ void CRoCodeBind::PacketQueueProc(char *buf,int len)
 				}
 			}
 			if( m_packetqueue_head >= packetlength ){
-				if (!isReceivedGID){
-
-				}
-				if( g_pSharedData && g_pSharedData->write_packetlog ){
-					std::stringstream str;
-					str << "[" << std::setfill('0') << std::setw(8) << timeGetTime() << "] R ";
-					for(int ii = 0;ii < (int)packetlength ;ii++)
-						str << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << (int)(unsigned char)m_packetqueuebuffer[ii] << " ";
-					str << std::flush;
+				if (isReceivedGID){
+					m_gid = *(int*)m_packetqueuebuffer;
+					DEBUG_LOGGING_NORMAL(("GID = %08X", m_gid));
+				}else{
 					DEBUG_LOGGING_DETAIL(("Opcode %04X size = %d / %d\n", opcode, packetlength, m_packetqueue_head));
-					DEBUG_LOGGING_NORMAL((str.str().c_str()));
+					PacketProc(m_packetqueuebuffer);
 				}
 
 				m_packetqueue_head -= packetlength;

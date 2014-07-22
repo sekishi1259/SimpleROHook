@@ -62,10 +62,7 @@ namespace SimpleROHookCS
 
                     InstallHook();
 
-                    using (new MainForm())
-                    {
-                        Application.Run();
-                    }
+                    Application.Run(new MainForm());
 
                     RemoveHook();
                     FreeLibrary(hModule);
