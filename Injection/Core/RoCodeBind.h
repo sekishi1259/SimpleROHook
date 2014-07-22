@@ -27,6 +27,7 @@
 //
 
 #include "ro/system.h"
+#include "ro/packet.h"
 #include "ro/mouse.h"
 #include "ro/unit.h"
 #include "ro/res.h"
@@ -50,6 +51,7 @@ typedef void* (__thiscall *tCFileMgr__GetData)(/*CFileMgr*/void *this_pt, const 
 
 typedef void* (__thiscall *tCFileMgr__GetPak)(/*CFileMgr*/void *this_pt, const char *name, unsigned int *size);
 
+
 class CRoCodeBind
 {
 private:
@@ -69,6 +71,7 @@ private:
 
 
 	HWND m_hWnd;
+	int  m_gid;
 
 #define PACKETQUEUE_BUFFERSIZE 40960
 	char m_packetqueuebuffer[PACKETQUEUE_BUFFERSIZE];
@@ -98,6 +101,17 @@ private:
 
 	void DrawBBE(IDirect3DDevice7* d3ddevice);
 	void DrawM2E(IDirect3DDevice7* d3ddevice);
+
+	void PacketProc(const char *packetdata);
+
+	typedef void (CRoCodeBind::*tPacketHandler)(const char *packetdata);
+	std::map<int, tPacketHandler> m_packethandler;
+
+	void InitPacketHandler(void);
+	void PacketHandler_Cz_Say_Dialog(const char *packetdata);
+	void PacketHandler_Cz_Menu_List(const char *packetdata);
+
+	void SendMessageToNPCLogger(const char *src, int size);
 
 	struct p_std_map_packetlen
 	{
@@ -130,7 +144,8 @@ public:
 		m_packetLenMap_table_index(0),m_packetqueue_head(0),
 		m_pSFastFont(NULL),m_pddsFontTexture(NULL),
 		g_renderer(NULL), g_pmodeMgr(NULL), g_mouse(NULL), 
-		m_CMode_old_subMode(-1), m_CMode_subMode(-1)
+		m_CMode_old_subMode(-1), m_CMode_subMode(-1),
+		m_gid(0)
 	{
 		ZeroMemory(m_packetLenMap_table, sizeof(m_packetLenMap_table));
 	};

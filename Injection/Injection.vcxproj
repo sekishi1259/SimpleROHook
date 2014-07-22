@@ -159,6 +159,7 @@
   <ItemGroup>
     <ClInclude Include="Core\FastFont\CacheInfo.h" />
     <ClInclude Include="Core\PerformanceCounter.h" />
+    <ClInclude Include="Core\ro\packet.h" />
     <ClInclude Include="Core\SearchCode.h" />
     <ClInclude Include="Hook.h" />
     <ClInclude Include="Core\FastFont\FastFont.h" />

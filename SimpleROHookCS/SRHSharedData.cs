@@ -6,6 +6,11 @@ using System.Runtime.InteropServices;
 
 namespace SimpleROHookCS
 {
+    enum COPYDATAENTRY
+    {
+        COPYDATA_NPCLogger = 127
+    };
+
     unsafe class SRHSharedData : IDisposable
     {
         private const int MAX_PATH = 260;
@@ -40,7 +45,7 @@ namespace SimpleROHookCS
 
         public SRHSharedData()
         {
-            m_Mmf = MemoryMappedFile.CreateNew(@"SimpleROHook1010",
+            m_Mmf = MemoryMappedFile.CreateNew(@"SimpleROHook1011",
                 Marshal.SizeOf(typeof(StSHAREDMEMORY)),
                 MemoryMappedFileAccess.ReadWrite);
             if (m_Mmf == null)
