@@ -809,6 +809,12 @@ int CRoCodeBind::GetTreeData(p_std_map_packetlen* node)
 	return m_packetLenMap_table_index;
 }
 
+void CRoCodeBind::InitPacketHandler(void)
+{
+	m_packethandler[HEADER_ZC_SAY_DIALOG] = &CRoCodeBind::PacketHandler_Cz_Say_Dialog;
+	m_packethandler[HEADER_ZC_MENU_LIST] = &CRoCodeBind::PacketHandler_Cz_Menu_List;
+}
+
 void CRoCodeBind::PacketProc(const char *packetdata)
 {
 	unsigned short opcode = *(unsigned short*)packetdata;
@@ -822,8 +828,10 @@ void CRoCodeBind::PacketProc(const char *packetdata)
 
 	// switch packet handler
 	if (m_packethandler[opcode])
+		// call to packetproc function.( CRoCodeBind::PacketHandler_...(const char *packetdata) )
 		(this->*m_packethandler[opcode])(packetdata);
 
+	// output packet log
 	if (g_pSharedData && g_pSharedData->write_packetlog){
 		std::stringstream str;
 		str << "[" << std::setfill('0') << std::setw(8) << timeGetTime() << "] R ";
@@ -835,12 +843,6 @@ void CRoCodeBind::PacketProc(const char *packetdata)
 
 }
 
-void CRoCodeBind::InitPacketHandler(void)
-{
-	m_packethandler[HEADER_ZC_SAY_DIALOG] = &CRoCodeBind::PacketHandler_Cz_Say_Dialog;
-	m_packethandler[HEADER_ZC_MENU_LIST] = &CRoCodeBind::PacketHandler_Cz_Menu_List;
-}
-
 void CRoCodeBind::SendMessageToNPCLogger(const char *src, int size)
 {
 	char buffer[512];
@@ -850,12 +852,12 @@ void CRoCodeBind::SendMessageToNPCLogger(const char *src, int size)
 			//
 			if (src[1] == 'n'){
 				if (src[2] == 'I'
-					&& src[3] == 't'
-					&& src[4] == 'e'
-					&& src[5] == 'm'
-					&& src[6] == 'I'
-					&& src[7] == 'D'
-					&& src[8] == '^'){
+				 && src[3] == 't'
+				 && src[4] == 'e'
+				 && src[5] == 'm'
+				 && src[6] == 'I'
+				 && src[7] == 'D'
+				 && src[8] == '^'){
 					//
 					src += 9;
 					size -= 9;
@@ -909,8 +911,6 @@ void CRoCodeBind::SendMessageToNPCLogger(const char *src, int size)
 			::SendMessage(hNPCLoggerWnd, WM_COPYDATA, (WPARAM)m_hWnd, (LPARAM)&data);
 		}
 	}
-
-	//DEBUG_LOGGING_NORMAL((data));
 }
 
 void CRoCodeBind::PacketHandler_Cz_Say_Dialog(const char *packetdata)
@@ -960,8 +960,6 @@ void CRoCodeBind::PacketHandler_Cz_Menu_List(const char *packetdata)
 
 
 		SendMessageToNPCLogger((const char*)buffer, dlength);
-		//DEBUG_LOGGING_NORMAL((data));
-		//addNPCMessageLog(pRCD, dlength, tempstr);
 		index++;
 	}
 

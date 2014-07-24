@@ -223,7 +223,7 @@ public:
 
 	void* dummy01; // added for later HightPrieast.exe?
 #ifdef JRO_CLIENT_STRUCTURE
-	void* dummy02; // added for later HightPrieast.exe?
+	unsigned long m_gid;
 #endif
 	CRenderObject(class CRenderObject&) {};
 	CRenderObject::CRenderObject() {};
@@ -556,16 +556,18 @@ public:
 	unsigned long m_moveStartTime;
 	unsigned char m_isNeverAnimation;
 	int m_pathStartCell;
-#ifndef JRO_CLIENT_STRUCTURE
+
 	float m_dist;
-#endif
 	unsigned long m_lastProcessStateTime;
 	unsigned long m_lastServerTime;
 	unsigned long m_chatTick;
 	unsigned long m_targetGid;
 	float m_attackMotion;
 	int m_isBladeStop;
+
+#ifndef JRO_CLIENT_STRUCTURE
 	unsigned long m_gid;
+#endif
 	int m_job;
 	int m_sex;
 	void* m_balloon;//class UIBalloonText* m_balloon;
