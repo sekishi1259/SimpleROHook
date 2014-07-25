@@ -932,10 +932,13 @@ void CRoCodeBind::PacketHandler_Cz_Menu_List(const char *packetdata)
 		int mbcode;
 		int dlength = 4;
 		char *dst = buffer;
-		*dst++ = '[';
-		*dst++ = 'A' + index;
-		*dst++ = ']';
-		*dst++ = ' ';
+
+		std::stringstream answerhead;
+		answerhead << '[' << (1 + index) << "] " << std::flush;
+
+		memcpy(dst, answerhead.str().c_str(), answerhead.str().length());
+		dst += answerhead.str().length();
+
 		while (size && *src != ':' && *src != '\0'){
 			int c;
 			c = (unsigned char)*src++;
