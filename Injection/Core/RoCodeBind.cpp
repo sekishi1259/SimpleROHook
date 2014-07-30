@@ -930,14 +930,17 @@ void CRoCodeBind::PacketHandler_Cz_Menu_List(const char *packetdata)
 
 	while (size){
 		int mbcode;
-		int dlength = 4;
+		int dlength;
 		char *dst = buffer;
 
 		std::stringstream answerhead;
 		answerhead << '[' << (1 + index) << "] " << std::flush;
 
-		memcpy(dst, answerhead.str().c_str(), answerhead.str().length());
-		dst += answerhead.str().length();
+		dlength = answerhead.str().length();
+
+		memcpy(dst, answerhead.str().c_str(), dlength);
+		dst += dlength;
+
 
 		while (size && *src != ':' && *src != '\0'){
 			int c;
