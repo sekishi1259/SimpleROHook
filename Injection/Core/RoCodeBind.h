@@ -123,6 +123,8 @@ private:
 
 	void ProjectVertex(vector3d& src,matrix& vtm,float *x,float *y,float *oow);
 	void ProjectVertex(vector3d& src,matrix& vtm,tlvertex3d *vert);
+	void ProjectVertexEx(vector3d& src, vector3d& pointvector, matrix& vtm, float *x, float *y, float *oow);
+	void ProjectVertexEx(vector3d& src, vector3d& pointvector, matrix& vtm, tlvertex3d *vert);
 
 	void LoadIni(void);
 	void SearchRagexeMemory(void);
@@ -135,6 +137,9 @@ private:
 		int x_axis,y_axis,wheel;
 		char l_button,r_button,wheel_button,pad;
 	};
+
+	void DrawGage(LPDIRECT3DDEVICE7 device, int x, int y, int w, int h, unsigned long value, DWORD color, int alpha, int type);
+	void DrawHPSPGage(IDirect3DDevice7 *d3ddev, int x, int y, int hp, int sp);
 
 public:
 	CRoCodeBind() :

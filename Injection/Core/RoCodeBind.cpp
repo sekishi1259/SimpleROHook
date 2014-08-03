@@ -342,6 +342,39 @@ void CRoCodeBind::ProjectVertex(vector3d& src,matrix& vtm,tlvertex3d *vert)
 	vert->oow = w;
 }
 
+// ProjectVertexEx
+// to move pointvector on camera view
+void CRoCodeBind::ProjectVertexEx(vector3d& src, vector3d& pointvector, matrix& vtm, float *x, float *y, float *oow)
+{
+	if (!g_renderer && !*g_renderer)return;
+
+	vector3d viewvect;
+	viewvect.MatrixMult(src, vtm);
+	viewvect += pointvector;
+
+	float w = 1.0f / viewvect.z;
+
+	*x = viewvect.x * w * (*g_renderer)->m_hpc + (*g_renderer)->m_xoffset;
+	*y = viewvect.y * w * (*g_renderer)->m_vpc + (*g_renderer)->m_yoffset;
+	*oow = w;
+}
+
+void CRoCodeBind::ProjectVertexEx(vector3d& src,vector3d& pointvector, matrix& vtm, tlvertex3d *vert)
+{
+	if (!g_renderer && !*g_renderer)return;
+
+	vector3d viewvect;
+	viewvect.MatrixMult(src, vtm);
+	viewvect += pointvector;
+
+	float w = 1.0f / viewvect.z;
+
+	vert->x = viewvect.x * w * (*g_renderer)->m_hpc + (*g_renderer)->m_halfWidth;
+	vert->y = viewvect.y * w * (*g_renderer)->m_vpc + (*g_renderer)->m_halfHeight;
+	vert->z = (1500 / (1500.0f - 10.0f)) * ((1.0f / w) - 10.0f) * w;
+	vert->oow = w;
+}
+
 
 void CRoCodeBind::LoadIni(void)
 {
@@ -386,6 +419,196 @@ void CRoCodeBind::LoadIni(void)
 	}
 }
 
+/*
+   drawgage sample
+   (x,y,  w,h) screenposition size
+   value : 0 - 1000
+   type != 0 : use sub bg
+ */
+void CRoCodeBind::DrawGage(LPDIRECT3DDEVICE7 device, int x, int y, int w, int h, unsigned long value, DWORD color, int alpha,int type)
+{
+	int gage_range;
+	DWORD gage_color;
+	D3DTLVERTEX vp[6];
+
+	for (int ii = 0; ii < 5; ii++){
+		vp[ii].sx = 0.0f;
+		vp[ii].sy = 0.0f;
+		vp[ii].sz = 0.5f;
+		vp[ii].rhw = 1.0f;
+		vp[ii].tu = 0.0f;
+		vp[ii].tv = 0.0f;
+	}
+
+	if (type){
+		gage_color = D3DCOLOR_ARGB(0x80, 1, 1, 1);
+		for (int ii = 0; ii < 4; ii++){
+			vp[ii].color = gage_color;
+		}
+		vp[0].sx = (D3DVALUE)(x);
+		vp[0].sy = (D3DVALUE)(y);
+		vp[1].sx = (D3DVALUE)(x + w);
+		vp[1].sy = (D3DVALUE)(y);
+		vp[2].sx = (D3DVALUE)(x);
+		vp[2].sy = (D3DVALUE)(y - 12 - 1);
+		vp[3].sx = (D3DVALUE)(x + w);
+		vp[3].sy = (D3DVALUE)(y - 12 - 1);
+		device->DrawPrimitive(D3DPT_TRIANGLESTRIP, D3DFVF_TLVERTEX, vp, 4, 0);
+	}
+
+	gage_color = D3DCOLOR_ARGB(0x00, 64, 64, 64);
+	gage_color = gage_color | (alpha << 24);
+	for (int ii = 0; ii < 4; ii++){
+		vp[ii].color = gage_color;
+	}
+	vp[0].sx = (D3DVALUE)(x);
+	vp[0].sy = (D3DVALUE)(y);
+	vp[1].sx = (D3DVALUE)(x + w - 1);
+	vp[1].sy = (D3DVALUE)(y);
+	vp[2].sx = (D3DVALUE)(x);
+	vp[2].sy = (D3DVALUE)(y + h - 1);
+	vp[3].sx = (D3DVALUE)(x + w - 1);
+	vp[3].sy = (D3DVALUE)(y + h - 1);
+	device->DrawPrimitive(D3DPT_TRIANGLESTRIP, D3DFVF_TLVERTEX, vp, 4, 0);
+
+	gage_color = D3DCOLOR_ARGB(0x00, 16, 24, 152);
+	gage_color = gage_color | (alpha << 24);
+	for (int ii = 0; ii < 5; ii++){
+		vp[ii].color = gage_color;
+	}
+	vp[0].sx = (D3DVALUE)(x);
+	vp[0].sy = (D3DVALUE)(y);
+	vp[1].sx = (D3DVALUE)(x + w - 1);
+	vp[1].sy = (D3DVALUE)(y);
+	vp[2].sx = (D3DVALUE)(x + w - 1);
+	vp[2].sy = (D3DVALUE)(y + h - 1);
+	vp[3].sx = (D3DVALUE)(x);
+	vp[3].sy = (D3DVALUE)(y + h - 1);
+	vp[4].sx = vp[0].sx;
+	vp[4].sy = vp[0].sy;
+	device->DrawPrimitive(D3DPT_LINESTRIP, D3DFVF_TLVERTEX, vp, 5, 0);
+
+	gage_color = color | (alpha << 24);
+
+	gage_range = (int)((value*(w - 2)) / 1000);
+	for (int ii = 0; ii < 4; ii++){
+		vp[ii].color = gage_color;
+	}
+	vp[0].sx = (D3DVALUE)(x + 1);
+	vp[0].sy = (D3DVALUE)(y + 1);
+	vp[1].sx = (D3DVALUE)(x + 1 + gage_range);
+	vp[1].sy = (D3DVALUE)(y + 1);
+	vp[2].sx = (D3DVALUE)(x + 1);
+	vp[2].sy = (D3DVALUE)(y + h - 1);
+	vp[3].sx = (D3DVALUE)(x + 1 + gage_range);
+	vp[3].sy = (D3DVALUE)(y + h - 1);
+	device->DrawPrimitive(D3DPT_TRIANGLESTRIP, D3DFVF_TLVERTEX, vp, 4, 0);
+}
+/*
+ gage draw sample
+ hp: 0 - 1000
+ sp: 0 - 1000
+ */
+void CRoCodeBind::DrawHPSPGage(IDirect3DDevice7 *d3ddev, int x, int y, int hp, int sp)
+{
+	D3DTLVERTEX vp[6];
+	int gage_range;
+
+	vp[0].rhw =
+	vp[1].rhw =
+	vp[2].rhw =
+	vp[3].rhw = 1.0f;
+
+	vp[0].color =
+	vp[1].color =
+	vp[2].color =
+	vp[3].color = D3DCOLOR_ARGB(255, 16, 24, 152);
+	//
+	vp[0].sz =
+	vp[1].sz =
+	vp[2].sz =
+	vp[3].sz = 0.5f;
+
+	vp[0].sx = (float)(x);
+	vp[0].sy = (float)(y);
+	vp[0].tu = 0.0f;
+	vp[0].tv = 0.0f;
+	//
+	vp[1].sx = (float)(x + 60);
+	vp[1].sy = vp[0].sy;
+	vp[1].tu = 0.0f;
+	vp[1].tv = 0.0f;
+	//
+	vp[2].sx = vp[0].sx;
+	vp[2].sy = (float)(y + 9);
+	vp[2].tu = 0.0f;
+	vp[2].tv = 0.0f;
+	//
+	vp[3].sx = vp[1].sx;
+	vp[3].sy = vp[2].sy;
+	vp[3].tu = 0.0f;
+	vp[3].tv = 0.0f;
+	//
+	d3ddev->DrawPrimitive(D3DPT_TRIANGLESTRIP, D3DFVF_TLVERTEX, vp, 4, 0);
+	//
+	for (int ii = 0; ii<2; ii++){
+		int value;
+		// HP SP
+		vp[0].color =
+		vp[1].color =
+		vp[2].color =
+		vp[3].color = D3DCOLOR_ARGB(255, 64, 64, 64);
+		//
+		vp[0].sx = (float)(x + 1);
+		vp[0].sy = (float)(y + 1 + ii * 4);
+		vp[1].sx = (float)(x + 1 + 58);
+		vp[1].sy = vp[0].sy;
+		vp[2].sx = vp[0].sx;
+		vp[2].sy = (float)(y + 1 + 3 + ii * 4);
+		vp[3].sx = vp[1].sx;
+		vp[3].sy = vp[2].sy;
+		d3ddev->DrawPrimitive(D3DPT_TRIANGLESTRIP, D3DFVF_TLVERTEX, vp, 4, 0);
+
+		// normal color
+
+		if (ii == 0){
+			value = hp;
+			if (hp > (1000 / 4) ) {
+				// dead zone color
+				vp[0].color =
+				vp[1].color =
+				vp[2].color =
+				vp[3].color = D3DCOLOR_ARGB(255, 24, 96, 216);
+			} else {
+				vp[0].color =
+				vp[1].color =
+				vp[2].color =
+				vp[3].color = D3DCOLOR_ARGB(255, 232, 16, 16);
+			}
+		} else {
+			vp[0].color =
+			vp[1].color =
+			vp[2].color =
+			vp[3].color = D3DCOLOR_ARGB(255, 38, 236, 32);
+			value = sp;
+		}
+
+		gage_range = (value * 58) / 1000;
+
+		// HP SP
+		vp[0].sx = (float)(x + 1);
+		vp[0].sy = (float)(y + 1 + ii * 4);
+		vp[1].sx = (float)(x + 1 + gage_range);
+		vp[1].sy = vp[0].sy;
+		vp[2].sx = vp[0].sx;
+		vp[2].sy = (float)(y + 1 + 3 + ii * 4);
+		vp[3].sx = vp[1].sx;
+		vp[3].sy = vp[2].sy;
+		d3ddev->DrawPrimitive(D3DPT_TRIANGLESTRIP, D3DFVF_TLVERTEX, vp, 4, 0);
+	}
+}
+
+
 void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 {
 	if( !g_pSharedData )return;
@@ -404,6 +627,18 @@ void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 		CModeMgr *pcmode = g_pmodeMgr;
 		//str.str("");
 		CGameMode *p_gamemode = (CGameMode*)pcmode->m_curMode;
+
+		BackupRenderState(d3ddevice);
+		d3ddevice->SetTexture(0, NULL);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_ZENABLE, D3DZB_FALSE);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_ZWRITEENABLE, FALSE);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_FOGENABLE, FALSE);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_SPECULARENABLE, FALSE);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_ALPHAFUNC, D3DCMP_GREATER);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_ALPHAREF, 0x00);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_SRCBLEND, D3DBLEND_SRCALPHA);
+		d3ddevice->SetRenderState(D3DRENDERSTATE_DESTBLEND, D3DBLEND_INVSRCALPHA);
+
 
 		if( p_gamemode && pcmode->m_curModeType == 1 
 		 && p_gamemode->m_world && p_gamemode->m_view && p_gamemode->m_world->m_attr ){
@@ -501,6 +736,25 @@ void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 
 
 				m_pSFastFont->DrawText((LPSTR)putinfostr.str().c_str(), sx, sy,D3DCOLOR_ARGB(255,255,255,255),2,NULL);
+
+				// fake cast bar
+				vector3d pointvecter(0, -13.5f, 0);
+				ProjectVertexEx(pPlayer->m_pos, pointvecter, pView->m_viewMatrix, &fx, &fy, &oow);
+				{
+					static int sx = 0, sy = 0;
+					DrawGage(d3ddevice, sx, sy, 60, 6, 800, D3DCOLOR_ARGB(0x00, 180, 0, 0), 0xff, 0);
+					sx = (int)fx - 30 + 60; // +60 side of the true cast bar
+					sy = (int)fy - 3;
+				}
+				// fake hp sp bar
+				pointvecter.Set(0, 2.5, 0);
+				ProjectVertexEx(pPlayer->m_pos, pointvecter, pView->m_viewMatrix, &fx, &fy, &oow);
+				{
+					static int sx = 0, sy = 0;
+					DrawHPSPGage(d3ddevice, sx, sy, 200, 900);
+					sx = (int)fx - 30 + 60; // +60 side of the true hpsp bar
+					sy = (int)fy - 6;
+				}
 			}
 
 			int skillnums = p_gamemode->m_world->m_skillList.size();
@@ -563,6 +817,8 @@ void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 		}
 		str << std::endl;
 		m_pSFastFont->DrawText((LPSTR)str.str().c_str(), 0, 16,D3DCOLOR_ARGB(255,255,255,255),0,NULL);
+
+		RestoreRenderState(d3ddevice);
 	}
 	m_pSFastFont->Flush();
 
