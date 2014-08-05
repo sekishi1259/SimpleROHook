@@ -995,7 +995,7 @@ void CRoCodeBind::DrawBBE(IDirect3DDevice7* d3ddevice)
 					}
 					if (pCell->flag){
 						if (deadcell){
-							color = 0x30ff00ff;
+							color = 0x00ff00ff;
 						}
 					}
 
