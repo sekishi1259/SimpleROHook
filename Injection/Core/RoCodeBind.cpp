@@ -611,9 +611,10 @@ void CRoCodeBind::DrawHPSPGage(IDirect3DDevice7 *d3ddev, int x, int y, int hp, i
 
 void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 {
-	if( !g_pSharedData )return;
-	if( !g_renderer )return;
-	if( !*g_renderer )return;
+	if (!g_pSharedData) return;
+	if (!g_pmodeMgr) return;
+	if (!g_renderer) return;
+	if (!*g_renderer) return;
 
 	if( g_pSharedData->show_framerate ){
 		std::stringstream str;
@@ -1300,7 +1301,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 	// Marker '6' UIWindowMgr g_windowMgr (C++ Class Instance)
 	// Marker '7' UIWindowMgr::DeleteWindow
 	// based RagFree.exe iRO vc6
-	CSearchCode UIYourItemWnd__SendMsg_0A9Handler_TypeA(
+	CSearchCode UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeA(
 		"b9*1******"		// mov     ecx,dword L008208d0 ; CModeMgr__g_modeMgr
 		"e8*2******"		// call    near F0052c0e0 ; CModeMgr__GetGameMode
 		"668b536c"			// mov     dx,[ebx+06ch]
@@ -1323,7 +1324,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 		"e8*7******"		// call    near F00502390 ; UIWindowMgr__DeleteWindow
 		);
 	// F2P_Ragexe.exe iRO vc9
-	CSearchCode UIYourItemWnd__SendMsg_0A9Handler_TypeB(
+	CSearchCode UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeB(
 		"b9*1******"		// mov     ecx,dword L00812088 ; CModeMgr__g_modeMgr
 		"e8*2******"		// call    near F0051eeb0 ; CModeMgr__GetGameMode
 		"668b4e**"			// mov     cx,[esi+06ch]
@@ -1347,7 +1348,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 		"e8*7******"		// call    near F004f8270 ; UIWindowMgr__DeleteWindow
 		);
 	// based 2011-12-01aRagexe.exe iRO vc9
-	CSearchCode UIYourItemWnd__SendMsg_0A9Handler_TypeC(
+	CSearchCode UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeC(
 		"b9*1******"		// mov     ecx,dword L008371f8 ; CModeMgr__g_modeMgr
 		"e8*2******"		// call    near F0054a7a0 ; CModeMgr__GetGameMode
 		"668b4e**"			// mov     cx,[esi+07ch]
@@ -1371,7 +1372,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 		"e8*7******"		// call    near F00523770 ; UIWindowMgr__DeleteWindow
 		);
 	// 2014-03-14aRagexe.exe jRO
-	CSearchCode UIYourItemWnd__SendMsg_0A9Handler_TypeD(
+	CSearchCode UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeD(
 		"b9*1******"		// mov     ecx,dword L00812088 ; CModeMgr__g_modeMgr
 		"e8*2******"		// call    near F0051eeb0 ; CModeMgr__GetGameMode
 		"668b****"			// mov     cx,[esi+06ch]
@@ -1395,7 +1396,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 		"e8*7******"		// call    near F004f8270 ; UIWindowMgr__DeleteWindow
 		);
 	// 2014-03-18 Ragexe.exe iRO link time 20140226 155100
-	CSearchCode UIYourItemWnd__SendMsg_0A9Handler_TypeE(
+	CSearchCode UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeE(
 		"b9*1******"        //         mov     ecx,dword L0099f930 ; CModeMgr__g_modeMgr
 		"e8*2******"        //         call    near F005a5eb0 ; CModeMgr__GetGameMode
 		"668b96********"    //         mov     dx,[esi+00000008ch]
@@ -1417,6 +1418,31 @@ void CRoCodeBind::SearchRagexeMemory(void)
 		"688a000000"        //         push    dword 00000008ah
 		"b9*6******"        //         mov     ecx,dword L009d21c0 ; UIWindowMgr__g_windowMgr
 		"e8*7******"        //         call    near F00573a40 ; UIWindowMgr__DeleteWindow
+		);
+
+	// 2014-08-20data-gm Ragexe.exe iRO
+	CSearchCode UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeF(
+		"b9*1******"        //   mov     ecx, dword L009b74f8
+		"e8*2******"        //   call    near F005ac940
+		"668b96********"    //   mov     dx, [esi + 00000008ch]
+		"8b86********"      //   mov     eax, dword[esi + 000000090h]
+		"b998090000"        //   mov     ecx, dword 000000998h
+		"66894d**"          //   mov[ebp - 034h], cx
+		"8d4d**"            //   lea     ecx, [ebp - 034h]
+		"51"                //   push    ecx
+		"6898090000"        //   push    dword 000000998h
+		"668955**"          //   mov[ebp - 032h], dx
+		"8945**"            //   mov     dword[ebp - 030h], eax
+		"e8*3******"        //   call    near F0071fb40
+		"8bc8"              //   mov     ecx, eax
+		"e8*4******"        //   call    near F0071f460
+		"50"                //   push    eax
+		"e8********"        //   call    near F0071fb40
+		"8bc8"              //   mov     ecx, eax
+		"e8*5******"        //   call    near F0071fa60
+		"688a000000"        //   push    dword 00000008ah
+		"b9*6******"        //   mov     ecx, dword L009ebe90
+		"e8*7******"        //   call    near F00579fc0
 		);
 
 	CSearchCode CMouse_Init_vc6(
@@ -1620,11 +1646,11 @@ void CRoCodeBind::SearchRagexeMemory(void)
 		{
 			LPBYTE pBase = (LPBYTE)mbi.BaseAddress;
 
-			if( UIYourItemWnd__SendMsg_0A9Handler_TypeA.PatternMatcher( &pBase[ii] ) )
+			if( UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeA.PatternMatcher( &pBase[ii] ) )
 			{
 				DWORD GetPacketSizeAddr;
 				GetPacketSizeAddr = 
-					UIYourItemWnd__SendMsg_0A9Handler_TypeA.Get4BIndexDWORD( &pBase[ii] , '4' );
+					UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeA.Get4BIndexDWORD( &pBase[ii] , '4' );
 				__asm push 0x0A9
 				__asm call GetPacketSizeAddr
 				__asm mov temp_esp,esp
@@ -1632,7 +1658,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 				p_std_map_packetlen *plen = (p_std_map_packetlen*)
 					*(DWORD*) (*(DWORD*)(temp_esp-19*4) + 4);
 
-				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_0A9Handler_TypeA
+				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeA
 					.GetImmediateDWORD( &pBase[ii], '1' );
 
 				DEBUG_LOGGING_NORMAL( ("TypeA GetPacketSizeAddr %08X",GetPacketSizeAddr) );
@@ -1648,11 +1674,11 @@ void CRoCodeBind::SearchRagexeMemory(void)
 				}
 				break;
 			}else
-			if( UIYourItemWnd__SendMsg_0A9Handler_TypeB.PatternMatcher( &pBase[ii] ) )
+			if( UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeB.PatternMatcher( &pBase[ii] ) )
 			{
 				DWORD GetPacketSizeAddr;
 				GetPacketSizeAddr = 
-					UIYourItemWnd__SendMsg_0A9Handler_TypeB.Get4BIndexDWORD( &pBase[ii] , '4' );
+					UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeB.Get4BIndexDWORD( &pBase[ii] , '4' );
 				__asm push 0x0A9
 				__asm call GetPacketSizeAddr
 				__asm mov temp_eax,eax
@@ -1665,7 +1691,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 					plen = (p_std_map_packetlen*)temp_edx;
 				}
 
-				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_0A9Handler_TypeB
+				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeB
 					.GetImmediateDWORD( &pBase[ii], '1' );
 
 				DEBUG_LOGGING_NORMAL( ("TypeB GetPacketSizeAddr     = %08X eax = %08X ecx = %08X edx =%08X",
@@ -1681,12 +1707,12 @@ void CRoCodeBind::SearchRagexeMemory(void)
 				}
 				break;
 			}else
-			if( UIYourItemWnd__SendMsg_0A9Handler_TypeC.PatternMatcher( &pBase[ii] ) )
+			if( UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeC.PatternMatcher( &pBase[ii] ) )
 			{
 				DWORD GetPacketSizeAddr;
 				Func_CRagConnection__GetPacketSize GetPacketSize;
 				GetPacketSizeAddr = 
-					UIYourItemWnd__SendMsg_0A9Handler_TypeC.Get4BIndexDWORD( &pBase[ii] , '4' );
+					UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeC.Get4BIndexDWORD( &pBase[ii] , '4' );
 				GetPacketSize = (Func_CRagConnection__GetPacketSize)GetPacketSizeAddr;
 				//GetPacketSize(0x0A9);
 				__asm push 0x0A9
@@ -1694,7 +1720,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 				__asm mov temp_ecx,ecx
 				p_std_map_packetlen *plen = (p_std_map_packetlen*)temp_ecx;
 
-				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_0A9Handler_TypeC
+				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeC
 					.GetImmediateDWORD( &pBase[ii], '1' );
 
 				DEBUG_LOGGING_NORMAL( ("TypeC GetPacketSizeAddr     = %08X ecx = %08X",GetPacketSizeAddr,temp_ecx) );
@@ -1709,12 +1735,12 @@ void CRoCodeBind::SearchRagexeMemory(void)
 				}
 				break;
 			}else
-			if( UIYourItemWnd__SendMsg_0A9Handler_TypeD.PatternMatcher( &pBase[ii] ) )
+			if( UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeD.PatternMatcher( &pBase[ii] ) )
 			{
 				DWORD GetPacketSizeAddr;
 				Func_CRagConnection__GetPacketSize GetPacketSize;
 				GetPacketSizeAddr = 
-					UIYourItemWnd__SendMsg_0A9Handler_TypeD.Get4BIndexDWORD( &pBase[ii] , '4' );
+					UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeD.Get4BIndexDWORD( &pBase[ii] , '4' );
 				GetPacketSize = (Func_CRagConnection__GetPacketSize)GetPacketSizeAddr;
 				//GetPacketSize(0x0A9);
 				__asm push 0x0A9
@@ -1722,7 +1748,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 				__asm mov temp_ecx,ecx
 				p_std_map_packetlen *plen = (p_std_map_packetlen*)temp_ecx;
 
-				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_0A9Handler_TypeD
+				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeD
 					.GetImmediateDWORD( &pBase[ii], '1' );
 
 				DEBUG_LOGGING_NORMAL( ("TypeD GetPacketSizeAddr     = %08X ecx = %08X",GetPacketSizeAddr,temp_ecx) );
@@ -1737,12 +1763,12 @@ void CRoCodeBind::SearchRagexeMemory(void)
 				}
 				break;
 			}else
-			if( UIYourItemWnd__SendMsg_0A9Handler_TypeE.PatternMatcher( &pBase[ii] ) )
+			if( UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeE.PatternMatcher( &pBase[ii] ) )
 			{
 				DWORD GetPacketSizeAddr;
 				Func_CRagConnection__GetPacketSize GetPacketSize;
 				GetPacketSizeAddr = 
-					UIYourItemWnd__SendMsg_0A9Handler_TypeE.Get4BIndexDWORD( &pBase[ii] , '4' );
+					UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeE.Get4BIndexDWORD( &pBase[ii] , '4' );
 				GetPacketSize = (Func_CRagConnection__GetPacketSize)GetPacketSizeAddr;
 				//GetPacketSize(0x0A9);
 				__asm push 0x0A9
@@ -1750,7 +1776,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 				__asm mov temp_ecx,ecx
 				p_std_map_packetlen *plen = (p_std_map_packetlen*)temp_ecx;
 
-				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_0A9Handler_TypeE
+				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeE
 					.GetImmediateDWORD( &pBase[ii], '1' );
 
 				DEBUG_LOGGING_NORMAL( ("TypeE GetPacketSizeAddr     = %08X ecx = %08X",GetPacketSizeAddr,temp_ecx) );
@@ -1759,6 +1785,62 @@ void CRoCodeBind::SearchRagexeMemory(void)
 					if( plen->key > 0xffff || (plen->key == 0 && plen->value == 0) ){
 						packetLenMap = plen;
 						DEBUG_LOGGING_NORMAL( ("packetLenMap = %08X",packetLenMap) );
+						break;
+					}
+					plen = plen->parent;
+				}
+				break;
+			}else
+			if( UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeE.PatternMatcher( &pBase[ii] ) )
+			{
+				DWORD GetPacketSizeAddr;
+				Func_CRagConnection__GetPacketSize GetPacketSize;
+				GetPacketSizeAddr = 
+					UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeE.Get4BIndexDWORD( &pBase[ii] , '4' );
+				GetPacketSize = (Func_CRagConnection__GetPacketSize)GetPacketSizeAddr;
+				//GetPacketSize(0x0A9);
+				__asm push 0x0A9
+				__asm call GetPacketSizeAddr
+				__asm mov temp_ecx,ecx
+				p_std_map_packetlen *plen = (p_std_map_packetlen*)temp_ecx;
+
+				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeE
+					.GetImmediateDWORD( &pBase[ii], '1' );
+
+				DEBUG_LOGGING_NORMAL( ("TypeE GetPacketSizeAddr     = %08X ecx = %08X",GetPacketSizeAddr,temp_ecx) );
+				while(1)
+				{
+					if( plen->key > 0xffff || (plen->key == 0 && plen->value == 0) ){
+						packetLenMap = plen;
+						DEBUG_LOGGING_NORMAL( ("packetLenMap = %08X",packetLenMap) );
+						break;
+					}
+					plen = plen->parent;
+				}
+				break;
+			}else
+			if (UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeF.PatternMatcher(&pBase[ii]))
+			{
+				DWORD GetPacketSizeAddr;
+				Func_CRagConnection__GetPacketSize GetPacketSize;
+				GetPacketSizeAddr =
+					UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeF.Get4BIndexDWORD(&pBase[ii], '4');
+				GetPacketSize = (Func_CRagConnection__GetPacketSize)GetPacketSizeAddr;
+				//GetPacketSize(0x0998);
+				__asm push 0x0998
+				__asm call GetPacketSizeAddr
+				__asm mov temp_ecx, ecx
+				p_std_map_packetlen *plen = (p_std_map_packetlen*)temp_ecx;
+
+				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeF
+					.GetImmediateDWORD(&pBase[ii], '1');
+
+				DEBUG_LOGGING_NORMAL(("TypeE GetPacketSizeAddr     = %08X ecx = %08X", GetPacketSizeAddr, temp_ecx));
+				while (1)
+				{
+					if (plen->key > 0xffff || (plen->key == 0 && plen->value == 0)){
+						packetLenMap = plen;
+						DEBUG_LOGGING_NORMAL(("packetLenMap = %08X", packetLenMap));
 						break;
 					}
 					plen = plen->parent;
