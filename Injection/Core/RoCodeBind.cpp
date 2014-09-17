@@ -1791,34 +1791,6 @@ void CRoCodeBind::SearchRagexeMemory(void)
 				}
 				break;
 			}else
-			if( UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeE.PatternMatcher( &pBase[ii] ) )
-			{
-				DWORD GetPacketSizeAddr;
-				Func_CRagConnection__GetPacketSize GetPacketSize;
-				GetPacketSizeAddr = 
-					UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeE.Get4BIndexDWORD( &pBase[ii] , '4' );
-				GetPacketSize = (Func_CRagConnection__GetPacketSize)GetPacketSizeAddr;
-				//GetPacketSize(0x0A9);
-				__asm push 0x0A9
-				__asm call GetPacketSizeAddr
-				__asm mov temp_ecx,ecx
-				p_std_map_packetlen *plen = (p_std_map_packetlen*)temp_ecx;
-
-				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeE
-					.GetImmediateDWORD( &pBase[ii], '1' );
-
-				DEBUG_LOGGING_NORMAL( ("TypeE GetPacketSizeAddr     = %08X ecx = %08X",GetPacketSizeAddr,temp_ecx) );
-				while(1)
-				{
-					if( plen->key > 0xffff || (plen->key == 0 && plen->value == 0) ){
-						packetLenMap = plen;
-						DEBUG_LOGGING_NORMAL( ("packetLenMap = %08X",packetLenMap) );
-						break;
-					}
-					plen = plen->parent;
-				}
-				break;
-			}else
 			if (UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeF.PatternMatcher(&pBase[ii]))
 			{
 				DWORD GetPacketSizeAddr;
