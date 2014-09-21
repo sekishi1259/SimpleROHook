@@ -37,13 +37,13 @@ namespace SimpleROHookCS
                     IntPtr intPtrInstall = GetProcAddress(hModule, @"InstallHook");
                     IntPtr intPtrRemove = GetProcAddress(hModule, @"RemoveHook");
 
-                    if (intPtrInstall == null)
+                    if (intPtrInstall == IntPtr.Zero)
                     {
                         MessageBox.Show("error:InstallHook function is not included in Core.dll.");
                         FreeLibrary(hModule);
                         return;
                     }
-                    if (intPtrRemove == null)
+                    if (intPtrRemove == IntPtr.Zero)
                     {
                         MessageBox.Show("error:intPtrRemove function is not included in Core.dll.");
                         FreeLibrary(hModule);
