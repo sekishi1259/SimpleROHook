@@ -253,6 +253,58 @@ namespace SimpleROHookCS
 
             string curentdirstr = System.IO.Directory.GetCurrentDirectory() + "\\config.ini";
             m_SharedData.configfilepath = curentdirstr;
+            if (!File.Exists("config.ini"))
+            {
+                using( StreamWriter w = new StreamWriter(@"config.ini") )
+                {
+                    w.WriteLine("[M2E]");
+                    w.WriteLine("; MiniMiniEffect Color Setting");
+                    w.WriteLine("; 0xAARRGGBB");
+                    w.WriteLine("; AA:alpha  00-FF (00:0%---7F:50%---FF:100%)");
+                    w.WriteLine("; RR:red    00-FF (0-255)");
+                    w.WriteLine("; GG:green  00-FF (0-255)");
+                    w.WriteLine("; BB:blue   00-FF (0-255)");
+                    w.WriteLine("; ");
+                    w.WriteLine(";SW");
+                    w.WriteLine("Skill007E=0x7F008888");
+                    w.WriteLine(";FW");
+                    w.WriteLine("Skill007F=0x7F880000");
+                    w.WriteLine(";");
+                    w.WriteLine(";warp portal");
+                    w.WriteLine("Skill0080=0x7FFFFFFF");
+                    w.WriteLine("Skill0081=0x7FFFFFFF");
+                    w.WriteLine(";b.s. sacramentl");
+                    w.WriteLine("Skill0082=0x7F888888");
+                    w.WriteLine(";sanctuary");
+                    w.WriteLine("Skill0083=0x7F00FFFF");
+                    w.WriteLine(";ME");
+                    w.WriteLine("Skill0084=0x7F00FFFF");
+                    w.WriteLine(";pneuma");
+                    w.WriteLine("Skill0085=0x7F00FFFF");
+                    w.WriteLine(";SG LOV etc.");
+                    w.WriteLine("Skill0086=0x7F880088");
+                    w.WriteLine(";FP");
+                    w.WriteLine("Skill0087=0x7F888800");
+                    w.WriteLine("Skill0088=0x7F888800");
+                    w.WriteLine(";");
+                    w.WriteLine("Skill0089=0x7F888888");
+                    w.WriteLine("Skill008A=0x7F888888");
+                    w.WriteLine("Skill008B=0x7F888888");
+                    w.WriteLine("Skill008C=0x7F888888");
+                    w.WriteLine(";IW");
+                    w.WriteLine("Skill008D=0x7F880088");
+                    w.WriteLine(";QM");
+                    w.WriteLine("Skill008E=0x7F448844");
+                    w.WriteLine(";");
+                    w.WriteLine("Skill008F=0x7F888888");
+                    w.WriteLine(";");
+                    for (int ii = 0x90; ii < 0x100; ii++)
+                    {
+                        w.WriteLine("Skill{0}=0x7F888888", ii.ToString("X4"));
+                    }
+                }
+            }
+
             if (File.Exists("config.xml"))
             {
                 #region Load Config XML
