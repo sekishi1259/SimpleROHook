@@ -263,7 +263,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			::DisableThreadLibraryCalls( hModule );
 			CreateTinyConsole();
 			OpenSharedMemory();
-#ifndef JRO_CLIENT_STRUCTURE
+#ifdef USE_WS2_32DLLINJECTION
 			InstallProxyFunction(
 				_T("ws2_32.dll"), "recv",
 				ProxyWS2_32_recv, (LPVOID*)&OrigWS2_32_recv);

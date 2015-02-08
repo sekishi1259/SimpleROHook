@@ -121,6 +121,9 @@ struct KANICLIP {
 
 class CGameObject {
 public:
+#ifdef USE_GAMEOBJ_COUNTER
+	long long m_unknown_qword_counter;
+#endif
 	CGameObject(class CGameObject&) {};
 	CGameObject::CGameObject() {};
 	void CGameObject::OnInit() {};
@@ -221,7 +224,7 @@ public:
 	class CSprRes* m_sprRes;
 	class CActRes* m_actRes;
 
-	void* dummy01; // added for later HightPrieast.exe?
+	int m_npcId; // added for later HightPrieast.exe?
 #ifdef JRO_CLIENT_STRUCTURE
 	unsigned long m_gid;
 #endif
@@ -479,9 +482,6 @@ public:
 	std::list<CRagEffect*> m_effectList;
 	CRagEffect* m_beginSpellEffect;
 	CRagEffect* m_magicTargetEffect;
-#ifdef JRO_CLIENT_STRUCTURE
-	DWORD m_pad[5];
-#endif
 	virtual ~CAbleToMakeEffect() {};
 };
 
@@ -501,6 +501,7 @@ struct WBA {
 
 class CMsgEffect : public CAbleToMakeEffect  {
 public:
+	int m_isAnimation;
 	class CGameActor* m_masterActor;
 	struct vector3d m_destPos;
 	struct vector3d m_targetPos;
@@ -517,13 +518,16 @@ public:
 	int m_msgEffectType;
 	int m_orgSprShift;
 	int m_isAttackTarget;
-	int m_isAnimation;
+	int m_unknown_data;
 
 	virtual ~CMsgEffect() {};
 };
 
 class CGameActor : public CAbleToMakeEffect  {
 public:
+#ifdef JRO_CLIENT_STRUCTURE
+	DWORD m_unknown_pad[5];
+#endif
 	int m_moveDestX;
 	int m_moveDestY;
 	unsigned long m_speed;
@@ -536,21 +540,7 @@ public:
 	char m_hitWaveName[128];
 	unsigned long m_colorEndTick;
 	short m_clevel;
-#if 1 // changed for later HightPrieast.exe?
-	short m_gactpad0; // added for later HightPrieast.exe?
-#else
-	short m_MaxHp;
-	short m_Hp;
-	short m_MaxSp;
-	short m_Sp;
-	int m_Exp;
-	short m_Str;
-	short m_Int;
-	short m_Dex;
-	short m_Vit;
-	short m_Luk;
-	short m_Agi;
-#endif
+
 	struct vector3d m_accel;
 	class CPathInfo m_path;
 	unsigned long m_moveStartTime;
@@ -574,9 +564,8 @@ public:
 	void* m_chatTitle;//class UIChatRoomTitle* m_chatTitle;
 	void* m_merchantShopTitle;//class UIMerchantShopTitle* m_merchantShopTitle;
 	void* m_skillRechargeGage;//class UIRechargeGage* m_skillRechargeGage;
-
-	void* m_unknownobj01; // added for later HightPrieast.exe?
-
+	void* m_merchantPurchaseTitle;//class UIMerchantPurchaseTitle* m_merchantPurchaseTitle;
+	
 	unsigned long m_freezeEndTick;
 	unsigned long m_petEmotionStartTick;
 	unsigned long m_skillRechargeEndTick;
@@ -590,15 +579,16 @@ public:
 	std::list<WBA> m_willBeAttackList;
 	std::list<WBA> m_willBeAttackedList;
 
-	int m_gactpad1[4]; // added for later HightPrieast.exe?
-
 	int m_willBeDead;
 	int m_is99;
 	char m_99;
 	int m_bodyState;
 	int m_effectState;
 	int m_healthState;
-	int m_pkState;
+
+	int m_stateId;
+	int m_isRideMonster;
+
 	float m_damageDestX;
 	float m_damageDestZ;
 	unsigned long m_effectLaunchCnt;
@@ -607,6 +597,14 @@ public:
 	int m_bIsMemberAndVisible;
 	int m_gdid;
 	int m_emblemVersion;
+
+	int m_unknown_data0000;
+	int m_unknown_data0001;
+	int m_unknown_data0002;
+	int m_unknown_data0003;
+	int m_unknown_data0004;
+	int m_unknown_data0005;
+
 	void* m_homunAI;//class CMercenaryAI* m_homunAI;
 	void* m_merAI;//class CMercenaryAI* m_merAI;
 	unsigned char m_objectType;

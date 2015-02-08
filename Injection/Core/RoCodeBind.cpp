@@ -178,6 +178,8 @@ void CRoCodeBind::InitItemNameMap()
 	buf = (char*)GetPak("data\\idnum2itemdisplaynametable.txt",&size);
 
 	if (!buf)return;
+	DEBUG_LOGGING_NORMAL(("load data\\idnum2itemdisplaynametable.txt from grf."));
+
 	p = buf;
 	while (*p != '\0'){
 		ptoken = p;
@@ -189,31 +191,45 @@ void CRoCodeBind::InitItemNameMap()
 
 		if (*ptoken == '/' || *ptoken == '\0' || *ptoken == ' ' || *ptoken == '\r' || *ptoken == '\n')
 			continue;
-		//
+
+#if 1
+		int itemid = 0;
+		while (*ptoken != '#'){
+			int num;
+			num = *ptoken++;
+			if( num >= '0' && num <= '9' ){
+				itemid = (itemid*10)+(num - '0');
+			}
+		}
+#else
+		// case of bRO( brasil ragnarok )
+		// injection.dll is dead if use the win32api(StrToInt and atoi and etc..) on nprotect gameguard.
 		char numstr[10], *pname;
 		pname = numstr;
 		while (*ptoken != '#')*pname++ = *ptoken++;
 		*pname++ = '\0';
 		int itemid = atoi(numstr);
+#endif
+		//DEBUG_LOGGING_NORMAL(("item id: %d",itemid));
 
 		char tempstr[256];
 		char *pdname = tempstr;
 		*ptoken++;
 		while (*ptoken != '#'){
-			if (*ptoken != '_'){
-				*pdname++ = *ptoken++;
-			}
-			else{
-				*pdname++ = ' ';
-				ptoken++;
-			}
+			if (*ptoken != '_')
+				*pdname = *ptoken;
+			else
+				*pdname = ' ';
+			pdname++;
+			ptoken++;
 		}
 		*pdname++ = '\0';
-		int datasize = (pdname - tempstr);
 
-		m_ItemName[itemid] = tempstr;
-}
+		if (itemid >= 0 )
+			m_ItemName[itemid] = tempstr;
+	}
 	ReleasePak(buf);
+	DEBUG_LOGGING_NORMAL(("release data\\idnum2itemdisplaynametable.txt"));
 }
 
 const char *CRoCodeBind::GetItemNameByID(int id)
@@ -228,9 +244,10 @@ const char *CRoCodeBind::GetItemNameByID(int id)
 	}
 }
 
+
 void CRoCodeBind::OneSyncProc(HRESULT Result,LPVOID lpvData,BOOL FreeMouse)
 {
-#ifdef JRO_CLIENT_STRUCTURE
+#ifndef USE_WS2_32DLLINJECTION
 	if (pCConnection_s_wsRecv){
 		if (*pCConnection_s_wsRecv && OrigWS2_32_recv == 0){
 			OrigWS2_32_recv = *pCConnection_s_wsRecv;
@@ -649,8 +666,6 @@ void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 
 			if( p_gamemode->m_world->m_player ){
 				std::stringstream putinfostr;
-				C3dAttr *pattr = p_gamemode->m_world->m_attr;
-
 				CPlayer *pPlayer = (CPlayer*)p_gamemode->m_world->m_player;
 
 				// CRenderObject
@@ -723,7 +738,7 @@ void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 				//  world position to cell position
 				//
 				long cx,cy;
-				pattr->ConvertToCellCoor(pPlayer->m_pos.x,pPlayer->m_pos.z,cx,cy);
+				pAttr->ConvertToCellCoor(pPlayer->m_pos.x,pPlayer->m_pos.z,cx,cy);
 				//
 				//
 				//
@@ -777,6 +792,16 @@ void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 					//putinfostr << pItem->m_itemName << std::endl;
 				//	putinfostr << "aid = " << pItem->m_aid << std::endl;
 					putinfostr << "itemid = " << pItem->m_itemid2 << std::endl;
+#if 0
+					unsigned char *pdump = (unsigned char*)&pItem->m_itemName;
+					for (int ii = 0; ii < 64; ii++){
+						putinfostr << std::setfill('0') << std::setw(2) << std::hex << (int)pdump[ii] << ",";
+						if ((ii % 0x10) == 0x0f){
+							putinfostr << std::endl;
+						}
+					}
+					putinfostr << std::endl;
+#endif
 
 					int sx,sy;
 					float fx,fy,oow;
@@ -791,11 +816,12 @@ void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 
 			int actornums = p_gamemode->m_world->m_actorList.size();
 			str << " m_actorList size =" << actornums << "\n";
+
 			std::list<CGameActor*> actorList = p_gamemode->m_world->m_actorList;
 			for( std::list<CGameActor*>::iterator it = actorList.begin() ; it != actorList.end() ; it++ )
 			{
 				CGameActor *pGameActor = *it;
-				if( pGameActor ){
+				if( pGameActor && !pGameActor->m_isPc){
 					long cx,cy;
 					pAttr->ConvertToCellCoor(pGameActor->m_pos.x,pGameActor->m_pos.z,cx,cy);
 
@@ -804,7 +830,18 @@ void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 				//	putinfostr << "dest(" << pGameActor->m_moveDestX << "," << pGameActor->m_moveDestY << ")" << std::endl;
 					putinfostr << "lv = " << pGameActor->m_clevel << std::endl;
 					putinfostr << "job = " << pGameActor->m_job << std::endl;
-
+					putinfostr << "m_npcId = " << pGameActor->m_npcId << std::endl;
+#if 0
+					putinfostr << "m_bodyPaletteName = " << pGameActor->m_bodyPaletteName << std::endl;
+					unsigned char *pdump = (unsigned char*)&pGameActor->m_pos.x;
+					for (int ii = 0; ii < 64; ii++){
+						putinfostr << std::setfill('0') << std::setw(2) << std::hex << (int)pdump[ii] << ",";
+						if ((ii % 0x10) == 0x0f){
+							putinfostr << std::endl;
+						}
+					}
+					putinfostr << std::endl;
+#endif
 					int sx,sy;
 					float fx,fy,oow;
 					ProjectVertex( pGameActor->m_pos,pView->m_viewMatrix,&fx,&fy,&oow);
@@ -1928,7 +1965,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 				addPak_event_grf.GetImmediateDWORD(&pBase[ii], '1') == (DWORD)strings_event_grf_address)
 			{
 				m_CFileMgr__gfileMgr = (void*)addPak_event_grf.GetImmediateDWORD(&pBase[ii], '2');
-				DEBUG_LOGGING_NORMAL(("find CFileMgr::gfileMgr : %08X", m_CFileMgr__gfileMgr));
+				DEBUG_LOGGING_NORMAL(("find CFileMgr::g_fileMgr : %08X", m_CFileMgr__gfileMgr));
 				break;
 			}
 		}
