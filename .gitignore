@@ -1,8 +1,8 @@
-Debug
-Debug-jRO
-Release
+Release-iRO
+Release-bRO
 Release-jRO
 ipch
+obj
 *.aps
 *.opensdf
 *.sdf
