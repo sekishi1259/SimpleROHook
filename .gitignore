@@ -1,6 +1,4 @@
-Release-iRO
-Release-bRO
-Release-jRO
+Release*
 ipch
 obj
 *.aps

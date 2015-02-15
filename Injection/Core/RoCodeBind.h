@@ -51,6 +51,10 @@ typedef void* (__thiscall *tCFileMgr__GetData)(/*CFileMgr*/void *this_pt, const 
 
 typedef void* (__thiscall *tCFileMgr__GetPak)(/*CFileMgr*/void *this_pt, const char *name, unsigned int *size);
 
+typedef void* (__cdecl *tCRagConnection__instanceR)(void);
+
+typedef int (__thiscall *tCRagConnection__GetPacketSize)(/*CRagConnection*/void *this_pt, int packetType);
+
 
 class CRoCodeBind
 {
@@ -62,13 +66,17 @@ private:
 	void* m_CFileMgr__gfileMgr;
 	tCFileMgr__GetData m_functionRagexe_CFileMgr__GetData;
 	tCFileMgr__GetPak m_functionRagexe_CFileMgr__GetPak;
-
+	
 	tPlayStream m_funcRagexe_PlayStream;
 
 
 	std::map<int, std::string> m_ItemName;
 	void InitItemNameMap();
 
+	tCRagConnection__instanceR m_functionRagexe_CRagConnection__instanceR;
+	tCRagConnection__GetPacketSize m_functionRagexe_CRagConnection__GetPacketSize;
+	void **m_packetLenMap;
+	void *m_packetLenMap_InsertTree;
 
 	HWND m_hWnd;
 	int  m_gid;
@@ -148,7 +156,10 @@ public:
 		m_functionRagexe_CFileMgr__GetPak(NULL),
 		m_packetLenMap_table_index(0),m_packetqueue_head(0),
 		m_pSFastFont(NULL),m_pddsFontTexture(NULL),
-		g_renderer(NULL), g_pmodeMgr(NULL), g_mouse(NULL), 
+		g_renderer(NULL), g_pmodeMgr(NULL), g_mouse(NULL),
+		m_packetLenMap(NULL), m_packetLenMap_InsertTree(NULL),
+		m_functionRagexe_CRagConnection__GetPacketSize(NULL),
+		m_functionRagexe_CRagConnection__instanceR(NULL),
 		m_CMode_old_subMode(-1), m_CMode_subMode(-1),
 		m_gid(0)
 	{

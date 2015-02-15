@@ -661,8 +661,10 @@ void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 		if( p_gamemode && pcmode->m_curModeType == 1 
 		 && p_gamemode->m_world && p_gamemode->m_view && p_gamemode->m_world->m_attr ){
 			CView *pView = p_gamemode->m_view;
-
 			C3dAttr *pAttr = p_gamemode->m_world->m_attr;
+
+			str << "mode->m_world = " << std::hex << p_gamemode->m_world << "\n";
+			str << "mode->m_world->m_player = " << p_gamemode->m_world->m_player << "\n\n";
 
 			if( p_gamemode->m_world->m_player ){
 				std::stringstream putinfostr;
@@ -679,15 +681,46 @@ void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 				str << "m_Sk_Level = "     << pPlayer->m_Sk_Level << "\n\n";
 
 				// CGameActor
-				str << "m_moveDestX/Y = " << std::dec 
+				str << "m_moveDestX/Y = " << std::dec
 					<< pPlayer->m_moveDestX << ","
 					<< pPlayer->m_moveDestY << "\n\n";
+
 				str << "m_speed = " << pPlayer->m_speed << "\n\n";
 
 				str << "m_clevel = " << pPlayer->m_clevel << "\n";
 				str << "m_gid = " << std::hex << (unsigned long)pPlayer->m_gid << "\n";
 				str << "m_job = " << std::hex << (unsigned long)pPlayer->m_job << "\n";
 				str << "m_sex = " << std::hex << (unsigned long)pPlayer->m_sex << "\n\n";
+#if 0
+				str << "m_cgameactor_unknown_state01 = " << std::hex << (unsigned long)pPlayer->m_cgameactor_unknown_state01 << "\n";
+				str << "m_cgameactor_unknown_state02 = " << std::hex << (unsigned long)pPlayer->m_cgameactor_unknown_state02 << "\n";
+				str << "m_cgameactor_unknown_state03 = " << std::hex << (unsigned long)pPlayer->m_cgameactor_unknown_state03 << "\n";
+				str << "m_cgameactor_unknown_choice_state = " << std::hex << (unsigned long)pPlayer->m_cgameactor_unknown_choice_state << "\n";
+				str << "m_cgameactor_unknown_dest_choice_state = " << std::hex << (unsigned long)pPlayer->m_cgameactor_unknown_dest_choice_state << "\n";
+				str << "m_cgameactor_unknown06 = " << std::hex << (unsigned long)pPlayer->m_cgameactor_unknown06 << "\n";
+				str << "m_cgameactor_unknown07 = " << std::hex << (unsigned long)pPlayer->m_cgameactor_unknown07 << "\n";
+
+				str << "m_cpc_unknown03 = " << std::hex << (unsigned long)pPlayer->m_cpc_unknown03 << "\n";
+				str << "m_cpc_unknown04 = " << std::hex << (unsigned long)pPlayer->m_cpc_unknown04 << "\n";
+				str << "m_cpc_offsetx = " << std::hex << (unsigned long)pPlayer->m_cpc_offsetx << "\n";
+				str << "m_cpc_offsety = " << std::hex << (unsigned long)pPlayer->m_cpc_offsety << "\n";
+				str << "m_cpc_unknown07 = " << std::hex << (unsigned long)pPlayer->m_cpc_unknown07 << "\n";
+				str << "m_cpc_unknown08 = " << std::hex << (unsigned long)pPlayer->m_cpc_unknown08 << "\n";
+				str << "m_cpc_unknown09 = " << std::hex << (unsigned long)pPlayer->m_cpc_unknown09 << "\n";
+				str << "m_cpc_unknown10 = " << std::hex << (unsigned long)pPlayer->m_cpc_unknown10 << "\n\n";
+#endif
+				str << "m_destCellX = " << std::hex << (unsigned long)pPlayer->m_destCellX << "\n";
+				str << "m_destCellZ = " << std::hex << (unsigned long)pPlayer->m_destCellZ << "\n";
+				str << "m_attackReqTime = " << std::hex << (unsigned long)pPlayer->m_attackReqTime << "\n";
+				str << "m_preMoveStartTick = " << std::hex << (unsigned long)pPlayer->m_preMoveStartTick << "\n";
+				str << "m_skillId = " << std::hex << (unsigned long)pPlayer->m_skillId << "\n";
+				str << "m_skillAttackRange = " << std::hex << (unsigned long)pPlayer->m_skillAttackRange << "\n";
+				str << "m_gSkillDx = " << std::hex << (unsigned long)pPlayer->m_gSkillDx << "\n";
+				str << "m_gSkillDy = " << std::hex << (unsigned long)pPlayer->m_gSkillDy << "\n";
+				str << "m_preengageXOfMove = " << std::hex << (unsigned long)pPlayer->m_preengageXOfMove << "\n";
+				str << "m_preengageYOfMove = " << std::hex << (unsigned long)pPlayer->m_preengageYOfMove << "\n";
+				str << "m_statusEffect = " << std::hex << (unsigned long)pPlayer->m_statusEffect << "\n";
+
 
 				unsigned char *pdump = (unsigned char*)&pPlayer->m_efId;
 				for(int ii = 0;ii < 64 ;ii++){
@@ -776,6 +809,26 @@ void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 			int skillnums = p_gamemode->m_world->m_skillList.size();
 			str << " m_skillList size =" << skillnums << "\n";
 
+			{
+				std::stringstream putinfostr;
+				std::list<CSkill*> skillList = p_gamemode->m_world->m_skillList;
+				for (std::list<CSkill*>::iterator it = skillList.begin(); it != skillList.end(); it++)
+				{
+					CSkill *pSkill = *it;
+					if (pSkill){
+						putinfostr << "m_ownerGid = " << std::hex << pSkill->m_ownerGid << std::endl;
+						putinfostr << "m_launchCnt = " << pSkill->m_launchCnt << std::endl;
+						putinfostr << "m_aid = " << pSkill->m_aid << std::endl;
+						putinfostr << "m_framecounter = " << pSkill->m_framecounter << std::endl;
+						putinfostr << "m_effectId = " << pSkill->m_effectId << std::endl;
+						putinfostr << "m_unknown_counter = " << pSkill->m_unknown_counter << std::endl;
+						putinfostr << std::endl;
+					}
+				}
+				m_pSFastFont->DrawText((LPSTR)putinfostr.str().c_str(),
+					400, 20, D3DCOLOR_ARGB(255, 255, 255, 255), 2, NULL);
+			}
+
 			int itemnums = p_gamemode->m_world->m_itemList.size();
 			str << " m_itemList size =" << itemnums << "\n";
 
@@ -821,7 +874,7 @@ void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 			for( std::list<CGameActor*>::iterator it = actorList.begin() ; it != actorList.end() ; it++ )
 			{
 				CGameActor *pGameActor = *it;
-				if( pGameActor && !pGameActor->m_isPc){
+				if( pGameActor && !pGameActor->m_isPc ){
 					long cx,cy;
 					pAttr->ConvertToCellCoor(pGameActor->m_pos.x,pGameActor->m_pos.z,cx,cy);
 
@@ -831,17 +884,40 @@ void CRoCodeBind::DrawSRHDebug(IDirect3DDevice7* d3ddevice)
 					putinfostr << "lv = " << pGameActor->m_clevel << std::endl;
 					putinfostr << "job = " << pGameActor->m_job << std::endl;
 					putinfostr << "m_npcId = " << pGameActor->m_npcId << std::endl;
+
+					putinfostr << "m_whiffCounter = " << pGameActor->m_whiffCounter << std::endl;
+					putinfostr << "m_damagePoint = " << pGameActor->m_damagePoint << std::endl;
+					putinfostr << "0002 = " << std::hex << pGameActor->m_unknown_data0002 << std::endl;
+					putinfostr << "0003 = " << pGameActor->m_unknown_data0003 << std::endl;
+					putinfostr << "m_unknown01_window = " << pGameActor->m_unknown01_window << std::endl;
+					putinfostr << "m_unknown01_window_offset = " << pGameActor->m_unknown01_window_offset << std::endl;
+
+					if (!pGameActor->m_isPc){
+						CNpc *pNpc = (CNpc*)pGameActor;
+						putinfostr << "m_gage = " << pNpc->m_gage << std::endl;
+						putinfostr << "m_gage2 = " << pNpc->m_gage2 << std::endl;
+					}else{
 #if 0
-					putinfostr << "m_bodyPaletteName = " << pGameActor->m_bodyPaletteName << std::endl;
-					unsigned char *pdump = (unsigned char*)&pGameActor->m_pos.x;
-					for (int ii = 0; ii < 64; ii++){
-						putinfostr << std::setfill('0') << std::setw(2) << std::hex << (int)pdump[ii] << ",";
-						if ((ii % 0x10) == 0x0f){
-							putinfostr << std::endl;
+						CPlayer *pPlayer = (CPlayer*)pGameActor;
+						putinfostr << "m_cpc_unknown03 = " << std::hex << (unsigned long)pPlayer->m_cpc_unknown03 << "\n";
+						putinfostr << "m_cpc_unknown04 = " << std::hex << (unsigned long)pPlayer->m_cpc_unknown04 << "\n";
+						putinfostr << "m_cpc_offsetx = " << std::hex << (unsigned long)pPlayer->m_cpc_offsetx << "\n";
+						putinfostr << "m_cpc_offsety = " << std::hex << (unsigned long)pPlayer->m_cpc_offsety << "\n";
+						putinfostr << "m_cpc_unknown07 = " << std::hex << (unsigned long)pPlayer->m_cpc_unknown07 << "\n";
+						putinfostr << "m_cpc_unknown08 = " << std::hex << (unsigned long)pPlayer->m_cpc_unknown08 << "\n";
+						putinfostr << "m_cpc_unknown09 = " << std::hex << (unsigned long)pPlayer->m_cpc_unknown09 << "\n";
+						putinfostr << "m_cpc_unknown10 = " << std::hex << (unsigned long)pPlayer->m_cpc_unknown10 << "\n";
+						unsigned char *pdump = (unsigned char*)&pPlayer->m_shoe_count;
+						for (int ii = 0; ii < 64; ii++){
+							putinfostr << std::setfill('0') << std::setw(2) << std::hex << (int)pdump[ii] << ",";
+							if ((ii % 0x10) == 0x0f){
+								putinfostr << std::endl;
+							}
 						}
-					}
-					putinfostr << std::endl;
+						putinfostr << std::endl;
 #endif
+					}
+
 					int sx,sy;
 					float fx,fy,oow;
 					ProjectVertex( pGameActor->m_pos,pView->m_viewMatrix,&fx,&fy,&oow);
@@ -1325,7 +1401,6 @@ void CRoCodeBind::PacketQueueProc(char *buf,int len)
 	}
 }
 
-typedef int (__stdcall *Func_CRagConnection__GetPacketSize)(DWORD opcode);
 
 void CRoCodeBind::SearchRagexeMemory(void)
 {
@@ -1482,6 +1557,11 @@ void CRoCodeBind::SearchRagexeMemory(void)
 		"e8*7******"        //   call    near F00579fc0
 		);
 
+	CSearchCode Mov_ecx_adr_Call_near_adr(
+		"b9*1******"        //   mov     ecx, dword L009b74f8
+		"e8*2******"        //   call    near F005ac940
+		);
+
 	CSearchCode CMouse_Init_vc6(
 		"a1********"		// mov     eax,[ g_hInstance ]
 		"53"				// push    ebx
@@ -1610,7 +1690,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 	LPBYTE strings_readfolder_address = NULL;
 	CSearchCode set_g_readFolderFirst(
 		"68*1******"         //  push    dword *"readfolder"
-		"8bce"               //  mov     ecx, esi
+		"8b**"               //  mov     ecx, esi || ecx,ebp
 		"e8********"         //  call    near XMLElement::FindChild(char const *)
 		"85c0"               //  test    eax, eax
 		"7407"               //  jz      C005a43ce
@@ -1635,11 +1715,27 @@ void CRoCodeBind::SearchRagexeMemory(void)
 		"8bce"               //  mov     ecx, esi
 		"e8*3******"         //  call    near CFileMgr::GetPak
 	);
+	CSearchCode subfunction_CFileMgr__Open_v9(
+		"803d*1******00"     //  cmp     byte[L00862c54], byte 000h
+		"53"                 //  push    ebx
+		"8b5c240c"           //  mov     ebx, dword[esp + 00ch]
+		"57"                 //  push    edi
+		"8b7c2414"           //  mov     edi, dword[esp + 014h]
+		"57"                 //  push    edi
+		"53"                 //  push    ebx
+		"7418"               //  jz      C0053aa2c
+		"e8*2******"         //  call    near CFileMgr::GetFile
+		"85c0"               //  test    eax, eax
+		"7521"               //  jnz     C0053aa3e;; goto
+		"57"                 //  push    edi
+		"53"                 //  push    ebx
+		"8bce"               //  mov     ecx, esi
+		"e8*3******"         //  call    near CFileMgr::GetPak
+	);
 
 
 	LPBYTE pRagexeBase;
 	MEMORY_BASIC_INFORMATION mbi,mbi_data;
-	DWORD temp_eax, temp_ecx, temp_edx, temp_esp;
 
 	pRagexeBase = (LPBYTE)::GetModuleHandle(NULL);
 	pRagexeBase += 0x1000;
@@ -1685,178 +1781,109 @@ void CRoCodeBind::SearchRagexeMemory(void)
 
 			if( UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeA.PatternMatcher( &pBase[ii] ) )
 			{
-				DWORD GetPacketSizeAddr;
-				GetPacketSizeAddr = 
-					UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeA.Get4BIndexDWORD( &pBase[ii] , '4' );
-				__asm push 0x0A9
-				__asm call GetPacketSizeAddr
-				__asm mov temp_esp,esp
-
-				p_std_map_packetlen *plen = (p_std_map_packetlen*)
-					*(DWORD*) (*(DWORD*)(temp_esp-19*4) + 4);
-
+				m_functionRagexe_CRagConnection__instanceR =
+					(tCRagConnection__instanceR)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeA
+					.Get4BIndexDWORD(&pBase[ii], '3');
+				m_functionRagexe_CRagConnection__GetPacketSize =
+					(tCRagConnection__GetPacketSize)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeA
+					.Get4BIndexDWORD(&pBase[ii], '4');
 				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeA
-					.GetImmediateDWORD( &pBase[ii], '1' );
-
-				DEBUG_LOGGING_NORMAL( ("TypeA GetPacketSizeAddr %08X",GetPacketSizeAddr) );
-				DEBUG_LOGGING_NORMAL( (" esp = %08X",temp_esp) );
-				while(1)
-				{
-					if( plen->key > 0xffff || (plen->key == 0 && plen->value == 0) ){
-						packetLenMap = plen;
-						DEBUG_LOGGING_NORMAL( ("packetLenMap = %08X",packetLenMap) );
-						break;
-					}
-					plen = plen->parent;
-				}
+					.GetImmediateDWORD(&pBase[ii], '1');
+				DEBUG_LOGGING_NORMAL(("TypeA CRagConnection::instanceR = %08X", m_functionRagexe_CRagConnection__instanceR));
+				DEBUG_LOGGING_NORMAL(("TypeA CRagConnection::GetPacketSize = %08X", m_functionRagexe_CRagConnection__GetPacketSize));
 				break;
 			}else
 			if( UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeB.PatternMatcher( &pBase[ii] ) )
 			{
-				DWORD GetPacketSizeAddr;
-				GetPacketSizeAddr = 
-					UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeB.Get4BIndexDWORD( &pBase[ii] , '4' );
-				__asm push 0x0A9
-				__asm call GetPacketSizeAddr
-				__asm mov temp_eax,eax
-				__asm mov temp_ecx,ecx
-				__asm mov temp_edx,edx
-				p_std_map_packetlen *plen;
-				if( temp_eax == temp_edx ){
-					plen = (p_std_map_packetlen*)temp_ecx;
-				}else{
-					plen = (p_std_map_packetlen*)temp_edx;
-				}
-
+				m_functionRagexe_CRagConnection__instanceR =
+					(tCRagConnection__instanceR)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeB
+					.Get4BIndexDWORD(&pBase[ii], '3');
+				m_functionRagexe_CRagConnection__GetPacketSize =
+					(tCRagConnection__GetPacketSize)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeB
+					.Get4BIndexDWORD(&pBase[ii], '4');
 				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeB
 					.GetImmediateDWORD( &pBase[ii], '1' );
-
-				DEBUG_LOGGING_NORMAL( ("TypeB GetPacketSizeAddr     = %08X eax = %08X ecx = %08X edx =%08X",
-					GetPacketSizeAddr,temp_eax,temp_ecx,temp_edx) );
-				while(1)
-				{
-					if( plen->key > 0xffff || (plen->key == 0 && plen->value == 0) ){
-						packetLenMap = plen;
-						DEBUG_LOGGING_NORMAL( ("packetLenMap = %08X",packetLenMap) );
-						break;
-					}
-					plen = plen->parent;
-				}
+				DEBUG_LOGGING_NORMAL(("TypeB CRagConnection::instanceR = %08X", m_functionRagexe_CRagConnection__instanceR));
+				DEBUG_LOGGING_NORMAL(("TypeB CRagConnection::GetPacketSize = %08X", m_functionRagexe_CRagConnection__GetPacketSize));
 				break;
 			}else
 			if( UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeC.PatternMatcher( &pBase[ii] ) )
 			{
-				DWORD GetPacketSizeAddr;
-				Func_CRagConnection__GetPacketSize GetPacketSize;
-				GetPacketSizeAddr = 
-					UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeC.Get4BIndexDWORD( &pBase[ii] , '4' );
-				GetPacketSize = (Func_CRagConnection__GetPacketSize)GetPacketSizeAddr;
-				//GetPacketSize(0x0A9);
-				__asm push 0x0A9
-				__asm call GetPacketSizeAddr
-				__asm mov temp_ecx,ecx
-				p_std_map_packetlen *plen = (p_std_map_packetlen*)temp_ecx;
-
+				m_functionRagexe_CRagConnection__instanceR =
+					(tCRagConnection__instanceR)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeC
+					.Get4BIndexDWORD(&pBase[ii], '3');
+				m_functionRagexe_CRagConnection__GetPacketSize =
+					(tCRagConnection__GetPacketSize)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeC
+					.Get4BIndexDWORD(&pBase[ii], '4');
 				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeC
 					.GetImmediateDWORD( &pBase[ii], '1' );
-
-				DEBUG_LOGGING_NORMAL( ("TypeC GetPacketSizeAddr     = %08X ecx = %08X",GetPacketSizeAddr,temp_ecx) );
-				while(1)
-				{
-					if( plen->key > 0xffff || (plen->key == 0 && plen->value == 0) ){
-						packetLenMap = plen;
-						DEBUG_LOGGING_NORMAL( ("packetLenMap = %08X",packetLenMap) );
-						break;
-					}
-					plen = plen->parent;
-				}
+				DEBUG_LOGGING_NORMAL(("TypeC CRagConnection::instanceR = %08X", m_functionRagexe_CRagConnection__instanceR));
+				DEBUG_LOGGING_NORMAL(("TypeC CRagConnection::GetPacketSize = %08X", m_functionRagexe_CRagConnection__GetPacketSize));
 				break;
 			}else
 			if( UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeD.PatternMatcher( &pBase[ii] ) )
 			{
-				DWORD GetPacketSizeAddr;
-				Func_CRagConnection__GetPacketSize GetPacketSize;
-				GetPacketSizeAddr = 
-					UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeD.Get4BIndexDWORD( &pBase[ii] , '4' );
-				GetPacketSize = (Func_CRagConnection__GetPacketSize)GetPacketSizeAddr;
-				//GetPacketSize(0x0A9);
-				__asm push 0x0A9
-				__asm call GetPacketSizeAddr
-				__asm mov temp_ecx,ecx
-				p_std_map_packetlen *plen = (p_std_map_packetlen*)temp_ecx;
-
+				m_functionRagexe_CRagConnection__instanceR =
+					(tCRagConnection__instanceR)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeD
+					.Get4BIndexDWORD(&pBase[ii], '3');
+				m_functionRagexe_CRagConnection__GetPacketSize =
+					(tCRagConnection__GetPacketSize)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeD
+					.Get4BIndexDWORD(&pBase[ii], '4');
 				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeD
 					.GetImmediateDWORD( &pBase[ii], '1' );
-
-				DEBUG_LOGGING_NORMAL( ("TypeD GetPacketSizeAddr     = %08X ecx = %08X",GetPacketSizeAddr,temp_ecx) );
-				while(1)
-				{
-					if( plen->key > 0xffff || (plen->key == 0 && plen->value == 0) ){
-						packetLenMap = plen;
-						DEBUG_LOGGING_NORMAL( ("packetLenMap = %08X",packetLenMap) );
-						break;
-					}
-					plen = plen->parent;
-				}
+				DEBUG_LOGGING_NORMAL(("TypeD CRagConnection::instanceR = %08X", m_functionRagexe_CRagConnection__instanceR));
+				DEBUG_LOGGING_NORMAL(("TypeD CRagConnection::GetPacketSize = %08X", m_functionRagexe_CRagConnection__GetPacketSize));
 				break;
 			}else
 			if( UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeE.PatternMatcher( &pBase[ii] ) )
 			{
-				DWORD GetPacketSizeAddr;
-				Func_CRagConnection__GetPacketSize GetPacketSize;
-				GetPacketSizeAddr = 
-					UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeE.Get4BIndexDWORD( &pBase[ii] , '4' );
-				GetPacketSize = (Func_CRagConnection__GetPacketSize)GetPacketSizeAddr;
-				//GetPacketSize(0x0A9);
-				__asm push 0x0A9
-				__asm call GetPacketSizeAddr
-				__asm mov temp_ecx,ecx
-				p_std_map_packetlen *plen = (p_std_map_packetlen*)temp_ecx;
-
+				m_functionRagexe_CRagConnection__instanceR =
+					(tCRagConnection__instanceR)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeE
+					.Get4BIndexDWORD(&pBase[ii], '3');
+				m_functionRagexe_CRagConnection__GetPacketSize =
+					(tCRagConnection__GetPacketSize)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeE
+					.Get4BIndexDWORD(&pBase[ii], '4');
 				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeE
 					.GetImmediateDWORD( &pBase[ii], '1' );
-
-				DEBUG_LOGGING_NORMAL( ("TypeE GetPacketSizeAddr     = %08X ecx = %08X",GetPacketSizeAddr,temp_ecx) );
-				while(1)
-				{
-					if( plen->key > 0xffff || (plen->key == 0 && plen->value == 0) ){
-						packetLenMap = plen;
-						DEBUG_LOGGING_NORMAL( ("packetLenMap = %08X",packetLenMap) );
-						break;
-					}
-					plen = plen->parent;
-				}
+				DEBUG_LOGGING_NORMAL(("TypeE CRagConnection::instanceR = %08X", m_functionRagexe_CRagConnection__instanceR));
+				DEBUG_LOGGING_NORMAL(("TypeE CRagConnection::GetPacketSize = %08X", m_functionRagexe_CRagConnection__GetPacketSize));
 				break;
 			}else
 			if (UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeF.PatternMatcher(&pBase[ii]))
 			{
-				DWORD GetPacketSizeAddr;
-				Func_CRagConnection__GetPacketSize GetPacketSize;
-				GetPacketSizeAddr =
-					UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeF.Get4BIndexDWORD(&pBase[ii], '4');
-				GetPacketSize = (Func_CRagConnection__GetPacketSize)GetPacketSizeAddr;
-				//GetPacketSize(0x0998);
-				__asm push 0x0998
-				__asm call GetPacketSizeAddr
-				__asm mov temp_ecx, ecx
-				p_std_map_packetlen *plen = (p_std_map_packetlen*)temp_ecx;
-
+				m_functionRagexe_CRagConnection__instanceR =
+					(tCRagConnection__instanceR)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeF
+					.Get4BIndexDWORD(&pBase[ii], '3');
+				m_functionRagexe_CRagConnection__GetPacketSize =
+					(tCRagConnection__GetPacketSize)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeF
+					.Get4BIndexDWORD(&pBase[ii], '4');
 				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeF
 					.GetImmediateDWORD(&pBase[ii], '1');
-
-				DEBUG_LOGGING_NORMAL(("TypeE GetPacketSizeAddr     = %08X ecx = %08X", GetPacketSizeAddr, temp_ecx));
-				while (1)
-				{
-					if (plen->key > 0xffff || (plen->key == 0 && plen->value == 0)){
-						packetLenMap = plen;
-						DEBUG_LOGGING_NORMAL(("packetLenMap = %08X", packetLenMap));
-						break;
-					}
-					plen = plen->parent;
-				}
+				DEBUG_LOGGING_NORMAL(("TypeF CRagConnection::instanceR = %08X", m_functionRagexe_CRagConnection__instanceR));
+				DEBUG_LOGGING_NORMAL(("TypeF CRagConnection::GetPacketSize = %08X", m_functionRagexe_CRagConnection__GetPacketSize));
 				break;
 			}
+		} 
+		if (m_functionRagexe_CRagConnection__instanceR && m_functionRagexe_CRagConnection__GetPacketSize){
+			// get packet length for classic client.
+			m_functionRagexe_CRagConnection__instanceR();
+
+			for (UINT ii = 0; ii < 32; ii++)
+			{
+				LPBYTE pBase = (LPBYTE)m_functionRagexe_CRagConnection__GetPacketSize;
+
+				if( Mov_ecx_adr_Call_near_adr.PatternMatcher(&pBase[ii]) )
+				{
+					m_packetLenMap = (void**)(Mov_ecx_adr_Call_near_adr.GetImmediateDWORD(&pBase[ii], '1')+4);
+					m_packetLenMap_InsertTree = (void*)Mov_ecx_adr_Call_near_adr.GetNearJmpAddress(&pBase[ii], '2');
+					packetLenMap = (p_std_map_packetlen*) *m_packetLenMap;
+					DEBUG_LOGGING_NORMAL(("m_packetLenMap %08X", m_packetLenMap));
+					DEBUG_LOGGING_NORMAL(("m_packetLenMap_InsertTree %08X", m_packetLenMap_InsertTree));
+				}
+			}
 		}
+
+
 
 		// get CMouse instance
 		for( UINT ii = 0; ii < mbi.RegionSize - CMouse_Init_vc6.GetSize() ; ii++ )
@@ -1994,6 +2021,14 @@ void CRoCodeBind::SearchRagexeMemory(void)
 			{
 				m_functionRagexe_CFileMgr__GetPak = (tCFileMgr__GetPak)subfunction_CFileMgr__Open.GetNearJmpAddress(&pBase[ii], '3');
 				DEBUG_LOGGING_NORMAL(("find CFileMgr::GetFile : %08X", subfunction_CFileMgr__Open.GetNearJmpAddress(&pBase[ii], '2') ));
+				DEBUG_LOGGING_NORMAL(("find CFileMgr::GetPak : %08X", m_functionRagexe_CFileMgr__GetPak));
+				break;
+			}
+			if (subfunction_CFileMgr__Open_v9.PatternMatcher(&pBase[ii]) &&
+				subfunction_CFileMgr__Open_v9.GetImmediateDWORD(&pBase[ii], '1') == (DWORD)pg_readFolderFirst)
+			{
+				m_functionRagexe_CFileMgr__GetPak = (tCFileMgr__GetPak)subfunction_CFileMgr__Open_v9.GetNearJmpAddress(&pBase[ii], '3');
+				DEBUG_LOGGING_NORMAL(("find CFileMgr::GetFile : %08X", subfunction_CFileMgr__Open_v9.GetNearJmpAddress(&pBase[ii], '2')));
 				DEBUG_LOGGING_NORMAL(("find CFileMgr::GetPak : %08X", m_functionRagexe_CFileMgr__GetPak));
 				break;
 			}

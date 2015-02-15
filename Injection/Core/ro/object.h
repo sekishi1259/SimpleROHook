@@ -526,7 +526,11 @@ public:
 class CGameActor : public CAbleToMakeEffect  {
 public:
 #ifdef JRO_CLIENT_STRUCTURE
-	DWORD m_unknown_pad[5];
+	int m_cgameactor_unknown_j00;
+	int m_cgameactor_unknown_j01;
+	int m_cgameactor_unknown_j02;
+	int m_cgameactor_unknown_j03;
+	int m_cgameactor_unknown_j04;
 #endif
 	int m_moveDestX;
 	int m_moveDestY;
@@ -598,12 +602,12 @@ public:
 	int m_gdid;
 	int m_emblemVersion;
 
-	int m_unknown_data0000;
-	int m_unknown_data0001;
-	int m_unknown_data0002;
-	int m_unknown_data0003;
-	int m_unknown_data0004;
-	int m_unknown_data0005;
+	int m_whiffCounter;//miss counter
+	int m_damagePoint;//damage
+	int m_unknown_data0002;//
+	int m_unknown_data0003;//m_effectState2
+	void *m_unknown01_window;
+	int m_unknown01_window_offset;
 
 	void* m_homunAI;//class CMercenaryAI* m_homunAI;
 	void* m_merAI;//class CMercenaryAI* m_merAI;
@@ -627,29 +631,34 @@ public:
 	class CMsgEffect* m_chatProhibitEffect;
 	class CMsgEffect* m_cursorEffect;
 	std::list<CMsgEffect*> m_msgEffectList;
-//	int m_gactpad2[9];
-	int m_gactpad2[4];
+
+	int m_cgameactor_unknown_state01;
+	int m_cgameactor_unknown_state02;
+	int m_cgameactor_unknown_state03;
+	int m_cgameactor_unknown_choice_state;
+	int m_cgameactor_unknown_dest_choice_state;
+	int m_cgameactor_unknown06;
+	int m_cgameactor_unknown07;
 	virtual ~CGameActor() {};
 };
 
 class CSkill : public CGameActor  {
 public:
-	long m_cskillpad;//
-
+	int m_ownerGid;
 	unsigned long m_launchCnt;
-	unsigned long m_SkillStartTime;
 	unsigned long m_aid;
-//	class C3dActor* m_3dactor;
-//	class CRagEffect* m_LoopEffect;
+	void *m_3dactor;// class C3dActor*
+	void *m_LoopEffect;// class CRagEffect*
 	long m_framecounter; // ?? added for later HightPrieast.exe?
 	int m_effectId;
-
+	int m_unknown_counter;
 	virtual ~CSkill() {};
 };
 
 class CPc : public CGameActor  {
 public:
-	int m_pcppad[5];//
+	int m_cpc_unknown01;
+	int m_cpc_unknown02;
 
 	std::basic_string<char> m_imfName;
 	int m_honor;
@@ -662,27 +671,29 @@ public:
 	int m_accessory2;
 	int m_accessory3;
 	int m_shield;
+	int m_shoe;
 
-//	int m_shoe; // deleted for later HightPrieast.exe?
-//	int m_shoe_count; // deleted for later HightPrieast.exe?
-//	struct vector3d shoe_pos; // deleted for later HightPrieast.exe?
+	int m_shoe_count; // deleted for later HightPrieast.exe?
+	struct vector3d shoe_pos; // deleted for later HightPrieast.exe?
 	int m_renderWithoutLayer;
-//	std::basic_string<char> m_headPaletteName;  // deleted for later HightPrieast.exe?
+	std::basic_string<char> m_headPaletteName;  // deleted for later HightPrieast.exe?
 	void* m_gage;//UIPcGage* m_gage;
-//	long m_pk_rank;  // deleted for later HightPrieast.exe?
-//	long m_pk_total; // deleted for later HightPrieast.exe?
+	long m_pk_rank;  // deleted for later HightPrieast.exe?
+	long m_pk_total; // deleted for later HightPrieast.exe?
+
+						// mage memo
+	int m_cpc_unknown03;// 0
+	int m_cpc_unknown04;// 101 (257)
+	int m_cpc_offsetx;// ffffffed (-19)
+	int m_cpc_offsety;// ffffffc2 (-62)
+	int m_cpc_unknown07;// ffffffff (-1)
+	int m_cpc_unknown08;//  9396d90 (
+	int m_cpc_unknown09;// 0
 
 	std::vector<CSprRes*> m_sprResList;
 	std::vector<CActRes*> m_actResList;
 
-	long m_cpcpad1;// 0x101?? added for later HightPrieast.exe?
-	long m_cpcpad2;// 0x101??
-	long m_cpcpad3;// 0x101??
-	long m_cpcpad4;// 0x101??
-	long m_cpcpad5;// 0x101??
-	long m_cpcpad6;// 0x101??
-	long m_cpcpad7;// 0x101??
-	long m_cpcpad8;// 0x101??
+	int m_cpc_unknown10;// ffffffff (-1)
 
 	virtual ~CPc() {};
 };
@@ -706,7 +717,6 @@ public:
 	unsigned long m_standTick;
 	int m_skillId;
 	int m_skillAttackRange;
-	int m_skillUseLevel;
 	int m_gSkillDx;
 	int m_gSkillDy;
 	int m_preengageXOfMove;
@@ -714,4 +724,19 @@ public:
 	CRagEffect* m_statusEffect;
 
 	virtual~CPlayer() {};
+};
+
+class CNpc : public CGameActor  {
+public:
+	float m_x1;
+	float m_z1;
+	float m_x2;
+	float m_z2;
+	int m_playerIswithinBox;
+	unsigned long m_lastEffectLaunchTick;
+	int m_doesLaunchEffect;
+	void *m_gage;  //class UIPlayerGage*
+	void *m_gage2; //class UIPcGage*
+	int m_unknown_value;
+	int m_unknown_counter;
 };
