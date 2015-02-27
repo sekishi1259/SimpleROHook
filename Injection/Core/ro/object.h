@@ -171,7 +171,7 @@ public:
 	struct ACTOR_COLOR m_curColor;
 	union {
 		unsigned long m_sprArgb;
-		struct COLOR m_sprColor; // deleted for after HightPrieast.exe?
+		struct COLOR m_sprColor;
 	};
 	unsigned char m_isLieOnGround;
 	unsigned char m_isMotionFinished;
@@ -660,6 +660,10 @@ public:
 	int m_cpc_unknown01;
 	int m_cpc_unknown02;
 
+#ifdef JRO_CLIENT_STRUCTURE
+	int m_cpc_unknown_j01;
+	int m_cpc_unknown_j02;
+#endif
 	std::basic_string<char> m_imfName;
 	int m_honor;
 	int m_virtue;
@@ -673,27 +677,26 @@ public:
 	int m_shield;
 	int m_shoe;
 
-	int m_shoe_count; // deleted for later HightPrieast.exe?
-	struct vector3d shoe_pos; // deleted for later HightPrieast.exe?
+	int m_shoe_count;
+	struct vector3d shoe_pos;
 	int m_renderWithoutLayer;
-	std::basic_string<char> m_headPaletteName;  // deleted for later HightPrieast.exe?
+	std::basic_string<char> m_headPaletteName;
 	void* m_gage;//UIPcGage* m_gage;
-	long m_pk_rank;  // deleted for later HightPrieast.exe?
-	long m_pk_total; // deleted for later HightPrieast.exe?
+	long m_pk_rank;
+	long m_pk_total;
 
-						// mage memo
-	int m_cpc_unknown03;// 0
-	int m_cpc_unknown04;// 101 (257)
-	int m_cpc_offsetx;// ffffffed (-19)
-	int m_cpc_offsety;// ffffffc2 (-62)
-	int m_cpc_unknown07;// ffffffff (-1)
-	int m_cpc_unknown08;//  9396d90 (
-	int m_cpc_unknown09;// 0
+	int m_cpc_unknown03;
+	int m_cpc_unknown04;
+	int m_cpc_offsetx;
+	int m_cpc_offsety;
+	int m_cpc_unknown07;
+	int m_cpc_unknown08;
+	int m_cpc_unknown09;
 
 	std::vector<CSprRes*> m_sprResList;
 	std::vector<CActRes*> m_actResList;
 
-	int m_cpc_unknown10;// ffffffff (-1)
+	int m_cpc_unknown10;
 
 	virtual ~CPc() {};
 };
