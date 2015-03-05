@@ -731,6 +731,10 @@ public:
 
 class CNpc : public CGameActor  {
 public:
+#ifdef JRO_CLIENT_STRUCTURE
+	int m_cnpc_unknown_j01;
+	int m_cnpc_unknown_j02;
+#endif
 	float m_x1;
 	float m_z1;
 	float m_x2;
