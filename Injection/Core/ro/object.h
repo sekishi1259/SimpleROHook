@@ -639,6 +639,10 @@ public:
 	int m_cgameactor_unknown_dest_choice_state;
 	int m_cgameactor_unknown06;
 	int m_cgameactor_unknown07;
+#ifdef JRO_CLIENT_STRUCTURE
+	int m_cgameactor_unknown_j05;
+	int m_cgameactor_unknown_j06;
+#endif
 	virtual ~CGameActor() {};
 };
 
@@ -660,10 +664,6 @@ public:
 	int m_cpc_unknown01;
 	int m_cpc_unknown02;
 
-#ifdef JRO_CLIENT_STRUCTURE
-	int m_cpc_unknown_j01;
-	int m_cpc_unknown_j02;
-#endif
 	std::basic_string<char> m_imfName;
 	int m_honor;
 	int m_virtue;
@@ -731,10 +731,6 @@ public:
 
 class CNpc : public CGameActor  {
 public:
-#ifdef JRO_CLIENT_STRUCTURE
-	int m_cnpc_unknown_j01;
-	int m_cnpc_unknown_j02;
-#endif
 	float m_x1;
 	float m_z1;
 	float m_x2;
